@@ -1,0 +1,375 @@
+/* ════════════════════════════════════════
+   Local fonts
+   ════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Simona Pro';
+  src: url('פונטים/SimonaPro-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Simona Pro';
+  src: url('פונטים/SimonaPro-Medium.ttf') format('truetype');
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'Simona Pro';
+  src: url('פונטים/SimonaPro-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+
+/* ════════════════════════════════════════
+   Reset
+   ════════════════════════════════════════ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  width: 100vw;
+  height: 100vh;
+  background: #101212;
+  color: #F8F4EE;
+  font-family: 'narkiss-asaf-variable', 'Simona Pro', sans-serif;
+  overflow: hidden;
+}
+
+/* ════════════════════════════════════════
+   Accordion canvas — rigid 2048 × 1070
+   ════════════════════════════════════════ */
+
+.accordion-wrapper {
+  display: flex;
+  flex-direction: row;
+  width: 2048px;
+  height: 1070px;
+  background: #101212;
+  transform-origin: top right;
+}
+
+/* ════════════════════════════════════════
+   Panel — base (ALL panels behave the same)
+   ════════════════════════════════════════ */
+
+.panel {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow: hidden;
+  flex: 0 0 93px;
+  transition: flex-basis 0.6s ease,
+              flex-grow  0.6s ease;
+}
+
+.panel.active {
+  flex: 1 0 0px;
+}
+
+/* ════════════════════════════════════════
+   Panel Tab — always-visible 93px sidebar
+   ════════════════════════════════════════
+   First child of each panel → rightmost in RTL.
+
+   justify-content: space-between  →  title at top,
+   number at bottom, space between them.
+
+   border-left  =  the 1px white separator.
+   • Closed panel: tab fills all 93px; border is
+     between this panel and the one to its left.
+   • Active panel: border separates content from tab.
+   ════════════════════════════════════════ */
+
+.panel-tab {
+  width: 93px;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 60px 0;
+  border-left: 1px solid #F8F4EE;
+  cursor: pointer;
+}
+
+.panel.active .panel-tab {
+  cursor: default;
+}
+
+.tab-title-wrap {
+  height: 450px !important;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.tab-title {
+  font-family: 'Simona Pro', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: #F8F4EE;
+  white-space: nowrap;
+  transform: rotate(-90deg);
+  display: inline-block;
+}
+
+.tab-num {
+  font-family: 'Simona Pro', serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+  color: #F8F4EE;
+}
+
+/* Panel 0 tab: logo sits at the top (instead of tab-title-wrap) */
+.p0-logo {
+  width: 29px;
+  height: 38px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════
+   Panel Content — hidden when closed
+   ════════════════════════════════════════ */
+
+.panel-content {
+  flex: 1;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease 0s,
+              visibility 0s    ease 0.25s;
+}
+
+.panel.active .panel-content {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease 0.45s;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  padding: 0 !important;
+}
+
+/* ════════════════════════════════════════
+   Panel 1 — two-column content
+   ════════════════════════════════════════
+   RTL flex-row inside .p1-content:
+     p1-sidebar      (first  = rightmost, near the tab)
+     p1-doctors-area (second = leftmost, the doctors grid)
+   ════════════════════════════════════════ */
+
+.p1-content {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+
+/* ── Right column: episode label + shape + description ── */
+
+.p1-sidebar {
+  flex: 0 0 373px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #F8F4EE;
+  overflow: hidden;
+}
+
+/* Vertical episode name at the top of the sidebar */
+.p1-episode-label {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0 0;
+}
+
+.p1-episode-title {
+  font-family: 'Simona Pro', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: #F8F4EE;
+  white-space: nowrap;
+  transform: rotate(-90deg);
+  display: inline-block;
+}
+
+/* Abstract shape fills the remaining top space */
+.p1-shape-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.abstract-shape {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.p1-hdivider {
+  width: 100%;
+  height: 1px;
+  background: #F8F4EE;
+  flex-shrink: 0;
+}
+
+.p1-text-area {
+  flex-shrink: 0;
+  padding: 40px 20px 60px 30px;
+}
+
+.p1-desc {
+  font-family: 'Simona Pro', serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: right;
+}
+
+/* ── Left column: doctors ── */
+/*
+  RTL flex-row inside .p1-doctors-area:
+    doctors-main     (first  = rightmost)
+    scroll-indicator (second = leftmost, the 22px white bar)
+*/
+
+.p1-doctors-area {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.doctors-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  min-width: 0;
+  /* 22px white bar at the leftmost edge — replaces the old scroll-indicator div */
+  border-left: 22px solid #F8F4EE;
+}
+
+/* Heading */
+.doctors-header {
+  padding: 60px 93px 0;
+  flex-shrink: 0;
+}
+
+.doctors-title {
+  font-family: 'narkiss-asaf-variable', 'Simona Pro', serif;
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 1;
+  color: #F8F4EE;
+  text-align: right;
+}
+
+.doctors-hdivider {
+  width: 100%;
+  height: 1px;
+  background: #F8F4EE;
+  flex-shrink: 0;
+  margin-top: 30px;
+}
+
+.doctors-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 67px;
+  padding: 60px 93px;
+  overflow: hidden;
+}
+
+/* ════════════════════════════════════════
+   Quote box
+   ════════════════════════════════════════ */
+
+.quote-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quote-frame {
+  position: relative;
+  width: 779px;
+  height: 101px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quote-svg-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#quote-text {
+  position: relative;
+  z-index: 1;
+  font-family: 'Simona Pro', serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1;
+  color: #F8F4EE;
+  text-align: center;
+  background: #101212;
+  padding: 0 28px;
+  white-space: nowrap;
+  max-width: 680px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ════════════════════════════════════════
+   Doctors grid  —  10 × 6 = 60
+   ════════════════════════════════════════ */
+
+.doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 56.57px);
+  grid-template-rows:    repeat(6,  56.57px);
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.doctor-cell {
+  width: 56.57px;
+  height: 56.57px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.doctor-cell:hover {
+  transform: scale(1.15);
+}
+
+.doctor-cell svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

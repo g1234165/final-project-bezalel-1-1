@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>7 שנים בלי אבחון</title>
+  <link rel="stylesheet" href="https://use.typekit.net/rho2pkv.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!--
+    RTL + flex-direction: row  →  first child = rightmost.
+    Panel 0 (first) = far right.  Panel 5 (last) = far left.
+
+    Each panel:
+      [panel-tab   first  = rightmost, always 93px]
+      [panel-content second = fills left, hidden when closed]
+
+    No tab-line elements anywhere.
+    border-left on .panel-tab is the white 1px separator.
+  -->
+  <div class="accordion-wrapper">
+
+    <!-- ═══════════════════════════════════
+         PANEL 0  ·  logo only  ·  collapsible
+         Tab: flame logo  +  "0"
+         ═══════════════════════════════════ -->
+    <div class="panel" data-panel="0">
+      <div class="panel-tab">
+        <img src="Logo.svg" alt="" class="p0-logo">
+        <span class="tab-num">0</span>
+      </div>
+      <div class="panel-content">
+        <!-- empty — panel 0 is the series anchor with no body content -->
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         PANEL 1  ·  active by default
+         Tab: "7 שנים בלי אבחון"  +  "1"
+         Content right: shape sidebar
+         Content left:  doctors grid
+         ═══════════════════════════════════ -->
+    <div class="panel active" data-panel="1">
+      <div class="panel-tab">
+        <div class="tab-title-wrap">
+          <span class="tab-title">7 שנים בלי אבחון</span>
+        </div>
+        <span class="tab-num">1</span>
+      </div>
+
+      <div class="panel-content p1-content">
+
+        <!-- RIGHT column (first = rightmost in RTL):
+             episode name label  +  abstract shape  +  description -->
+        <div class="p1-sidebar">
+
+
+          <div class="p1-shape-area">
+            <img src="Frame 934.svg" alt="" class="abstract-shape">
+          </div>
+
+          <div class="p1-hdivider"></div>
+
+          <div class="p1-text-area">
+            <p class="p1-desc">
+              המסע לאבחון HS<br>
+              נמשך בממוצע 7 שנים<br>
+              וכולל אבחונים שגויים<br>
+              ופגישות עם רופאים<br>
+              רבים. זהו סיפורה של<br>
+              מטופלת אחת.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- LEFT column (second = leftmost in RTL):
+             doctors heading  +  quote  +  grid  +  22px scroll bar -->
+        <div class="p1-doctors-area">
+
+          <div class="doctors-main">
+            <div class="doctors-header">
+              <h1 class="doctors-title">לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון</h1>
+            </div>
+            <div class="doctors-hdivider"></div>
+            <div class="doctors-body">
+              <div class="quote-area">
+                <div class="quote-frame">
+                  <img src="פריים רופאים/quote.svg" alt="" class="quote-svg-bg">
+                  <span id="quote-text">&quot;ציטוט&quot;</span>
+                </div>
+              </div>
+              <div class="doctors-grid" id="doctors-grid"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         PANELS 2–5  ·  closed nav panels
+         ═══════════════════════════════════ -->
+
+    <div class="panel" data-panel="2">
+      <div class="panel-tab">
+        <div class="tab-title-wrap">
+          <span class="tab-title">כשהל״ן שייך למחלה</span>
+        </div>
+        <span class="tab-num">2</span>
+      </div>
+      <div class="panel-content"></div>
+    </div>
+
+    <div class="panel" data-panel="3">
+      <div class="panel-tab">
+        <div class="tab-title-wrap">
+          <span class="tab-title">מה זה HS?</span>
+        </div>
+        <span class="tab-num">3</span>
+      </div>
+      <div class="panel-content"></div>
+    </div>
+
+    <div class="panel" data-panel="4">
+      <div class="panel-tab">
+        <div class="tab-title-wrap">
+          <span class="tab-title">עדויות של חולים</span>
+        </div>
+        <span class="tab-num">4</span>
+      </div>
+      <div class="panel-content"></div>
+    </div>
+
+    <div class="panel" data-panel="5">
+      <div class="panel-tab">
+        <div class="tab-title-wrap">
+          <span class="tab-title">מידע שימושי</span>
+        </div>
+        <span class="tab-num">5</span>
+      </div>
+      <div class="panel-content"></div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
