@@ -18,6 +18,25 @@
   font-weight: 700;
 }
 
+@font-face {
+  font-family: 'Narkiss Asaf Variable';
+  src: url('פונטים/NarkissAsaf-Regular-TRIAL.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Narkiss Asaf TRIAL';
+  src: url('פונטים/NarkissAsaf-Regular-TRIAL.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Narkiss Asaf TRIAL';
+  src: url('פונטים/NarkissAsaf-Bold-TRIAL.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 /* ════════════════════════════════════════
    Reset
    ════════════════════════════════════════ */
@@ -98,6 +117,21 @@ body, html {
 
 .panel.active .panel-tab {
   cursor: default;
+  /* The active panel's divider comes from p1-sidebar's border-left (Vector 826).
+     Removing the tab's border-left prevents a duplicate internal line. */
+  border-left: none;
+}
+
+/* Hover: tab background becomes #F8F4EE, text/number become dark for contrast */
+.panel:not(.active) .panel-tab:hover {
+  background-color: #F8F4EE;
+  transition: background-color 0.2s ease;
+}
+
+.panel:not(.active) .panel-tab:hover .tab-title,
+.panel:not(.active) .panel-tab:hover .tab-num {
+  color: #101212;
+  transition: color 0.2s ease;
 }
 
 .tab-title-wrap {
@@ -109,7 +143,7 @@ body, html {
 
 .tab-title {
   font-family: 'Simona Pro', serif;
-  font-size: 26px;
+  font-size: 18px;
   font-weight: 400;
   color: #F8F4EE;
   white-space: nowrap;
@@ -120,7 +154,7 @@ body, html {
 
 .tab-num {
   font-family: 'Simona Pro', serif;
-  font-size: 26px;
+  font-size: 18px;
   font-weight: 400;
   line-height: 1;
   color: #F8F4EE;
@@ -155,7 +189,11 @@ body, html {
   display: flex !important;
   flex-direction: row !important;
   padding: 0 !important;
+  /* Vector 826: divider between this panel's content and the closed panel to its left */
+  border-left: 1px solid #F8F4EE;
 }
+
+/* Panel 1 tab stays visible when active — same position as when closed */
 
 /* ════════════════════════════════════════
    Panel 1 — two-column content
@@ -178,7 +216,7 @@ body, html {
   display: flex;
   flex-direction: column;
   border-left: 1px solid #F8F4EE;
-  overflow: hidden;
+  overflow: visible; /* allows p1-hdivider to extend into the 93px tab column */
 }
 
 /* Vertical episode name at the top of the sidebar */
@@ -192,7 +230,7 @@ body, html {
 
 .p1-episode-title {
   font-family: 'Simona Pro', serif;
-  font-size: 26px;
+  font-size: 18px;
   font-weight: 400;
   color: #F8F4EE;
   white-space: nowrap;
@@ -200,43 +238,146 @@ body, html {
   display: inline-block;
 }
 
-/* Abstract shape fills the remaining top space */
-.p1-shape-area {
+/* .open-episode-frame-logo — Figma: 631px, padding 48px 0px, gap 16px */
+.station-logo {
+  width: 100%;
   flex: 1;
+  position: relative;
   display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 48px 0;
+  box-sizing: border-box;
+  gap: 16px;
+  overflow: visible;
+}
+
+/* .wrapper — Figma: width 80px, column flex, align center */
+.episode-name-wrapper {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+}
+
+.episode-name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* .div — Figma: position relative, line-height 110%, rotate(-90deg) */
+.episode-name-text {
+  position: relative;
+  font-size: 18px;
+  line-height: 110%;
+  font-family: 'Simona Pro';
+  color: #F8F4EE;
+  transform: rotate(-90deg);
+  white-space: nowrap;
+}
+
+/* .logo-big — Figma: align-self stretch, width 303px, padding 0 0 0 80px */
+.logo-big {
+  align-self: stretch;
+  width: 303px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   justify-content: center;
-  padding: 10px;
-  overflow: hidden;
+  padding: 0 0 0 80px;
+  box-sizing: border-box;
+}
+
+/* .logo-big-child — Figma: 287×399px, flex-shrink 0 */
+.logo-big-child {
+  width: 287px;
+  height: 399px;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .abstract-shape {
-  width: auto;
+  width: 100%;
   height: 100%;
-  max-width: 100%;
   object-fit: contain;
 }
 
+/* Horizontal divider — box-shadow extends the line 93px into the tab column */
 .p1-hdivider {
   width: 100%;
   height: 1px;
   background: #F8F4EE;
   flex-shrink: 0;
+  box-shadow: 93px 0 0 0 #F8F4EE;
 }
 
-/* station text — Figma Frame 924: width 346px in a 373px container.
-   (373 - 346) / 2 ≈ 13px padding each side. Top/bottom 60px matches Figma. */
-.p1-text-area {
-  flex-shrink: 0;
-  padding: 60px 14px;
+/* .epiode-description — Figma: padding 84px 0px 48px, font-size 26px, Narkiss Asaf TRIAL */
+.station-text {
+  width: 100%;
+  flex: 0 0 439px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 84px 0 48px;
+  box-sizing: border-box;
+  font-size: 26px;
+  color: #F8F4EE;
+  font-family: 'Narkiss Asaf TRIAL';
 }
 
+/* .epiode-description-inner / .frame-parent — Figma: padding 0px 80px */
+.station-text-inner {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 80px;
+}
+
+/* .wrapper — align-self stretch, column flex, align flex-end */
+.desc-wrapper {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* .div — Figma: 26px, Narkiss Asaf TRIAL, line-height 100%, align-self stretch */
 .p1-desc {
-  font-family: 'Simona Pro', serif;
-  font-size: 32px;
-  font-weight: 400;
+  align-self: stretch;
+  position: relative;
   line-height: 100%;
+  font-size: 26px;
+  font-family: 'Narkiss Asaf TRIAL';
+  color: #F8F4EE;
   text-align: right;
+  display: inline-block;
+  width: 100%;
+}
+
+/* .container — Figma: width 80px, height 20px, center, font-size 18px, Simona Pro */
+.ep-num-container {
+  width: 80px;
+  height: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 18px;
+  font-family: 'Simona Pro';
+  color: #F8F4EE;
+}
+
+/* .div2 — Figma: position relative, line-height 110% */
+.ep-num {
+  position: relative;
+  line-height: 110%;
 }
 
 /* ── Left column: doctors ── */
@@ -265,26 +406,31 @@ body, html {
   border-left: 22px solid #F8F4EE;
 }
 
-/* Heading — Frame 936: padding 60px 93px 0px, gap 10px between heading and divider */
+/* text-frame — Figma: height 247px, position relative */
 .doctors-header {
-  padding: 60px 93px 0;
+  width: 100%;
+  height: 247px;
+  position: relative;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
+/* .div in Figma: width 864px, font-size 44px, Narkiss Asaf TRIAL Regular */
 .doctors-title {
-  font-family: "narkiss-asaf-variable", sans-serif;
-  font-variation-settings: "MONO" 0, "wght" 400;
-  font-size: 64px;
+  position: absolute;
+  top: 60px;
+  left: 138px;
+  width: 864px;
+  font-size: 44px;
   line-height: 100%;
+  font-family: 'Narkiss Asaf TRIAL';
   color: #F8F4EE;
   text-align: right;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
 }
 
+/* Vector 825 — horizontal divider after the 247px text-frame */
 .doctors-hdivider {
   width: 100%;
   height: 1px;
@@ -292,33 +438,39 @@ body, html {
   flex-shrink: 0;
 }
 
+/* stars-and-quote — Figma: width/height 100%, column flex, padding 93px, gap 67px */
 .doctors-body {
+  width: 100%;
   flex: 1;
   min-height: 0;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 67px;
   padding: 93px;
+  box-sizing: border-box;
+  gap: 67px;
   overflow: hidden;
 }
 
 /* ════════════════════════════════════════
-   Quote box
+   Quote — Figma .quote + .vector-parent
    ════════════════════════════════════════ */
 
+/* .quote — Figma: width 778.7px, flex, justify flex-end */
 .quote-area {
-  width: 100%;
+  width: 778.7px;
   display: flex;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-end;
   flex-shrink: 0;
 }
 
+/* .vector-parent — Figma: height 100px, width 778.7px, position relative */
 .quote-frame {
+  height: 100px;
+  width: 778.7px;
   position: relative;
-  width: 779px;
-  height: 101px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -332,43 +484,62 @@ body, html {
   pointer-events: none;
 }
 
+/* .div (quote text) — Figma: width 702px, line-height 100%, inline-block */
 #quote-text {
   position: relative;
   z-index: 1;
   font-family: 'Simona Pro', serif;
   font-size: 32px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 100%;
   color: #F8F4EE;
   text-align: center;
-  background: #101212;
-  padding: 0 28px;
-  white-space: nowrap;
-  max-width: 680px;
+  background: #101212;   /* covers baked SVG text */
+  width: 702px;
+  max-width: 100%;
+  display: inline-block;
+  flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ════════════════════════════════════════
-   Doctors grid  —  10 × 6 = 60
+   Doctors grid — Figma .div2 + .div3 + .icon
+   Flex column of 6 rows, each row 10 icons
    ════════════════════════════════════════ */
 
+/* .div2 — Figma: width 828px, height 439.4px, column flex, space-between, gap 20px */
 .doctors-grid {
-  display: grid;
-  grid-template-columns: repeat(10, 56.57px);
-  grid-template-rows:    repeat(6,  56.57px);
+  width: 828px;
+  height: 439.4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 20px;
   flex-shrink: 0;
 }
 
+/* .div3 — Figma: width 828px, flex row, space-between, gap 20px */
+.doctors-row {
+  width: 828px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* .icon — Figma: 56.6px × 56.6px */
 .doctor-cell {
-  width: 56.57px;
-  height: 56.57px;
+  height: 56.6px;
+  width: 56.6px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: transform 0.15s ease;
 }
 
 .doctor-cell:hover {

@@ -65,17 +65,28 @@ const DEFAULT_QUOTE = '"ציטוט"';
 const grid    = document.getElementById('doctors-grid');
 const quoteEl = document.getElementById('quote-text');
 
+// Build flex-column structure: 6 rows (.doctors-row) × 10 cells (.doctor-cell)
+// Matches Figma's .div2 (column) → .div3 (row) → .icon structure
 if (grid && quoteEl) {
-  for (let i = 0; i < 60; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'doctor-cell';
-    cell.innerHTML = makeStar(true);
+  let doctorIndex = 0;
+  for (let row = 0; row < 6; row++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'doctors-row';
 
-    const q = QUOTES[i % QUOTES.length];
-    cell.addEventListener('mouseenter', () => { quoteEl.textContent = q; });
-    cell.addEventListener('mouseleave', () => { quoteEl.textContent = DEFAULT_QUOTE; });
+    for (let col = 0; col < 10; col++) {
+      const cell = document.createElement('div');
+      cell.className = 'doctor-cell';
+      cell.innerHTML = makeStar(true);
 
-    grid.appendChild(cell);
+      const q = QUOTES[doctorIndex % QUOTES.length];
+      cell.addEventListener('mouseenter', () => { quoteEl.textContent = q; });
+      cell.addEventListener('mouseleave', () => { quoteEl.textContent = DEFAULT_QUOTE; });
+
+      rowEl.appendChild(cell);
+      doctorIndex++;
+    }
+
+    grid.appendChild(rowEl);
   }
 }
 
