@@ -3,158 +3,1997 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>7 שנים בלי אבחון</title>
-  <link rel="stylesheet" href="https://use.typekit.net/rho2pkv.css">
-  <link rel="stylesheet" href="style.css">
+  <title>HS — 7 שנים בלי אבחון</title>
+  <style>
+
+/* ═══════════════════════════════════════════
+   Design tokens
+   ═══════════════════════════════════════════ */
+:root {
+  --color-dark:        #101212;
+  --color-light:       #F8F4EE;
+  --font-body:         'Simona Pro', serif;
+  --font-heading:      'Narkiss Asaf TRIAL', serif;
+  --fs-body:           18px;
+  --fs-h2:             44px;
+  --fs-h3:             28px;
+  --lh-body:           1.1;
+  --lh-heading:        1;
+  --sp-pad:            48px;
+  --sp-content:        80px;
+  --nav-w:             80px;
+  --sidebar-w:         470px;
+  --canvas-w:          2048px;
+  --canvas-h:          1070px;
+}
+
+/* ═══════════════════════════════════════════
+   Local fonts
+   ═══════════════════════════════════════════ */
+@font-face {
+  font-family: 'Simona Pro';
+  src: url('פונטים/SimonaPro-Regular.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Simona Pro';
+  src: url('פונטים/SimonaPro-Medium.ttf') format('truetype');
+  font-weight: 500;
+}
+@font-face {
+  font-family: 'Simona Pro';
+  src: url('פונטים/SimonaPro-Bold.ttf') format('truetype');
+  font-weight: 700;
+}
+@font-face {
+  font-family: 'Narkiss Asaf TRIAL';
+  src: url('פונטים/NarkissAsaf-Regular-TRIAL.ttf') format('truetype');
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'Narkiss Asaf TRIAL';
+  src: url('פונטים/NarkissAsaf-Bold-TRIAL.ttf') format('truetype');
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════
+   Reset
+   ═══════════════════════════════════════════ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--color-dark);
+  color: var(--color-light);
+  font-family: var(--font-body);
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   Accordion canvas — 2048 × 1070 scaled
+   ═══════════════════════════════════════════ */
+.accordion {
+  display: flex;
+  flex-direction: row;
+  width: var(--canvas-w);
+  height: var(--canvas-h);
+  background: var(--color-dark);
+  transform-origin: top right;
+}
+
+/* ═══════════════════════════════════════════
+   Panel — base
+   ═══════════════════════════════════════════ */
+.panel {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow: hidden;
+  flex: 0 0 var(--nav-w);
+  transition: flex-basis 0.6s ease, flex-grow 0.6s ease;
+}
+.panel--active {
+  flex: 1 0 0px;
+}
+
+/* ═══════════════════════════════════════════
+   Panel tab (always-visible column)
+   ═══════════════════════════════════════════ */
+.panel__tab {
+  width: var(--nav-w);
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-pad) 0;
+  border-left: 1px solid var(--color-light);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.panel--active .panel__tab {
+  border-left: none;
+  cursor: default;
+}
+.panel:not(.panel--active) .panel__tab:hover {
+  background-color: var(--color-light);
+}
+.panel:not(.panel--active) .panel__tab:hover .panel__tab-title,
+.panel:not(.panel--active) .panel__tab:hover .panel__tab-num {
+  color: var(--color-dark);
+}
+
+.panel__tab-title-wrap {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.panel__tab-title {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: var(--lh-body);
+}
+.panel__tab-num {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  line-height: 1;
+}
+.panel__tab-logo {
+  width: 44px;
+  display: block;
+}
+.panel__tab-logo--dark {
+  display: none;
+}
+.panel:not(.panel--active) .panel__tab:hover .panel__tab-logo--light {
+  display: none;
+}
+.panel:not(.panel--active) .panel__tab:hover .panel__tab-logo--dark {
+  display: block;
+}
+
+/* ═══════════════════════════════════════════
+   Panel content
+   ═══════════════════════════════════════════ */
+.panel__content {
+  flex: 1;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease 0s, visibility 0s ease 0.25s;
+}
+.panel--active .panel__content {
+  opacity: 1;
+  visibility: visible;
+  overflow: visible;
+  transition: opacity 0.3s ease 0.45s;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+}
+/* Left-edge separator as pseudo-element — avoids border corner artifacts */
+.panel--active .panel__content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-light);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   Panel 1 — two-column layout
+   RTL order: sidebar (right) | doctors (left)
+   ═══════════════════════════════════════════ */
+.p1 {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+/* ── Sidebar (right column in RTL) ── */
+.p1__sidebar {
+  flex: 0 0 var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-left: 1px solid var(--color-light);
+}
+
+/* Logo section — open-episode-frame-logo */
+.p1__logo-section {
+  width: 100%;
+  height: 631px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 48px 0;
+  box-sizing: border-box;
+  gap: 16px;
+}
+/* logo-big */
+.p1__logo-big {
+  align-self: stretch;
+  width: 303px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 0 80px;
+  box-sizing: border-box;
+}
+/* logo-big-child */
+.p1__logo-big-child {
+  width: 303px;
+  height: 442px;
+  position: relative;
+  flex-shrink: 0;
+}
+/* vector-icon (the SVG image) */
+.p1__vector-icon {
+  width: 100%;
+  height: 566.5px;
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  object-fit: contain;
+}
+/* wrapper (episode label column — kept for CSS completeness) */
+.p1__episode-label-col {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.p1__episode-label-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: var(--lh-body);
+}
+
+/* Horizontal divider — box-shadow extends it into the 80px tab column on the right */
+.p1__hdivider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
+}
+
+/* Description area — fills remaining height after 631px logo + 1px divider */
+.p1__desc-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 84px 0 48px;
+}
+.p1__desc-inner {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 var(--sp-content);
+}
+.p1__desc-text {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h3);
+  font-weight: 400;
+  color: var(--color-light);
+  text-align: right;
+  line-height: var(--lh-heading);
+  direction: rtl;
+}
+.p1__ep-num {
+  width: var(--nav-w);
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  line-height: var(--lh-body);
+}
+
+/* ── Doctors area (left column in RTL) ── */
+.p1__doctors-area {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+.p1__doctors-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* Title bar */
+.p1__doctors-header {
+  flex: 0 0 246px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+}
+.p1__doctors-title {
+  min-height: 184px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: var(--sp-pad) var(--sp-content);
+  font-family: var(--font-heading);
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  color: var(--color-light);
+  text-align: right;
+  line-height: var(--lh-heading);
+  direction: rtl;
+}
+.p1__doctors-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+
+/* Stars + quote body */
+.p1__doctors-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-content);
+  gap: 64px;
+}
+
+/* Quote */
+.p1__quote {
+  width: 100%;
+  flex-shrink: 0;
+  height: 80px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.p1__quote-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.p1__quote-text {
+  position: relative;
+  z-index: 1;
+  width: 702px;
+  font-family: 'Simona Pro';
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 100%;
+  color: #F8F4EE;
+  text-align: center;
+  display: inline-block;
+  background: var(--color-dark);
+  padding: 0 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Stars grid */
+.p1__stars-grid {
+  width: 935px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  flex-shrink: 0;
+}
+.p1__stars-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.p1__star {
+  width: 56.569px;
+  height: 56.569px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, opacity 0.4s ease;
+}
+.p1__star:hover,
+.p1__star:focus-visible {
+  transform: scale(1.2);
+  opacity: 1 !important;
+  outline: none;
+}
+.p1__star svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Scroll interaction ── */
+.p1__doctors-sticky {
+  position: sticky;
+  top: 0;
+  height: var(--canvas-h);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-dark);
+}
+.p1__scroll-track {
+  height: calc(var(--canvas-h) * 3);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+/* ═══════════════════════════════════════════
+   Panel 2 — Schedule
+   ═══════════════════════════════════════════ */
+.p2 {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+/* ── Sidebar (right column in RTL) ── */
+.p2__sidebar {
+  flex: 0 0 var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-left: 1px solid var(--color-light);
+}
+.p2__logo-section {
+  width: 100%;
+  height: 631px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 48px 0;
+  box-sizing: border-box;
+  gap: 16px;
+}
+.p2__logo-big {
+  align-self: stretch;
+  width: 303px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 0 20px;
+  box-sizing: border-box;
+}
+.p2__vector-icon {
+  width: 283px;
+  height: auto;
+  display: block;
+}
+.p2__episode-label-col {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.p2__episode-label-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: var(--lh-body);
+}
+.p2__hdivider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
+}
+.p2__desc-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 84px 0 48px;
+}
+.p2__desc-inner {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 80px;
+}
+.p2__desc-text {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h3);
+  font-weight: 400;
+  color: var(--color-light);
+  text-align: right;
+  line-height: var(--lh-body);
+  direction: rtl;
+}
+.p2__ep-num {
+  width: 80px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+}
+
+/* ── Schedule area (left column in RTL) ── */
+.p2__schedule-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+.p2__schedule-header {
+  flex: 0 0 246px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+}
+.p2__title {
+  min-height: 184px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: var(--sp-pad) var(--sp-content);
+  font-family: var(--font-heading);
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  color: var(--color-light);
+  text-align: right;
+  line-height: var(--lh-heading);
+  direction: rtl;
+}
+.p2__divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+.p2__scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+.p2__schedule-frame {
+  width: 100%;
+  min-height: 2129px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 80px 36px 90px 0px;
+  box-sizing: border-box;
+}
+
+/* Hours + grid (Figma-exact) */
+.p2__hours-and-grid {
+  align-self: stretch;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  direction: ltr;
+  text-align: left;
+  font-size: var(--fs-body);
+  color: var(--color-light);
+  font-family: var(--font-body);
+}
+/* grid — first child (Figma: grid on left in LTR) */
+.p2__grid {
+  align-self: stretch;
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+/* horizontal lines inside grid */
+.p2__grid-lines {
+  align-self: stretch;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+/* vertical separator inside grid */
+.p2__vert-line {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.p2__vert-line-inner {
+  width: 1px;
+  flex: 1;
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  max-height: 100%;
+  background: var(--color-light);
+}
+/* hours frame — second child (Figma: hours on right in LTR) */
+.p2__hours-col {
+  align-self: stretch;
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+.p2__hour-wrap {
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.p2__hour {
+  position: relative;
+  line-height: 110%;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+}
+.p2__line {
+  align-self: stretch;
+  height: 0.9px;
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+
+/* ── Task cards + Crushing Scroll (crossfade in-place) ── */
+.p2__tasks {
+  position: absolute;
+  left: 0;
+  top: 152px;
+  width: 100%;
+  font-family: 'Narkiss Asaf TRIAL';
+}
+
+/* wrapper: has the task's exact height — both states sit inside */
+.p2__task-wrap {
+  position: absolute;
+  left: 30px;
+  width: 920px;
+  overflow: visible;
+}
+
+/* Both states fill the wrapper completely */
+.p2__task-ideal,
+.p2__task-reality {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  box-sizing: border-box;
+  border-radius: 15px;
+}
+
+/* ── Ideal: dark card, visible by default ── */
+.p2__task-ideal {
+  background: #101212;
+  border: 0.9px solid #F8F4EE;
+  padding: 24px 24px 36px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 2;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+.p2__task-wrap.p2--crushed .p2__task-ideal {
+  animation: p2-shake 0.1s ease 5;
+  opacity: 0;
+}
+@keyframes p2-shake {
+  0%, 100% { transform: none; }
+  30% { transform: translateX(-3px) rotate(-0.3deg); }
+  70% { transform: translateX(3px)  rotate(0.3deg); }
+}
+
+/* ── Reality: hidden, overlaid on top, fades in on crush ── */
+.p2__task-reality {
+  z-index: 3;
+  opacity: 0;
+  overflow: visible;
+  transition: opacity 0.45s ease 0.08s;
+  /* default dark card */
+  background: #101212;
+  border: 0.9px solid #F8F4EE;
+  padding: 24px 24px 36px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.p2__task-wrap.p2--crushed .p2__task-reality {
+  opacity: 1;
+}
+/* light-thorn variant: thorn is the background */
+.p2__task-reality--light {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* ── Thorn SVG shapes ── */
+.p2__task-thorn {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+/* thorn.svg — 972×188, horizontal flip */
+.p2__task-thorn--thorn {
+  width: calc(100% + 62px);
+  left: -31px;
+  top: -39px;
+  transform: scaleX(-1);
+}
+/* thorn3.svg — 1020×246, vertical flip */
+.p2__task-thorn--thorn3 {
+  width: calc(100% + 107px);
+  left: -53.5px;
+  top: -39px;
+  transform: scaleY(-1);
+}
+/* Vector.svg — 1042×981, vertical flip */
+.p2__task-thorn--vector {
+  width: 115%;
+  left: -7.05%;
+  top: -8.55%;
+  transform: scaleY(-1);
+}
+
+/* Text container for light-thorn (sits above thorn at z-index 2) */
+.p2__task-reality-text {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 24px 24px 36px 36px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 2;
+}
+
+/* ── Typography ── */
+.p2__task-label,
+.p2__task-del {
+  align-self: stretch;
+  position: relative;
+  line-height: 100%;
+  font-family: 'Narkiss Asaf TRIAL';
+  font-size: 28px;
+  font-weight: 400;
+  color: #F8F4EE;
+  text-align: right;
+  direction: rtl;
+}
+.p2__task-del { text-decoration: line-through; }
+.p2__task-reality--light .p2__task-del { color: #101212; }
+
+.p2__task-reason {
+  align-self: stretch;
+  font-family: 'Simona Pro';
+  font-size: 22px;
+  font-weight: 400;
+  color: #F8F4EE;
+  text-align: right;
+  line-height: 100%;
+  direction: rtl;
+}
+.p2__task-reality--light .p2__task-reason { color: #101212; }
+
+/* ═══════════════════════════════════════════
+   Panel 4 — Testimonials
+   ═══════════════════════════════════════════ */
+.p4 {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+/* ── Sidebar (same structure as p1/p2) ── */
+.p4__sidebar {
+  flex: 0 0 var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-left: 1px solid var(--color-light);
+}
+.p4__logo-section {
+  width: 100%;
+  height: 631px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 48px 0;
+  box-sizing: border-box;
+  gap: 16px;
+}
+.p4__logo-big {
+  align-self: stretch;
+  width: 303px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 0 20px;
+  box-sizing: border-box;
+}
+.p4__vector-icon {
+  width: 283px;
+  height: auto;
+  display: block;
+}
+.p4__episode-label-col {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.p4__episode-label-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: var(--lh-body);
+}
+.p4__hdivider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
+}
+.p4__desc-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 84px 0 48px;
+}
+.p4__desc-inner {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 80px;
+}
+.p4__desc-text {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h3);
+  font-weight: 400;
+  color: var(--color-light);
+  text-align: right;
+  line-height: var(--lh-body);
+  direction: rtl;
+}
+.p4__ep-num {
+  width: 80px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--color-light);
+}
+
+/* ── Content area (left column) ── */
+.p4__content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+  position: relative;
+  isolation: isolate;
+}
+.p4__header {
+  flex: 0 0 246px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+}
+.p4__title {
+  min-height: 184px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: var(--sp-pad) var(--sp-content);
+  font-family: var(--font-heading);
+  font-size: var(--fs-h2);
+  font-weight: 400;
+  color: var(--color-light);
+  text-align: right;
+  line-height: var(--lh-heading);
+  direction: rtl;
+}
+.p4__divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+.p4__scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+  position: relative;
+}
+.p4__scroll-track {
+  height: calc(var(--canvas-h) * 6);
+  pointer-events: none;
+}
+.p4__sticky {
+  position: sticky;
+  top: 0;
+  height: var(--canvas-h);
+  overflow: hidden;
+}
+
+/* ── Popup cards (Figma-exact structure) ── */
+.p4__popup-stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Base card — absolute, rotated, hidden until .p4--visible */
+.p4__popup {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(28px) rotate(var(--rot, 0deg));
+  transition: opacity 0.5s ease,
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.p4__popup.p4--visible {
+  opacity: 1;
+  transform: translateY(0) rotate(var(--rot, 0deg));
+}
+
+/* Sizes */
+.p4__popup--small { height: 302px; }
+.p4__popup--big   { height: 423px; }
+.p4__popup--xl    { height: 713px; }
+
+/* Colors */
+.p4__popup--dark  { background: #101212; border: 1px solid #F8F4EE; }
+.p4__popup--white { background: #F8F4EE; border: 1px solid #101212; }
+
+/* ── Header: category label rotated -90deg ── */
+.p4__popup-header {
+  width: 100%;
+  padding: 48px 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.p4__popup-cat {
+  position: relative;
+  line-height: 110%;
+  font-family: 'Simona Pro';
+  font-size: 18px;
+  font-weight: 400;
+  transform: rotate(-90deg);
+  white-space: nowrap;
+}
+.p4__popup--dark  .p4__popup-cat { color: #F8F4EE; }
+.p4__popup--white .p4__popup-cat { color: #101212; }
+
+/* ── Body: quote marks + text (Figma frame-parent) ── */
+.p4__popup-body {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 56px 36px 72px;
+  box-sizing: border-box;
+  gap: 8px;
+}
+/* Closing quote — left (21px wrapper, flex-end) */
+.p4__popup-qclose {
+  width: 21px;
+  flex-shrink: 0;
+  align-self: flex-end;
+  line-height: 100%;
+  font-size: 44px;
+  font-family: 'Narkiss Asaf TRIAL';
+}
+.p4__popup--dark  .p4__popup-qclose { color: #F8F4EE; }
+.p4__popup--white .p4__popup-qclose { color: #101212; }
+
+/* Text container */
+.p4__popup-middle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 32px 0 36px;
+}
+.p4__popup-text {
+  align-self: stretch;
+  position: relative;
+  line-height: 100%;
+  font-family: 'Narkiss Asaf TRIAL';
+  font-weight: 400;
+  text-align: right;
+  direction: rtl;
+}
+.p4__popup--small .p4__popup-text { font-size: 28px; }
+.p4__popup--big   .p4__popup-text { font-size: 44px; }
+.p4__popup--xl    .p4__popup-text { font-size: 80px; line-height: 1; }
+.p4__popup--dark  .p4__popup-text { color: #F8F4EE; }
+.p4__popup--white .p4__popup-text { color: #101212; }
+
+/* Opening quote — right (21px frame, flex-end) */
+.p4__popup-qopen {
+  width: 21px;
+  flex-shrink: 0;
+  align-self: flex-end;
+  line-height: 100%;
+  font-size: 44px;
+  font-family: 'Narkiss Asaf TRIAL';
+}
+.p4__popup--dark  .p4__popup-qopen { color: #F8F4EE; }
+.p4__popup--white .p4__popup-qopen { color: #101212; }
+
+/* Shake animation */
+@keyframes p4-shake {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  20% { transform: translateY(-5px) rotate(calc(var(--rot, 0deg) + 2deg)); }
+  40% { transform: translateY(5px)  rotate(calc(var(--rot, 0deg) - 2.5deg)); }
+  60% { transform: translateY(-4px) rotate(calc(var(--rot, 0deg) + 1.5deg)); }
+  80% { transform: translateY(4px)  rotate(calc(var(--rot, 0deg) - 2deg)); }
+}
+/* Fall animation */
+@keyframes p4-fall {
+  from { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)); }
+  to   { opacity: 0; transform: translateY(160%) rotate(calc(var(--rot, 0deg) + 35deg)); }
+}
+.p4__popup.p4--shaking {
+  animation: p4-shake 0.16s ease infinite;
+}
+.p4__popup.p4--falling {
+  animation: p4-fall 0.65s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+/* ═══════════════════════════════════════════
+   Entrance animation
+   ═══════════════════════════════════════════ */
+@keyframes panel-enter {
+  from { opacity: 0; transform: translateX(160px); }
+  to   { opacity: 1; transform: translateX(0);     }
+}
+.panel--entering {
+  animation: panel-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel--entering {
+    animation-duration: 0.01ms;
+    animation-delay:    0ms !important;
+  }
+}
+
+  </style>
 </head>
 <body>
 
-  <!--
-    RTL + flex-direction: row  →  first child = rightmost.
-    Panel 0 (first) = far right.  Panel 5 (last) = far left.
+  <!-- ══════════════════════════════
+       Accordion canvas
+       RTL: first child = rightmost
+       ══════════════════════════════ -->
+  <main class="accordion" role="main">
 
-    Each panel:
-      [panel-tab   first  = rightmost, always 93px]
-      [panel-content second = fills left, hidden when closed]
-
-    No tab-line elements anywhere.
-    border-left on .panel-tab is the white 1px separator.
-  -->
-  <div class="accordion-wrapper">
-
-    <!-- ═══════════════════════════════════
-         PANEL 0  ·  logo only  ·  collapsible
-         Tab: flame logo  +  "0"
-         ═══════════════════════════════════ -->
+    <!-- ─────────────────────────────
+         Panel 0 — HS logo / anchor
+         ───────────────────────────── -->
     <div class="panel" data-panel="0">
-      <div class="panel-tab">
-        <img src="Logo small.svg" alt="" class="p0-logo">
-        <span class="tab-num">0</span>
+      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 0 — HS">
+        <img src="Logo small.svg"       alt="HS" class="panel__tab-logo panel__tab-logo--light">
+        <img src="Logo small balck.svg" alt=""   class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
+        <span class="panel__tab-num">0</span>
       </div>
-      <div class="panel-content">
-        <!-- empty — panel 0 is the series anchor with no body content -->
-      </div>
+      <div class="panel__content" aria-hidden="true"></div>
     </div>
 
-    <!-- ═══════════════════════════════════
-         PANEL 1  ·  active by default
-         Tab: "7 שנים בלי אבחון"  +  "1"
-         Content right: shape sidebar
-         Content left:  doctors grid
-         ═══════════════════════════════════ -->
-    <div class="panel active" data-panel="1">
-      <div class="panel-tab">
-        <div class="tab-title-wrap">
-          <span class="tab-title">7 שנים בלי אבחון</span>
+    <!-- ─────────────────────────────
+         Panel 1 — active by default
+         ───────────────────────────── -->
+    <div class="panel panel--active" data-panel="1">
+      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 1 — שם הפרק">
+        <div class="panel__tab-title-wrap">
+          <span class="panel__tab-title">7 שנים בלי אבחון </span>
         </div>
-        <span class="tab-num">1</span>
+        <span class="panel__tab-num">1</span>
       </div>
 
-      <div class="panel-content p1-content">
+      <div class="panel__content p1">
 
-        <!-- RIGHT column (first = rightmost in RTL):
-             episode name label  +  abstract shape  +  description -->
-        <div class="p1-sidebar">
+        <!-- Sidebar: shape + description -->
+        <aside class="p1__sidebar">
 
-
-          <!-- station-logo: height 631px, padding 48px 0px -->
-          <div class="station-logo">
-            <div class="logo-big">
-              <div class="logo-big-child">
-                <img src="Frame 934.svg" alt="" class="abstract-shape">
+          <div class="p1__logo-section">
+            <div class="p1__logo-big">
+              <div class="p1__logo-big-child">
+                <img src="Frame 934.svg" alt="צורה אבסטרקטית — HS" class="p1__vector-icon">
               </div>
             </div>
           </div>
 
-          <!-- horizontal divider (Figma: lines / vertical line) -->
-          <div class="p1-hdivider"></div>
+          <div class="p1__hdivider" role="separator"></div>
 
-          <!-- station-text: height 439px, padding 60px 0px -->
-          <div class="station-text">
-            <div class="station-text-inner">
-              <!-- wrapper: description 342px -->
-              <div class="desc-wrapper">
-                <p class="p1-desc">המסע לאבחון HS נמשך בממוצע 7 שנים. הוא כולל אבחונים שגויים ופגישות עם רופאים רבים. זהו סיפורה של מטופלת אחת.</p>
-              </div>
-              <!-- container: episode number -->
-              <div class="ep-num-container">
-                <span class="ep-num">1</span>
-              </div>
+          <div class="p1__desc-section">
+            <div class="p1__desc-inner">
+              <p class="p1__desc-text" dir="rtl">המסע לאבחון HS נמשך בממוצע 7 שנים. </p>
+              <p class="p1__desc-text">הוא כולל אבחונים שגויים ופגישות עם רופאים רבים. זהו סיפורה של מטופלת אחת.</p>
             </div>
           </div>
 
-        </div>
+        </aside>
 
-        <!-- LEFT column (second = leftmost in RTL):
-             doctors heading  +  quote  +  grid  +  22px scroll bar -->
-        <div class="p1-doctors-area">
+        <!-- Doctors area: title + quote + grid -->
+        <section class="p1__doctors-area" aria-label="60 רופאים ורופאות">
+          <div class="p1__doctors-main">
+            <div class="p1__doctors-sticky">
 
-          <div class="doctors-main">
-            <div class="doctors-header">
-              <h1 class="doctors-title">לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון</h1>
-            </div>
-            <div class="doctors-hdivider"></div>
-            <div class="doctors-body">
-              <div class="quote-area">
-                <div class="quote-frame">
-                  <img src="מסגרת ציטוט.svg" alt="" class="quote-svg-bg">
-                  <span id="quote-text">&quot;ציטוט&quot;</span>
+              <header class="p1__doctors-header">
+                <h1 class="p1__doctors-title">
+                  לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון
+                </h1>
+              </header>
+
+              <div class="p1__doctors-divider" role="separator"></div>
+
+              <div class="p1__doctors-body">
+
+                <div class="p1__quote" role="status" aria-live="polite" aria-atomic="true">
+                  <img src="Property 1=empty.svg"
+                       alt=""
+                       class="p1__quote-bg"
+                       aria-hidden="true">
+                  <span class="p1__quote-text" id="quote-text"></span>
                 </div>
-              </div>
-              <div class="doctors-grid" id="doctors-grid"></div>
-            </div>
-          </div>
 
-        </div>
+                <div class="p1__stars-grid"
+                     id="doctors-grid"
+                     role="list"
+                     aria-label="60 ייצוגי רופאים — רחף לגילוי ציטוט">
+                </div>
+
+              </div>
+
+            </div>
+            <div class="p1__scroll-track" aria-hidden="true"></div>
+          </div>
+        </section>
+
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════
-         PANELS 2–5  ·  closed nav panels
-         ═══════════════════════════════════ -->
-
+    <!-- ─────────────────────────────
+         Panels 2–5 — closed
+         ───────────────────────────── -->
     <div class="panel" data-panel="2">
-      <div class="panel-tab">
-        <div class="tab-title-wrap">
-          <span class="tab-title">כשהל״ן שייך למחלה</span>
+      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 2 — כשהל״ן שייך למחלה">
+        <div class="panel__tab-title-wrap">
+          <span class="panel__tab-title">הלו״ז שייך למחלה</span>
         </div>
-        <span class="tab-num">2</span>
+        <span class="panel__tab-num">2</span>
       </div>
-      <div class="panel-content"></div>
+
+      <div class="panel__content p2">
+
+        <!-- Sidebar: shape + description -->
+        <aside class="p2__sidebar">
+
+          <div class="p2__logo-section">
+            <div class="p2__logo-big">
+              <img src="Property 1=2.svg" alt="צורה אבסטרקטית — פאנל 2" class="p2__vector-icon">
+            </div>
+            <div class="p2__episode-label-col">
+            </div>
+          </div>
+
+          <div class="p2__hdivider" role="separator"></div>
+
+          <div class="p2__desc-section">
+            <div class="p2__desc-inner">
+              <p class="p2__desc-text">
+                איך מתכננים את מחר כשהגוף יכול לבטל הכל בנגיעה? החיים עם HS דורשים ניהול יומיומי של כאב וחוסר ודאות.
+              </p>
+            </div>
+
+        </aside>
+
+        <!-- Schedule area: title + scrollable calendar -->
+        <section class="p2__schedule-area" aria-label="לוח זמנים יומי">
+
+          <header class="p2__schedule-header">
+            <h1 class="p2__title">
+              ככה היום שלי היה אמור להיראות – אבל למחלה היו תוכניות אחרות
+            </h1>
+          </header>
+
+          <div class="p2__divider" role="separator"></div>
+
+          <div class="p2__scroll-body">
+            <div class="p2__schedule-frame">
+
+              <!-- Hours column + grid lines -->
+              <div class="p2__hours-and-grid">
+
+                <!-- grid: horizontal-lines + lines (Figma order) -->
+                <div class="p2__grid">
+                  <div class="p2__grid-lines" aria-hidden="true">
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                    <div class="p2__line"></div>
+                  </div>
+                  <div class="p2__vert-line" aria-hidden="true">
+                    <div class="p2__vert-line-inner"></div>
+                  </div>
+                </div>
+
+                <!-- hours-frame: second child = physical right in LTR -->
+                <div class="p2__hours-col" aria-hidden="true">
+                  <div class="p2__hour-wrap"><span class="p2__hour">06</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">07</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">08</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">09</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">10</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">11</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">12</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">13</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">14</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">15</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">16</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">17</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">18</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">19</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">20</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">21</span></div>
+                  <div class="p2__hour-wrap"><span class="p2__hour">22</span></div>
+                </div>
+
+              </div>
+
+              <!-- Task cards: ideal ↔ reality crossfade in-place -->
+              <div class="p2__tasks">
+
+                <!-- 1. מקלחת — thorn.svg (אורגני לבן, טקסט כהה) -->
+                <div class="p2__task-wrap" style="top:0;height:120px">
+                  <div class="p2__task-ideal">
+                    <span class="p2__task-label">מקלחת והתארגנות</span>
+                  </div>
+                  <div class="p2__task-reality p2__task-reality--light">
+                    <img src="thorn.svg" class="p2__task-thorn p2__task-thorn--thorn" aria-hidden="true">
+                    <div class="p2__task-reality-text">
+                      <span class="p2__task-del">מקלחת והתארגנות</span>
+                      <span class="p2__task-reason">התפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליחה ללבוש מכנסיים
+</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. פרזנטציה — dark card -->
+                <div class="p2__task-wrap" style="top:146px;height:162px">
+                  <div class="p2__task-ideal">
+                    <span class="p2__task-label">פרזנטציה חשובה בעבודה</span>
+                  </div>
+                  <div class="p2__task-reality">
+                    <span class="p2__task-del">פרזנטציה חשובה בעבודה</span>
+                    <span class="p2__task-reason">מגיע באיחור, מתכווצת מכאב מול כולם ומשקרת שרק נתפס לי שריר</span>
+                  </div>
+                </div>
+
+                <!-- 3. עבודה — Vector.svg (צורה כהה גדולה) -->
+                <div class="p2__task-wrap" style="top:334px;height:840px">
+                  <div class="p2__task-ideal">
+                    <span class="p2__task-label">יום עבודה במשרד</span>
+                  </div>
+                  <div class="p2__task-reality">
+                    <img src="Vector.svg" class="p2__task-thorn p2__task-thorn--vector" aria-hidden="true">
+                    <span class="p2__task-del" style="position:relative;z-index:2">יום עבודה במשרד</span>
+                    <span class="p2__task-reason" style="position:relative;z-index:2">מחליפה תחבושות בסתר בשירותים ולא מצליחה לשבת על הכיסא</span>
+                  </div>
+                </div>
+
+                <!-- 4. קניות — dark card -->
+                <div class="p2__task-wrap" style="top:1200px;height:120px">
+                  <div class="p2__task-ideal">
+                    <span class="p2__task-label">קניות בסופר בדרך חזרה הביתה</span>
+                  </div>
+                  <div class="p2__task-reality">
+                    <span class="p2__task-del">קניות בסופר בדרך חזרה הביתה</span>
+                    <span class="p2__task-reason">חותכת הביתה, מותשת לגמרי מהמאמץ הנפשי להסתיר</span>
+                  </div>
+                </div>
+
+                <!-- 5. ספורט — dark card -->
+                <div class="p2__task-wrap" style="top:1346px;height:120px">
+                  <div class="p2__task-ideal">
+                    <span class="p2__task-label">אימון כושר עם חברה</span>
+                  </div>
+                  <div class="p2__task-reality">
+                    <span class="p2__task-del">אימון כושר עם חברה</span>
+                    <span class="p2__task-reason">בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים
+</span>
+                  </div>
+                </div>
+
+                <!-- 6. דייט — thorn3.svg (אורגני לבן, טקסט כהה) -->
+                <div class="p2__task-wrap" style="top:1492px;height:158px">
+                  <div class="p2__task-ideal">
+                    <span class="p2__task-label">דייט ראשון</span>
+                  </div>
+                  <div class="p2__task-reality p2__task-reality--light">
+                    <img src="thorn3.svg" class="p2__task-thorn p2__task-thorn--thorn3" aria-hidden="true">
+                    <div class="p2__task-reality-text">
+                      <span class="p2__task-del">דייט ראשון</span>
+                      <span class="p2__task-reason">ביטלתי, משותקת מהחרדה שייגעל מהריח או מכתם פתאומי
+</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 7. שינה — dark card -->
+                <div class="p2__task-wrap" style="top:1676px;height:120px">
+                  <div class="p2__task-ideal">
+                    <span class="p2__task-label">התארגנות לשינה</span>
+                  </div>
+                  <div class="p2__task-reality">
+                    <span class="p2__task-del">התארגנות לשינה</span>
+                    <span class="p2__task-reason">פורסת מגבת מתחת לסדין ונאבקת למצוא תנוחה שלא תכאיב
+</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+        </section>
+
+      </div>
     </div>
 
     <div class="panel" data-panel="3">
-      <div class="panel-tab">
-        <div class="tab-title-wrap">
-          <span class="tab-title">מה זה HS?</span>
+      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 3 — מה זה HS">
+        <div class="panel__tab-title-wrap">
+          <span class="panel__tab-title">מה זה HS?</span>
         </div>
-        <span class="tab-num">3</span>
+        <span class="panel__tab-num">3</span>
       </div>
-      <div class="panel-content"></div>
+      <div class="panel__content" aria-hidden="true"></div>
     </div>
 
     <div class="panel" data-panel="4">
-      <div class="panel-tab">
-        <div class="tab-title-wrap">
-          <span class="tab-title">עדויות של חולים</span>
+      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 4 — עדויות של חולים">
+        <div class="panel__tab-title-wrap">
+          <span class="panel__tab-title">עדויות של חולים</span>
         </div>
-        <span class="tab-num">4</span>
+        <span class="panel__tab-num">4</span>
       </div>
-      <div class="panel-content"></div>
+
+      <div class="panel__content p4">
+
+        <!-- Sidebar -->
+        <aside class="p4__sidebar">
+          <div class="p4__logo-section">
+            <div class="p4__logo-big">
+              <img src="Property 1=3.svg" alt="צורה — פאנל 4" class="p4__vector-icon">
+            </div>
+            <div class="p4__episode-label-col">
+              <span class="p4__episode-label-text">עדויות של חולים</span>
+            </div>
+          </div>
+          <div class="p4__hdivider" role="separator"></div>
+          <div class="p4__desc-section">
+            <div class="p4__desc-inner">
+              <p class="p4__desc-text">
+                הכאב של HS אינו מסתכם בפצעים ודלקות. הוא מחלחל לשגרה, לביטחון העצמי, לתוכניות לעתיד וליחסים עם הגוף.
+              </p>
+            </div>
+            <div class="p4__ep-num">4</div>
+          </div>
+        </aside>
+
+        <!-- Content: title + scroll-triggered popups -->
+        <section class="p4__content-area" aria-label="עדויות חולים">
+          <header class="p4__header">
+            <h1 class="p4__title">
+              חולים מספרים מה הסביבה לא מבינה על HS
+            </h1>
+          </header>
+          <div class="p4__divider" role="separator"></div>
+          <div class="p4__scroll-body" id="p4-scroll">
+            <div class="p4__sticky" id="p4-sticky">
+              <div class="p4__popup-stage" id="p4-popup-stage"></div>
+            </div>
+            <div class="p4__scroll-track" aria-hidden="true"></div>
+          </div>
+        </section>
+
+      </div>
     </div>
 
     <div class="panel" data-panel="5">
-      <div class="panel-tab">
-        <div class="tab-title-wrap">
-          <span class="tab-title">מידע שימושי</span>
+      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 5 — מידע שימושי">
+        <div class="panel__tab-title-wrap">
+          <span class="panel__tab-title">מידע שימושי</span>
         </div>
-        <span class="tab-num">5</span>
+        <span class="panel__tab-num">5</span>
       </div>
-      <div class="panel-content"></div>
+      <div class="panel__content" aria-hidden="true"></div>
     </div>
 
-  </div>
+  </main>
 
-  <script src="script.js"></script>
+
+  <script>
+    /* ══════════════════════════════════════════
+       1. Scale canvas to viewport (desktop only)
+       ══════════════════════════════════════════ */
+    const accordion = document.querySelector('.accordion');
+
+    function fitToScreen() {
+      if (window.innerWidth > 1024) {
+        const scale = Math.min(
+          window.innerWidth  / 2048,
+          window.innerHeight / 1070
+        );
+        accordion.style.width           = (window.innerWidth / scale) + 'px';
+        accordion.style.height          = '1070px';
+        accordion.style.transform       = `scale(${scale})`;
+        accordion.style.transformOrigin = 'top right';
+      } else {
+        accordion.style.width           = '';
+        accordion.style.height          = '';
+        accordion.style.transform       = '';
+        accordion.style.transformOrigin = '';
+      }
+    }
+    fitToScreen();
+    window.addEventListener('resize', fitToScreen);
+
+    /* ══════════════════════════════════════════
+       2. Star SVG (4-pointed star path)
+       ══════════════════════════════════════════ */
+    const STAR_PATH_SELECTED =
+      'M28.2842 56.5685C28.2842 56.5685 26.062 33.5629 -9.09874e-05 28.2843C26.6175 23.2851 ' +
+      '28.2842 4.76837e-06 28.2842 4.76837e-06C28.2842 4.76837e-06 34.6731 25.7851 56.5685 ' +
+      '28.2843C34.3953 32.4518 28.2842 56.5685 28.2842 56.5685Z';
+
+    const STAR_PATH_NORMAL =
+      'M28.4237 54.4389C28.3176 53.949 28.1833 53.3843 28.0114 52.7589C27.3868 50.4865 ' +
+      '26.2797 47.4021 24.3454 44.15C20.6933 38.0098 14.1034 31.2919 2.32148 28.3022C14.3631 ' +
+      '25.436 20.9632 18.7047 24.556 12.5187C26.4561 9.24701 27.5114 6.13469 28.0922 3.83937C' +
+      '28.2389 3.25969 28.3556 2.73139 28.4478 2.26565C28.6385 2.83581 28.8729 3.50407 29.1577 ' +
+      '4.24748C30.1075 6.72645 31.6047 10.0601 33.7946 13.4751C37.8259 19.7614 44.2388 26.3722 ' +
+      '53.9423 28.372C44.1216 31.0166 37.703 37.607 33.6938 43.7149C31.5211 47.0251 30.0491 ' +
+      '50.2022 29.1204 52.5517C28.8396 53.2621 28.6099 53.8979 28.4237 54.4389Z';
+
+    function makeStar(selected = true) {
+      return selected
+        ? `<svg viewBox="0 0 57 57" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="${STAR_PATH_SELECTED}" fill="#F8F4EE"/>
+          </svg>`
+        : `<svg viewBox="0 0 57 57" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="${STAR_PATH_NORMAL}" stroke="#F8F4EE"/>
+          </svg>`;
+    }
+
+    /* ══════════════════════════════════════════
+       3. Doctor data — 60 doctors with tags
+       ══════════════════════════════════════════ */
+    const DOCTORS = [
+      // Group 1 (1) — diagnosed + believed
+      { quote: "לפי המיקום של הפצעים, החזרתיות, והכאב שאת מתארת, מדובר בהידרדניטיס סופורטיבה.", tags: ['diagnosed', 'believed'] },
+
+      // Group 2 (6) — blamed + believed
+      { quote: "זה זיהום חמור שדורש ניקוז דחוף במיון, אבל זה קרה כי את לא שומרת על היגיינה.", tags: ['blamed', 'believed'] },
+      { quote: "האבסס הזה נראה כואב מאוד, כנראה בגלל החיכוך והמשקל העודף שלך.", tags: ['blamed', 'believed'] },
+      { quote: "אני אתן לך פטור ממדי א', אבל זה בגלל שאת מגלחת שם וגורמת לזה.", tags: ['blamed', 'believed'] },
+      { quote: "קחי אנטיביוטיקה, אבל את חייבת להפסיק לאכול ג'אנק פוד שסותם לך את הנקבוביות.", tags: ['blamed', 'believed'] },
+      { quote: "נפתח את זה עכשיו כי זה מודלק, אבל להבא את חייבת ללבוש בגדים רחבים.", tags: ['blamed', 'believed'] },
+      { quote: "זה אקנה ציסטי שמצריך רואקוטן, וזה מחמיר ככה כי את בלחץ נפשי מהצבא.", tags: ['blamed', 'believed'] },
+
+      // Group 3 (12) — believed
+      { quote: "נפתח וננקז את האבסס הזה עכשיו במיון, זה ישחרר את הלחץ.", tags: ['believed'] },
+      { quote: "קחי אנטיביוטיקה ל-3 חודשים ונראה אם זה נרגע.", tags: ['believed'] },
+      { quote: "אם זה חוזר, פשוט נחליף לסוג אחר של אנטיביוטיקה חזקה יותר.", tags: ['believed'] },
+      { quote: "זה נראה כמו פוליקוליטיס קשה, דלקת של זקיק השערה.", tags: ['believed'] },
+      { quote: "זו פשוט שערה הפוכה שהזדהמה, נצטרך כירורג שיחתוך.", tags: ['believed'] },
+      { quote: "זה כנראה זיהום בבלוטה בנרתיק, ניתן טיפול מקומי ומשככי כאבים.", tags: ['believed'] },
+      { quote: "תצטרכי ללמוד לחיות עם כאב כרוני, אין לזה ממש תרופה.", tags: ['believed'] },
+      { quote: "זה פשוט דלקת מקומית בעור שהסתבכה, אני מאשר לך ימי מחלה.", tags: ['believed'] },
+      { quote: "אין הרבה מה לעשות עם זה מעבר למשחות שנתתי לך, מקווה שיקל.", tags: ['believed'] },
+      { quote: "תחזרי למיון אם זה מתנפח שוב וננקז שוב, אני מבין שזה סיוט.", tags: ['believed'] },
+      { quote: "כל רופא עור יגיד לך שזו דלקת כרונית של העור, תמרחי משחה.", tags: ['believed'] },
+      { quote: "זה לא קשור למערכת החיסון, זה רק זיהום כואב מאוד.", tags: ['believed'] },
+
+      // Group 4 (28) — blamed
+      { quote: "זה כנראה בגלל היגיינה, תקפידי להסתבן יותר טוב באזורים האלה.", tags: ['blamed'] },
+      { quote: "את צריכה פשוט לשמור יותר על ניקיון, זה מקום שצובר זיעה.", tags: ['blamed'] },
+      { quote: "כנראה הזעת יותר מדי וזה סתם את הנקבוביות.", tags: ['blamed'] },
+      { quote: "תנסי לרדת קצת במשקל והפצעים האלה יפסיקו.", tags: ['blamed'] },
+      { quote: "זה קשור ישירות לעודף משקל ולחיכוך של הירכיים.", tags: ['blamed'] },
+      { quote: "תלבשי רק תחתוני כותנה, בדים סינתטיים עושים לך פריחה.", tags: ['blamed'] },
+      { quote: "אולי את אוכלת יותר מדי ג'אנק פוד וזה יוצא דרך העור.", tags: ['blamed'] },
+      { quote: "זה יכול להיות מסטרס, את בלחץ מהצבא או בלימודים?", tags: ['blamed'] },
+      { quote: "הרבה דברים בעור קשורים ללחץ נפשי שאת מביאה על עצמך.", tags: ['blamed'] },
+      { quote: "תנסי להירגע והדלקות האלה יירגעו מעצמן.", tags: ['blamed'] },
+      { quote: "זה כנראה בגלל גילוח לא נכון שעשה לך פוליקולוזיס.", tags: ['blamed'] },
+      { quote: "אז פשוט אל תסירי שם שיער יותר בחיים.", tags: ['blamed'] },
+      { quote: "זה בטח אלרגיה לדאודורנט שאת שמה.", tags: ['blamed'] },
+      { quote: "תנסי להחליף את הסבון גוף למשהו פחות אגרסיבי.", tags: ['blamed'] },
+      { quote: "תייבשי ממש טוב את האזור אחרי המקלחת, פטריות אוהבות לחות.", tags: ['blamed'] },
+      { quote: "את כנראה לא מחטאת מספיק טוב את האזור אחרי שניקזו לך.", tags: ['blamed'] },
+      { quote: "זה בגלל שאת לובשת מדים צמודים מדי, אין מה לעשות.", tags: ['blamed'] },
+      { quote: "תפסיקי ללכת עם בגדים צמודים, זה רק אשמת החיכוך.", tags: ['blamed'] },
+      { quote: "זה רק פצעונים מהזנחה, תקרצפי יותר טוב.", tags: ['blamed'] },
+      { quote: "אולי את לא שותה מספיק מים וזה מתבטא בעור.", tags: ['blamed'] },
+      { quote: "זה קורה כי את לא שומרת על תזונה נכונה, זה הכל.", tags: ['blamed'] },
+      { quote: "בגלל שאת לא עושה מספיק ספורט זרימת הדם שלך גרועה שם.", tags: ['blamed'] },
+      { quote: "זה בטח יעבור אם רק תפסיקי להתעסק עם זה ולגעת בזה.", tags: ['blamed'] },
+      { quote: "אני בטוח שאם תרדי במשקל לא תראי אותי יותר.", tags: ['blamed'] },
+      { quote: "את כנראה רגישה בגלל הלחץ שאת מכניסה את עצמך אליו.", tags: ['blamed'] },
+      { quote: "זה קורה לבנות שמתלבשות כמוך, תעברי לבגדים נושמים.", tags: ['blamed'] },
+      { quote: "את פשוט לא מקפידה על ההוראות שלי לגבי ניקיון.", tags: ['blamed'] },
+      { quote: "הכל מתחיל ונגמר באיך שאת מטפלת בעצמך.", tags: ['blamed'] },
+
+      // Group 5 (13) — ignored
+      { quote: "זה נראה כמו סתם אקנה של גיל ההתבגרות, יעבור עם הזמן.", tags: ['ignored'] },
+      { quote: "זה קורה להרבה נערות, באמת שאין מה להילחץ מכל חצ'קון.", tags: ['ignored'] },
+      { quote: "זה לא נראה לי משהו כרוני או מחלה, סתם התפרצות חולפת.", tags: ['ignored'] },
+      { quote: "אין פה משהו מיוחד שדורש רופא מומחה, רופא משפחה מספיק.", tags: ['ignored'] },
+      { quote: "זה לא מסוכן לבריאות שלך, רק קצת לא נעים.", tags: ['ignored'] },
+      { quote: "זה בעיקר עניין אסתטי, הרפואה הציבורית פחות מתעסקת בזה.", tags: ['ignored'] },
+      { quote: "אני לא רואה פה שום דבר שמצדיק דאגה כזו גדולה מצידך.", tags: ['ignored'] },
+      { quote: "זה נפוץ מאוד בגיל שלך, ההורמונים פשוט משתוללים.", tags: ['ignored'] },
+      { quote: "אני לא חושב שצריך ועדה רפואית בשביל כמה פצעים בעור.", tags: ['ignored'] },
+      { quote: "אין טעם לעשות מזה כזה עניין גדול, זה קורה לכולם.", tags: ['ignored'] },
+      { quote: "זה לא משהו שמצריך מעקב קבוע אצלי במרפאה.", tags: ['ignored'] },
+      { quote: "אני לא בטוח מה זה בדיוק, בואי נתמקד בלשים על זה פלסטר בינתיים.", tags: ['ignored'] },
+      { quote: "אבל את נראית בריאה לחלוטין, על מה את מתלוננת?", tags: ['ignored'] },
+    ];
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    const shuffledDoctors = shuffle(DOCTORS);
+
+    /* ══════════════════════════════════════════
+       4. Build doctors grid (6 rows × 10 stars)
+       ══════════════════════════════════════════ */
+    const grid    = document.getElementById('doctors-grid');
+    const quoteEl = document.getElementById('quote-text');
+
+    if (grid && quoteEl) {
+      for (let row = 0; row < 6; row++) {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'p1__stars-row';
+        rowEl.setAttribute('role', 'group');
+
+        for (let col = 0; col < 10; col++) {
+          const idx    = row * 10 + col;
+          const doctor = shuffledDoctors[idx];
+          const cell   = document.createElement('div');
+          cell.className = 'p1__star';
+          cell.setAttribute('role', 'listitem');
+          cell.setAttribute('tabindex', '0');
+          cell.setAttribute('aria-label', `רופא/ה ${idx + 1}`);
+          cell.dataset.tags = doctor.tags.join(',');
+          cell.innerHTML = makeStar(true);
+
+          cell.addEventListener('mouseenter', () => { quoteEl.textContent = doctor.quote; });
+          cell.addEventListener('mouseleave', () => { quoteEl.textContent = ''; });
+          cell.addEventListener('focus',      () => { quoteEl.textContent = doctor.quote; });
+          cell.addEventListener('blur',       () => { quoteEl.textContent = ''; });
+
+          rowEl.appendChild(cell);
+        }
+        grid.appendChild(rowEl);
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       5. Scroll sections + typewriter
+       ══════════════════════════════════════════ */
+    const SECTIONS = [
+      { title: 'לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון', filter: null },
+      { title: '34 רופאים חשבו שהמחלה היא באשמתי',                 filter: 'blamed'    },
+      { title: 'רק 19 באמת האמינו שאני סובלת',                     filter: 'believed'  },
+      { title: 'רק רופא אחד ידע לתת לזה שם',                      filter: 'diagnosed' },
+    ];
+
+    let typewriterGen  = 0;
+    let currentSection = 0;
+
+    function typewrite(el, newText) {
+      const gen = ++typewriterGen;
+
+      function backspace() {
+        if (gen !== typewriterGen) return;
+        const t = el.textContent;
+        if (t.length > 0) {
+          el.textContent = t.slice(0, -1);
+          setTimeout(backspace, 22);
+        } else {
+          setTimeout(() => forward(0), 60);
+        }
+      }
+
+      function forward(i) {
+        if (gen !== typewriterGen) return;
+        el.textContent = newText.slice(0, i);
+        if (i <= newText.length) setTimeout(() => forward(i + 1), 48);
+      }
+
+      backspace();
+    }
+
+    function applySection(idx) {
+      if (idx === currentSection) return;
+      currentSection = idx;
+      const { title, filter } = SECTIONS[idx];
+      const titleEl = document.querySelector('.p1__doctors-title');
+      if (titleEl) typewrite(titleEl, title);
+      const quoteSpan = document.getElementById('quote-text');
+      if (quoteSpan) quoteSpan.textContent = '';
+      document.querySelectorAll('.p1__star').forEach(star => {
+        const active = filter === null || star.dataset.tags.split(',').includes(filter);
+        star.style.opacity       = active ? '1'    : '0.2';
+        star.style.pointerEvents = active ? 'auto' : 'none';
+        star.innerHTML           = makeStar(active);
+      });
+    }
+
+    const doctorsMain = document.querySelector('.p1__doctors-main');
+    if (doctorsMain) {
+      doctorsMain.addEventListener('scroll', () => {
+        const { scrollTop, scrollHeight, clientHeight } = doctorsMain;
+        const maxScroll = scrollHeight - clientHeight;
+        if (maxScroll <= 0) return;
+        const idx = Math.min(3, Math.floor((scrollTop / maxScroll) * 4));
+        applySection(idx);
+      }, { passive: true });
+    }
+
+    /* ══════════════════════════════════════════
+       6. Accordion — tab clicks
+       ══════════════════════════════════════════ */
+    const panels = Array.from(document.querySelectorAll('.panel'));
+
+    panels.forEach(panel => {
+      const tab = panel.querySelector('.panel__tab');
+      if (!tab) return;
+
+      const activate = () => {
+        if (panel.classList.contains('panel--active')) return;
+        panels.forEach(p => {
+          p.classList.remove('panel--active');
+          const c = p.querySelector('.panel__content');
+          if (c) c.setAttribute('aria-hidden', 'true');
+        });
+        panel.classList.add('panel--active');
+        const c = panel.querySelector('.panel__content');
+        if (c) c.removeAttribute('aria-hidden');
+      };
+
+      tab.addEventListener('click', activate);
+      tab.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+      });
+    });
+
+    /* ══════════════════════════════════════════
+       Entrance animation — stagger then expand
+       ══════════════════════════════════════════ */
+    (function () {
+      const allPanels = Array.from(document.querySelectorAll('.panel'));
+      const STAGGER   = 150; // ms between panels
+
+      // Start everything closed
+      allPanels.forEach(p => p.classList.remove('panel--active'));
+
+      let completed = 0;
+
+      function onAllEntered() {
+        // Brief pause, then expand panel 1
+        setTimeout(() => {
+          const p1 = allPanels.find(p => p.dataset.panel === '1');
+          if (p1) p1.classList.add('panel--active');
+        }, 80);
+      }
+
+      allPanels.forEach((panel, i) => {
+        panel.style.animationDelay = `${i * STAGGER}ms`;
+        panel.classList.add('panel--entering');
+
+        panel.addEventListener('animationend', () => {
+          panel.style.animationDelay = '';
+          panel.classList.remove('panel--entering');
+          if (++completed === allPanels.length) onAllEntered();
+        }, { once: true });
+      });
+
+      // Safety fallback — in case animationend never fires
+      setTimeout(() => {
+        if (completed < allPanels.length) {
+          allPanels.forEach(p => {
+            p.classList.remove('panel--entering');
+            p.style.animationDelay = '';
+          });
+          const p1 = allPanels.find(p => p.dataset.panel === '1');
+          if (p1 && !p1.classList.contains('panel--active')) {
+            p1.classList.add('panel--active');
+          }
+        }
+      }, (allPanels.length - 1) * STAGGER + 600);
+    }());
+
+
+    /* ══════════════════════════════════════════
+       Panel 2 — Crushing Scroll (crossfade in-place)
+       ══════════════════════════════════════════ */
+    (function () {
+      const scrollEl  = document.querySelector('.p2__scroll-body');
+      const taskWraps = Array.from(document.querySelectorAll('.p2__task-wrap'));
+      if (!scrollEl || !taskWraps.length) return;
+
+      scrollEl.addEventListener('scroll', () => {
+        const viewBottom = scrollEl.scrollTop + scrollEl.clientHeight;
+        taskWraps.forEach(wrap => {
+          if (wrap.classList.contains('p2--crushed')) return;
+          const wrapTop = parseFloat(wrap.style.top) || 0;
+          const wrapH   = parseFloat(wrap.style.height) || 120;
+          if (wrapTop + wrapH * 0.5 < viewBottom - 40) {
+            wrap.classList.add('p2--crushed');
+          }
+        });
+      }, { passive: true });
+    }());
+
+
+    /* ══════════════════════════════════════════
+       Panel 4 — One-by-one scroll + fill screen
+       ══════════════════════════════════════════ */
+    (function () {
+      const scrollEl  = document.getElementById('p4-scroll');
+      const stageEl   = document.getElementById('p4-popup-stage');
+      if (!scrollEl || !stageEl) return;
+
+      /* ── 16 cards, scattered across the content area (~1100×820px) ── */
+      const POPUPS = [
+        // כאב שקוף (cards 1–6)
+        { size:'small', type:'dark',  w:460, top:220, left:310, rot:-8,  cat:'כאב שקוף',  text:'צועקים ולא שומעים אותנו.' },
+        { size:'small', type:'dark',  w:420, top: 60, left:590, rot:11,  cat:'כאב שקוף',  text:'לא מבינים למה אתה לא מתפקד.' },
+        { size:'big',   type:'dark',  w:530, top:400, left:-20, rot:-6,  cat:'כאב שקוף',  text:'את רמת הכאב, אנשים לא רואים. גם אם רואים פצע קטן, לא מבינים עד כמה הוא כואב.' },
+        { size:'small', type:'dark',  w:430, top: 50, left: 80, rot: 7,  cat:'כאב שקוף',  text:'אנשים לא יבינו מה זה אומר שכואב לשבת.' },
+        { size:'big',   type:'dark',  w:550, top:380, left:540, rot: 5,  cat:'כאב שקוף',  text:'אף אחד לא ירגיש את הכאב הפיזי/הנפשי שלנו ואף אחד לא מבין.' },
+        { size:'small', type:'dark',  w:460, top:150, left:300, rot:-12, cat:'כאב שקוף',  text:'חושבים שאני מתרצת כשאני לא יכולה לצאת מהמיטה.' },
+        // דימוי גוף (cards 7–11)
+        { size:'small', type:'white', w:440, top:270, left:110, rot: 9,  cat:'דימוי גוף', text:'שאלות כמו \'למה את עם מכנסיים\' כשאני בים.' },
+        { size:'small', type:'white', w:410, top: 90, left:670, rot:-7,  cat:'דימוי גוף', text:'לחיות בהסתרה מתמדת גם אם זה בפרצוף.' },
+        { size:'big',   type:'white', w:520, top:450, left:280, rot: 4,  cat:'דימוי גוף', text:'הכתמים השחורים באזורים הכי אינטימיים והצלקות שלא עוברות.' },
+        { size:'small', type:'dark',  w:440, top:200, left:570, rot:-14, cat:'דימוי גוף', text:'בגדים מתלכלכים בגלל הפצעים, מביך.' },
+        { size:'small', type:'dark',  w:430, top:520, left: 60, rot:11,  cat:'דימוי גוף', text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' },
+        // אינטימיות (cards 12–13)
+        { size:'big',   type:'dark',  w:510, top:190, left:190, rot:-9,  cat:'אינטימיות', text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
+        { size:'small', type:'dark',  w:410, top:380, left:680, rot: 6,  cat:'אינטימיות', text:'השפעה על הדימוי העצמי וזוגיות.' },
+        // עומס נפשי (cards 14–15)
+        { size:'big',   type:'white', w:500, top:340, left:-10, rot:-4,  cat:'עומס נפשי', text:'זה מרגיש שאתה תלותי במחלה כמו מערכת יחסים רעילה.' },
+        { size:'small', type:'dark',  w:460, top:110, left:440, rot: 8,  cat:'עומס נפשי', text:'הכי קשה לראות את הגוף נאכל יום אחרי יום ולדעת שלא תמיד יש מה לעשות.' },
+        // הנפש מצולקת — XL white (card 16)
+        { size:'xl',    type:'white', w:780, top: 55, left:160, rot: 2,  cat:'עומס נפשי', text:'הנפש מצולקת.' },
+      ];
+
+      let shown   = 0;
+      let falling = false;
+      let shakeTimer = null;
+
+      /* Build all popup DOM nodes */
+      const nodes = POPUPS.map(p => {
+        const el = document.createElement('div');
+        el.className = `p4__popup p4__popup--${p.size} p4__popup--${p.type}`;
+        el.style.cssText = `top:${p.top}px;left:${p.left}px;width:${p.w}px;--rot:${p.rot}deg;`;
+        el.innerHTML = `
+          <div class="p4__popup-header">
+            <span class="p4__popup-cat">${p.cat}</span>
+          </div>
+          <div class="p4__popup-body">
+            <span class="p4__popup-qclose">"</span>
+            <div class="p4__popup-middle">
+              <p class="p4__popup-text">${p.text}</p>
+            </div>
+            <span class="p4__popup-qopen">"</span>
+          </div>`;
+        stageEl.appendChild(el);
+        return el;
+      });
+
+      function revealCard(i) {
+        if (i < nodes.length) nodes[i].classList.add('p4--visible');
+      }
+
+      function startShake() {
+        nodes.forEach(n => {
+          if (n.classList.contains('p4--visible')) n.classList.add('p4--shaking');
+        });
+      }
+
+      function startFall(onDone) {
+        nodes.forEach((n, i) => {
+          if (!n.classList.contains('p4--visible')) return;
+          n.classList.remove('p4--shaking');
+          setTimeout(() => n.classList.add('p4--falling'), i * 35);
+        });
+        setTimeout(onDone, 800);
+      }
+
+      function resetAll() {
+        nodes.forEach(n => n.classList.remove('p4--visible','p4--shaking','p4--falling'));
+        shown   = 0;
+        falling = false;
+        scrollEl.scrollTop = 0;
+      }
+
+      scrollEl.addEventListener('scroll', () => {
+        if (falling) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollEl;
+        const maxScroll = scrollHeight - clientHeight;
+        if (maxScroll <= 0) return;
+
+        const progress = scrollTop / maxScroll;            // 0 → 1
+        // Each card gets 1/(N+2) of scroll; last slice = shake+fall
+        const N        = POPUPS.length;                    // 16
+        const newShown = Math.min(N, Math.floor(progress * (N + 2)));
+
+        // Reveal cards one by one
+        while (shown < newShown && shown < N) {
+          revealCard(shown);
+          shown++;
+        }
+
+        // After all cards shown: shake → fall → reset
+        if (shown === N && !shakeTimer) {
+          const shakeAt = (N / (N + 2)) * maxScroll;
+          if (scrollTop >= shakeAt) {
+            shakeTimer = setTimeout(() => {
+              startShake();
+              setTimeout(() => {
+                falling = true;
+                startFall(() => setTimeout(resetAll, 500));
+              }, 1000);
+            }, 300);
+          }
+        }
+      }, { passive: true });
+    }());
+
+  </script>
 </body>
 </html>
