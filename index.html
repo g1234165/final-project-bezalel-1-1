@@ -871,6 +871,7 @@ html, body {
   flex-direction: row;
   height: 100%;
   width: 100%;
+  position: relative;
 }
 
 /* ── Sidebar (same structure as p1/p2) ── */
@@ -978,8 +979,6 @@ html, body {
   height: 100%;
   overflow: hidden;
   min-width: 0;
-  position: relative;
-  isolation: isolate;
 }
 .p4__header {
   flex: 0 0 246px;
@@ -1031,6 +1030,7 @@ html, body {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 10;
 }
 
 /* Base card — absolute, rotated, hidden until .p4--visible */
@@ -1049,12 +1049,19 @@ html, body {
 .p4__popup.p4--visible {
   opacity: 1;
   transform: translateY(0) rotate(var(--rot, 0deg));
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+}
+.p4__popup.p4--dragging {
+  cursor: grabbing;
+  transition: none;
 }
 
 /* Sizes */
-.p4__popup--small { height: 302px; }
-.p4__popup--big   { height: 423px; }
-.p4__popup--xl    { height: 713px; }
+.p4__popup--small { width: 480px; height: 302px; }
+.p4__popup--big   { width: 680px; height: 423px; }
+.p4__popup--xl    { width: 850px; height: 713px; }
 
 /* Colors */
 .p4__popup--dark  { background: #101212; border: 1px solid #F8F4EE; }
@@ -1159,6 +1166,190 @@ html, body {
   animation: p4-fall 0.65s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
+/* =========================================
+   Panel 0 — Home page
+   ========================================= */
+
+.panel[data-panel="0"] .panel__tab {
+  border-left: 1px solid var(--color-light) !important;
+}
+
+.p0 {
+  width: 100%;
+  height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  background-color: var(--color-dark);
+}
+
+.p0__top-frame {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 80px;
+  min-height: 0;
+}
+
+.p0__illustration {
+  width: 100%;
+  height: 100%;
+  max-height: 689px;
+  object-fit: contain;
+}
+
+/* lower-frame-home — flex COLUMN, 248px */
+.p0__lower-frame {
+  width: 100%;
+  height: 248px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Narkiss Asaf TRIAL';
+  font-size: 28px;
+  color: #F8F4EE;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* lines: horizontal divider inside lower-frame */
+.p0__h-line {
+  align-self: stretch;
+  height: 1px;
+  flex-shrink: 0;
+  background-color: var(--color-light);
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* small-left-frame-parent: flex ROW, fills remaining height */
+.p0__lower-row {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+/* big-right-frame-with-line */
+.p0__big-right-with-line {
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  font-size: 44px;
+}
+
+/* big-right-frame */
+.p0__big-right-frame {
+  align-self: stretch;
+  width: 1024px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 48px 80px;
+  box-sizing: border-box;
+  font-size: 44px;
+  color: #F8F4EE;
+  font-family: 'Narkiss Asaf TRIAL';
+  text-align: right;
+}
+
+/* opening-text-parent */
+.p0__opening-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 60px;
+}
+
+/* opening-text wrapper */
+.p0__opening-text {
+  width: 379px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* question text (.div in Figma) */
+.p0__question {
+  align-self: stretch;
+  position: relative;
+  line-height: 100%;
+  font-family: 'Narkiss Asaf TRIAL';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 44px;
+  color: #F8F4EE;
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+}
+
+/* navigation-barlogo-hs */
+.p0__logo-nav {
+  height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* navigation-barlogo-hs-child */
+.p0__hs-logo {
+  width: 144px;
+  height: 120px;
+  position: relative;
+  object-fit: contain;
+  display: block;
+}
+
+/* line-icon (vertical separator) */
+.p0__v-line {
+  align-self: stretch;
+  width: 1px;
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  max-height: 100%;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+
+/* small-left-frame */
+.p0__small-left {
+  align-self: stretch;
+  width: 466px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 48px 80px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* .hs — description text */
+.p0__desc-text {
+  width: 326px;
+  height: 112px;
+  position: relative;
+  line-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  font-family: 'Narkiss Asaf TRIAL';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 28px;
+  color: #F8F4EE;
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+}
+
 /* ═══════════════════════════════════════════
    Entrance animation
    ═══════════════════════════════════════════ */
@@ -1189,19 +1380,66 @@ html, body {
     <!-- ─────────────────────────────
          Panel 0 — HS logo / anchor
          ───────────────────────────── -->
-    <div class="panel" data-panel="0">
+    <div class="panel panel--active" data-panel="0">
       <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 0 — HS">
         <img src="Logo small.svg"       alt="HS" class="panel__tab-logo panel__tab-logo--light">
         <img src="Logo small balck.svg" alt=""   class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
         <span class="panel__tab-num">0</span>
       </div>
-      <div class="panel__content" aria-hidden="true"></div>
+
+      <div class="panel__content p0">
+
+        <!-- top-frame: illustration -->
+        <div class="p0__top-frame">
+          <img src="Vector copy.svg" alt="דמות אנושית — HS" class="p0__illustration">
+        </div>
+
+        <!-- lower-frame-home: flex column, 248px -->
+        <div class="p0__lower-frame">
+
+          <!-- horizontal line (lines) -->
+          <div class="p0__h-line" role="separator"></div>
+
+          <!-- small-left-frame-parent: flex row -->
+          <div class="p0__lower-row">
+
+            <!-- big-right-frame-with-line (first = right in RTL) -->
+            <div class="p0__big-right-with-line">
+              <!-- big-right-frame -->
+              <div class="p0__big-right-frame">
+                <!-- opening-text-parent -->
+                <div class="p0__opening-row">
+                  <!-- opening-text -->
+                  <div class="p0__opening-text">
+                    <p class="p0__question">מה מרגישים כשחיים עם מחלה שאף אחד לא רואה?</p>
+                  </div>
+                  <!-- navigation-barlogo-hs -->
+                  <div class="p0__logo-nav">
+                    <img src="Logo HS.svg" alt="HS" class="p0__hs-logo">
+                  </div>
+                </div>
+              </div>
+              <!-- line-icon (vertical separator) -->
+              <div class="p0__v-line" role="separator"></div>
+            </div>
+
+            <!-- small-left-frame (last = left in RTL) -->
+            <div class="p0__small-left">
+              <p class="p0__desc-text">
+                הידרדניטיס סופורטיבה (HS) היא מחלה עור כרונית כואבת המשפיעה לא רק על הגוף, אלא גם על הנפש.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
     </div>
 
     <!-- ─────────────────────────────
-         Panel 1 — active by default
+         Panel 1
          ───────────────────────────── -->
-    <div class="panel panel--active" data-panel="1">
+    <div class="panel" data-panel="1">
       <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 1 — שם הפרק">
         <div class="panel__tab-title-wrap">
           <span class="panel__tab-title">7 שנים בלי אבחון </span>
@@ -1494,6 +1732,8 @@ html, body {
 
       <div class="panel__content p4">
 
+        <div class="p4__popup-stage" id="p4-popup-stage"></div>
+
         <!-- Sidebar -->
         <aside class="p4__sidebar">
           <div class="p4__logo-section">
@@ -1501,7 +1741,6 @@ html, body {
               <img src="Property 1=3.svg" alt="צורה — פאנל 4" class="p4__vector-icon">
             </div>
             <div class="p4__episode-label-col">
-              <span class="p4__episode-label-text">עדויות של חולים</span>
             </div>
           </div>
           <div class="p4__hdivider" role="separator"></div>
@@ -1511,7 +1750,6 @@ html, body {
                 הכאב של HS אינו מסתכם בפצעים ודלקות. הוא מחלחל לשגרה, לביטחון העצמי, לתוכניות לעתיד וליחסים עם הגוף.
               </p>
             </div>
-            <div class="p4__ep-num">4</div>
           </div>
         </aside>
 
@@ -1525,7 +1763,6 @@ html, body {
           <div class="p4__divider" role="separator"></div>
           <div class="p4__scroll-body" id="p4-scroll">
             <div class="p4__sticky" id="p4-sticky">
-              <div class="p4__popup-stage" id="p4-popup-stage"></div>
             </div>
             <div class="p4__scroll-track" aria-hidden="true"></div>
           </div>
@@ -1824,8 +2061,8 @@ html, body {
       function onAllEntered() {
         // Brief pause, then expand panel 1
         setTimeout(() => {
-          const p1 = allPanels.find(p => p.dataset.panel === '1');
-          if (p1) p1.classList.add('panel--active');
+          const p0 = allPanels.find(p => p.dataset.panel === '0');
+          if (p0) p0.classList.add('panel--active');
         }, 80);
       }
 
@@ -1879,47 +2116,56 @@ html, body {
 
 
     /* ══════════════════════════════════════════
-       Panel 4 — One-by-one scroll + fill screen
+       Panel 4 — Scroll (bidirectional) + Drag
        ══════════════════════════════════════════ */
     (function () {
       const scrollEl  = document.getElementById('p4-scroll');
       const stageEl   = document.getElementById('p4-popup-stage');
       if (!scrollEl || !stageEl) return;
 
+      /* Current scale of the accordion canvas */
+      function getScale() {
+        const acc = document.querySelector('.accordion');
+        if (!acc || !acc.style.transform) return 1;
+        const m = acc.style.transform.match(/scale\(([^)]+)\)/);
+        return m ? parseFloat(m[1]) : 1;
+      }
+
       /* ── 16 cards, scattered across the content area (~1100×820px) ── */
       const POPUPS = [
-        // כאב שקוף (cards 1–6)
-        { size:'small', type:'dark',  w:460, top:220, left:310, rot:-8,  cat:'כאב שקוף',  text:'צועקים ולא שומעים אותנו.' },
-        { size:'small', type:'dark',  w:420, top: 60, left:590, rot:11,  cat:'כאב שקוף',  text:'לא מבינים למה אתה לא מתפקד.' },
-        { size:'big',   type:'dark',  w:530, top:400, left:-20, rot:-6,  cat:'כאב שקוף',  text:'את רמת הכאב, אנשים לא רואים. גם אם רואים פצע קטן, לא מבינים עד כמה הוא כואב.' },
-        { size:'small', type:'dark',  w:430, top: 50, left: 80, rot: 7,  cat:'כאב שקוף',  text:'אנשים לא יבינו מה זה אומר שכואב לשבת.' },
-        { size:'big',   type:'dark',  w:550, top:380, left:540, rot: 5,  cat:'כאב שקוף',  text:'אף אחד לא ירגיש את הכאב הפיזי/הנפשי שלנו ואף אחד לא מבין.' },
-        { size:'small', type:'dark',  w:460, top:150, left:300, rot:-12, cat:'כאב שקוף',  text:'חושבים שאני מתרצת כשאני לא יכולה לצאת מהמיטה.' },
+        // כאב שקוף (cards 1–6) — מפוזר על כל רוחב הפאנל
+        { size:'small', type:'dark',  top:220, left: 350, rot:-8,  cat:'כאב שקוף',  text:'צועקים ולא שומעים אותנו.' },
+        { size:'small', type:'dark',  top: 60, left: 820, rot:11,  cat:'כאב שקוף',  text:'לא מבינים למה אתה לא מתפקד.' },
+        { size:'big',   type:'dark',  top:400, left:  50, rot:-6,  cat:'כאב שקוף',  text:'את רמת הכאב, אנשים לא רואים. גם אם רואים פצע קטן, לא מבינים עד כמה הוא כואב.' },
+        { size:'small', type:'dark',  top: 55, left:1100, rot: 7,  cat:'כאב שקוף',  text:'אנשים לא יבינו מה זה אומר שכואב לשבת.' },
+        { size:'big',   type:'dark',  top:380, left: 680, rot: 5,  cat:'כאב שקוף',  text:'אף אחד לא ירגיש את הכאב הפיזי/הנפשי שלנו ואף אחד לא מבין.' },
+        { size:'small', type:'dark',  top:160, left: 200, rot:-12, cat:'כאב שקוף',  text:'חושבים שאני מתרצת כשאני לא יכולה לצאת מהמיטה.' },
         // דימוי גוף (cards 7–11)
-        { size:'small', type:'white', w:440, top:270, left:110, rot: 9,  cat:'דימוי גוף', text:'שאלות כמו \'למה את עם מכנסיים\' כשאני בים.' },
-        { size:'small', type:'white', w:410, top: 90, left:670, rot:-7,  cat:'דימוי גוף', text:'לחיות בהסתרה מתמדת גם אם זה בפרצוף.' },
-        { size:'big',   type:'white', w:520, top:450, left:280, rot: 4,  cat:'דימוי גוף', text:'הכתמים השחורים באזורים הכי אינטימיים והצלקות שלא עוברות.' },
-        { size:'small', type:'dark',  w:440, top:200, left:570, rot:-14, cat:'דימוי גוף', text:'בגדים מתלכלכים בגלל הפצעים, מביך.' },
-        { size:'small', type:'dark',  w:430, top:520, left: 60, rot:11,  cat:'דימוי גוף', text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' },
+        { size:'small', type:'white', top:270, left: 950, rot: 9,  cat:'דימוי גוף', text:'שאלות כמו \'למה את עם מכנסיים\' כשאני בים.' },
+        { size:'small', type:'white', top: 90, left: 540, rot:-7,  cat:'דימוי גוף', text:'לחיות בהסתרה מתמדת גם אם זה בפרצוף.' },
+        { size:'big',   type:'white', top:460, left: 300, rot: 4,  cat:'דימוי גוף', text:'הכתמים השחורים באזורים הכי אינטימיים והצלקות שלא עוברות.' },
+        { size:'small', type:'dark',  top:210, left: 700, rot:-14, cat:'דימוי גוף', text:'בגדים מתלכלכים בגלל הפצעים, מביך.' },
+        { size:'small', type:'dark',  top:530, left:1050, rot:11,  cat:'דימוי גוף', text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' },
         // אינטימיות (cards 12–13)
-        { size:'big',   type:'dark',  w:510, top:190, left:190, rot:-9,  cat:'אינטימיות', text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
-        { size:'small', type:'dark',  w:410, top:380, left:680, rot: 6,  cat:'אינטימיות', text:'השפעה על הדימוי העצמי וזוגיות.' },
+        { size:'big',   type:'dark',  top:195, left: 130, rot:-9,  cat:'אינטימיות', text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
+        { size:'small', type:'dark',  top:390, left: 900, rot: 6,  cat:'אינטימיות', text:'השפעה על הדימוי העצמי וזוגיות.' },
         // עומס נפשי (cards 14–15)
-        { size:'big',   type:'white', w:500, top:340, left:-10, rot:-4,  cat:'עומס נפשי', text:'זה מרגיש שאתה תלותי במחלה כמו מערכת יחסים רעילה.' },
-        { size:'small', type:'dark',  w:460, top:110, left:440, rot: 8,  cat:'עומס נפשי', text:'הכי קשה לראות את הגוף נאכל יום אחרי יום ולדעת שלא תמיד יש מה לעשות.' },
+        { size:'big',   type:'white', top:345, left: 490, rot:-4,  cat:'עומס נפשי', text:'זה מרגיש שאתה תלותי במחלה כמו מערכת יחסים רעילה.' },
+        { size:'small', type:'dark',  top:115, left:1150, rot: 8,  cat:'עומס נפשי', text:'הכי קשה לראות את הגוף נאכל יום אחרי יום ולדעת שלא תמיד יש מה לעשות.' },
         // הנפש מצולקת — XL white (card 16)
-        { size:'xl',    type:'white', w:780, top: 55, left:160, rot: 2,  cat:'עומס נפשי', text:'הנפש מצולקת.' },
+        { size:'xl',    type:'white', top: 60, left: 380, rot: 2,  cat:'עומס נפשי', text:'הנפש מצולקת.' },
       ];
 
-      let shown   = 0;
-      let falling = false;
+      let shown      = 0;
+      let falling    = false;
       let shakeTimer = null;
+      let globalZ    = 20;
 
-      /* Build all popup DOM nodes */
-      const nodes = POPUPS.map(p => {
+      /* Build cards with drag support */
+      const nodes = POPUPS.map((p, i) => {
         const el = document.createElement('div');
         el.className = `p4__popup p4__popup--${p.size} p4__popup--${p.type}`;
-        el.style.cssText = `top:${p.top}px;left:${p.left}px;width:${p.w}px;--rot:${p.rot}deg;`;
+        el.style.cssText = `top:${p.top}px;left:${p.left}px;--rot:${p.rot}deg;z-index:${10+i};`;
         el.innerHTML = `
           <div class="p4__popup-header">
             <span class="p4__popup-cat">${p.cat}</span>
@@ -1932,32 +2178,70 @@ html, body {
             <span class="p4__popup-qopen">"</span>
           </div>`;
         stageEl.appendChild(el);
+
+        /* Drag: bring to front + free movement */
+        el.addEventListener('mousedown', (e) => {
+          if (!el.classList.contains('p4--visible')) return;
+          e.preventDefault();
+          el.style.zIndex = ++globalZ;
+          el.classList.add('p4--dragging');
+          const scale = getScale();
+          const mx0   = e.clientX, my0 = e.clientY;
+          const t0    = parseFloat(el.style.top)  || 0;
+          const l0    = parseFloat(el.style.left) || 0;
+          const move  = (e) => {
+            el.style.top  = (t0 + (e.clientY - my0) / scale) + 'px';
+            el.style.left = (l0 + (e.clientX - mx0) / scale) + 'px';
+          };
+          const up = () => {
+            el.classList.remove('p4--dragging');
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup',   up);
+          };
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup',   up);
+        });
+
         return el;
       });
 
+      /* כרטיס ראשון גלוי מיד עם פתיחת הפאנל */
+      shown = 1;
+      revealCard(0);
+
       function revealCard(i) {
-        if (i < nodes.length) nodes[i].classList.add('p4--visible');
+        if (i >= nodes.length) return;
+        nodes[i].style.zIndex = ++globalZ;
+        nodes[i].classList.add('p4--visible');
+      }
+
+      function hideCard(i) {
+        if (i >= nodes.length) return;
+        nodes[i].classList.remove('p4--visible', 'p4--shaking');
+        nodes[i].style.top  = POPUPS[i].top  + 'px';
+        nodes[i].style.left = POPUPS[i].left + 'px';
       }
 
       function startShake() {
-        nodes.forEach(n => {
-          if (n.classList.contains('p4--visible')) n.classList.add('p4--shaking');
-        });
+        nodes.forEach(n => { if (n.classList.contains('p4--visible')) n.classList.add('p4--shaking'); });
       }
 
-      function startFall(onDone) {
+      function startFall(cb) {
         nodes.forEach((n, i) => {
           if (!n.classList.contains('p4--visible')) return;
           n.classList.remove('p4--shaking');
           setTimeout(() => n.classList.add('p4--falling'), i * 35);
         });
-        setTimeout(onDone, 800);
+        setTimeout(cb, 800);
       }
 
       function resetAll() {
-        nodes.forEach(n => n.classList.remove('p4--visible','p4--shaking','p4--falling'));
-        shown   = 0;
-        falling = false;
+        nodes.forEach((n, i) => {
+          n.classList.remove('p4--visible', 'p4--shaking', 'p4--falling');
+          n.style.top  = POPUPS[i].top  + 'px';
+          n.style.left = POPUPS[i].left + 'px';
+        });
+        shown = 0; falling = false; shakeTimer = null;
         scrollEl.scrollTop = 0;
       }
 
@@ -1967,18 +2251,18 @@ html, body {
         const maxScroll = scrollHeight - clientHeight;
         if (maxScroll <= 0) return;
 
-        const progress = scrollTop / maxScroll;            // 0 → 1
-        // Each card gets 1/(N+2) of scroll; last slice = shake+fall
-        const N        = POPUPS.length;                    // 16
+        const N        = POPUPS.length;
+        const progress = scrollTop / maxScroll;
         const newShown = Math.min(N, Math.floor(progress * (N + 2)));
 
-        // Reveal cards one by one
-        while (shown < newShown && shown < N) {
-          revealCard(shown);
-          shown++;
+        if (newShown > shown) {
+          while (shown < newShown && shown < N) revealCard(shown++);
+        } else if (newShown < shown) {
+          // Scroll UP — hide in reverse, reset positions
+          while (shown > newShown && shown > 0) hideCard(--shown);
+          shakeTimer = null;
         }
 
-        // After all cards shown: shake → fall → reset
         if (shown === N && !shakeTimer) {
           const shakeAt = (N / (N + 2)) * maxScroll;
           if (scrollTop >= shakeAt) {
