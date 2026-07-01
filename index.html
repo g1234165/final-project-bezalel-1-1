@@ -1351,6 +1351,600 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════
+   Panel 3 — מה זה HS? (FAQ Accordion)
+   ═══════════════════════════════════════════ */
+.p3 {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+/* ── Sidebar (same as p1/p2) ── */
+.p3__sidebar {
+  flex: 0 0 var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-left: 1px solid var(--color-light);
+}
+.p3__logo-section {
+  width: 100%;
+  height: 631px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 48px 0;
+  box-sizing: border-box;
+  gap: 16px;
+}
+.p3__logo-big {
+  align-self: stretch;
+  width: 303px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 0 20px;
+  box-sizing: border-box;
+}
+.p3__vector-icon {
+  width: 283px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+.p3__episode-label-col {
+  width: 80px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.p3__episode-label-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  line-height: var(--lh-body);
+}
+.p3__hdivider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
+}
+.p3__desc-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 84px 0 48px;
+}
+.p3__desc-inner {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 80px;
+}
+.p3__desc-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: var(--color-light);
+  text-align: right;
+  line-height: var(--lh-body);
+  direction: rtl;
+}
+.p3__ep-num {
+  width: 80px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--color-light);
+}
+
+/* ── Content area ── */
+.p3__content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+.p3__header {
+  flex: 0 0 246px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 80px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.p3__title {
+  font-family: 'Narkiss Asaf TRIAL';
+  font-size: 44px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+}
+.p3__content-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+.p3__scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ── Accordion items ── */
+.p3__accordion-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Header row: 108px, padding 36px 80px */
+.p3__item-header {
+  height: 108px;
+  background: var(--color-dark);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 36px 80px;
+  box-sizing: border-box;
+  cursor: pointer;
+  gap: 24px;
+  transition: background 0.3s ease;
+}
+.p3__accordion-item.is-open .p3__item-header {
+  background: var(--color-light);
+}
+
+/* Title row inside header */
+.p3__item-title-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 36px;
+}
+
+/* Right: number + label (first in DOM = right in RTL) */
+.p3__item-right {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 0 0 8px;
+  gap: 24px;
+}
+.p3__item-label {
+  font-family: 'Narkiss Asaf TRIAL';
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  transition: color 0.3s ease;
+}
+.p3__item-num {
+  font-family: 'Narkiss Asaf TRIAL';
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-light);
+  text-align: right;
+  transition: color 0.3s ease;
+}
+.p3__accordion-item.is-open .p3__item-label,
+.p3__accordion-item.is-open .p3__item-num {
+  color: var(--color-dark);
+}
+
+/* Left: chevron (last in DOM = left in RTL) */
+.p3__chevron-wrap {
+  width: 22px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.p3__chevron {
+  width: 22px;
+  height: 14px;
+  transition: transform 0.3s ease;
+  overflow: visible;
+}
+.p3__chevron path { transition: stroke 0.3s ease; }
+.p3__accordion-item.is-open .p3__chevron {
+  transform: scaleY(-1);
+}
+.p3__accordion-item.is-open .p3__chevron path {
+  stroke: var(--color-dark);
+}
+
+/* Separator line between items */
+.p3__item-separator {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+.p3__accordion-item.is-open .p3__item-separator--top {
+  background: var(--color-dark);
+}
+
+/* Expanded body */
+.p3__item-body {
+  display: none;
+  background: var(--color-light);
+  flex-direction: column;
+}
+.p3__accordion-item.is-open .p3__item-body {
+  display: flex;
+}
+.p3__cards-container {
+  padding: 36px 80px 48px;
+  box-sizing: border-box;
+}
+.p3__content-frame {
+  padding: 0 76px 0 0;
+  box-sizing: border-box;
+}
+.p3__cards-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+/* Flip cards */
+.p3__card {
+  flex: 1;
+  height: 376px;
+  perspective: 1200px;
+  cursor: pointer;
+}
+.p3__card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+.p3__card:hover .p3__card-inner {
+  transform: rotateY(180deg);
+}
+.p3__card-front,
+.p3__card-back {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.p3__card-front {
+  background: var(--color-light);
+  border: 1px solid var(--color-dark);
+}
+.p3__card-back {
+  background: var(--color-dark);
+  border: 1px solid var(--color-light);
+  transform: rotateY(180deg);
+  justify-content: center;
+  gap: 12px;
+}
+.p3__card-text {
+  font-family: 'Simona Pro';
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.p3__card-label {
+  font-family: 'Simona Pro';
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  align-self: stretch;
+}
+.p3__card-desc {
+  font-family: 'Simona Pro';
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 110%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  align-self: stretch;
+  margin: 0;
+}
+
+/* ── Panel 3 item 02: body illustration layout ── */
+.p3__body-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 36px 80px 44px;
+  box-sizing: border-box;
+  gap: 28px;
+  width: 100%;
+  background: var(--color-light);
+}
+
+/* Right side: description text (first in DOM = right in RTL) */
+.p3__body-text-wrap {
+  width: 392px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding-top: 4px;
+}
+.p3__body-desc {
+  font-family: 'Simona Pro';
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+  width: 316px;
+}
+
+/* Left side: illustration (last in DOM = left in RTL) */
+.p3__body-illustration {
+  width: 434px;
+  height: 468px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Body outline (Union.svg) — starts 116px from top */
+.p3__body-figure {
+  position: absolute;
+  top: 0; right: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-top: 116px;
+  width: 100%;
+  height: 1030px;
+}
+.p3__body-outline {
+  width: 344px;
+  height: 914px;
+  display: block;
+  object-fit: contain;
+}
+
+/* Shapes + labels overlay */
+.p3__body-shapes {
+  position: absolute;
+  top: 0; left: 0;
+  width: 381px;
+  height: 426px;
+  padding-top: 60px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 1;
+}
+
+/* Each body area row: label — line — shape */
+.p3__body-area {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  flex-shrink: 0;
+}
+.p3__body-area--armpits  { margin: -22px 0; }
+.p3__body-area--boobs    { margin: -22px 0; }
+.p3__body-area--crotch   { padding-top: 124px; margin: -22px 0; }
+.p3__body-area--butt     { margin: 0; }
+
+.p3__area-label-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.p3__area-label {
+  font-family: 'Simona Pro';
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 110%;
+  color: var(--color-dark);
+  text-align: right;
+}
+.p3__area-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-dark);
+  flex-shrink: 0;
+  min-width: 20px;
+}
+.p3__area-shape {
+  width: 70px;
+  height: 74px;
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.p3__area-shape--large {
+  width: 118px;
+  height: 126px;
+  transform: rotate(3.03deg);
+}
+
+/* ── Panel 3 item 03: two-column with illustrations ── */
+.p3__col-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 76px 0 0;
+  gap: 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.p3__col-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 46px;
+  width: 942px;
+}
+.p3__col-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 28px;
+  width: 448px;
+  height: 148px;
+  flex: 1;
+}
+.p3__col-illus {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 148px;
+  flex: 1;
+  flex-shrink: 0;
+}
+.p3__col-illus img {
+  display: block;
+  object-fit: contain;
+}
+.p3__col-illus--03-1 img { width: 124px; height: 148px; }
+.p3__col-illus--03-2 img { width: 20.94px; height: 68.93px; transform: rotate(32.67deg); }
+.p3__col-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  width: 220px;
+  flex-shrink: 0;
+}
+.p3__col-subtitle {
+  font-family: 'Simona Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 100%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  align-self: stretch;
+  margin: 0;
+}
+.p3__col-body {
+  font-family: 'Simona Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 110%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  width: 220px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+.p3__col-footer {
+  font-family: 'Simona Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 110%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  width: 839px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+/* ── Panel 3 item 04: simple text only ── */
+.p3__simple-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 76px 0 0;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.p3__simple-text {
+  font-family: 'Simona Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 110%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  width: 839px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
    Entrance animation
    ═══════════════════════════════════════════ */
 @keyframes panel-enter {
@@ -1719,7 +2313,245 @@ html, body {
         </div>
         <span class="panel__tab-num">3</span>
       </div>
-      <div class="panel__content" aria-hidden="true"></div>
+
+      <div class="panel__content p3">
+
+        <!-- Sidebar -->
+        <aside class="p3__sidebar">
+          <div class="p3__logo-section">
+            <div class="p3__logo-big">
+              <img src="Property 1=Variant5.svg" alt="צורה — פאנל 3" class="p3__vector-icon">
+            </div>
+            <div class="p3__episode-label-col">
+              <span class="p3__episode-label-text">מה זה HS?</span>
+            </div>
+          </div>
+          <div class="p3__hdivider" role="separator"></div>
+          <div class="p3__desc-section">
+            <div class="p3__desc-inner">
+              <p class="p3__desc-text">*התוכן מבוסס על מידע מאיגוד רופאי העור הבריטי וראיונות עם חולים ורופאים מומחים, ואינו תחליף לייעוץ רופאי.</p>
+            </div>
+            <div class="p3__ep-num">3</div>
+          </div>
+        </aside>
+
+        <!-- Content: title + accordion -->
+        <section class="p3__content-area">
+          <header class="p3__header">
+            <h1 class="p3__title">HS היא מחלה עור דלקתית וכרונית המתבטאת בפצעים מוגלתיים וגושים כואבים, לרוב בקפלי הגוף.</h1>
+          </header>
+          <div class="p3__content-divider" role="separator"></div>
+
+          <div class="p3__scroll-body" id="p3-scroll">
+
+            <!-- Macro for an accordion item -->
+            <!-- 01 מה זה לא? -->
+            <div class="p3__accordion-item" data-p3-item>
+              <div class="p3__item-header">
+                <div class="p3__item-title-row">
+                  <div class="p3__item-right">
+                    <span class="p3__item-label">מה זה לא?</span>
+                    <span class="p3__item-num">(01)</span>
+                  </div>
+                  <div class="p3__chevron-wrap">
+                    <svg class="p3__chevron" viewBox="0 0 22 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="p3__item-separator"></div>
+              <div class="p3__item-body">
+                <div class="p3__cards-container">
+                  <div class="p3__content-frame">
+                    <div class="p3__cards-row">
+                      <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים או בשימוש בחפצים משותפים כמו מגבות.</p></div></div></div>
+                      <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים או בשימוש בחפצים משותפים כמו מגבות.</p></div></div></div>
+                      <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים או בשימוש בחפצים משותפים כמו מגבות.</p></div></div></div>
+                      <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים או בשימוש בחפצים משותפים כמו מגבות.</p></div></div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="p3__item-separator" style="background:var(--color-dark)"></div>
+              </div>
+            </div>
+
+            <!-- 02 איפה זה קורה? — body illustration -->
+            <div class="p3__accordion-item" data-p3-item>
+              <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-label">איפה זה קורה?</span><span class="p3__item-num">(02)</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
+              <div class="p3__item-separator"></div>
+              <div class="p3__item-body">
+                <div class="p3__body-content">
+
+                  <!-- RIGHT: description text (first in DOM = right in RTL) -->
+                  <div class="p3__body-text-wrap">
+                    <p class="p3__body-desc">פצעי HS עשויים להופיע כמעט בכל מקום, אך נוטים לפגוע בעיקר באזורי חיכוך ובקפלי עור כגון בתי שחי, מפשעות, ישבן ומתחת לשדיים (אצל נשים).</p>
+                  </div>
+
+                  <!-- LEFT: body illustration (last in DOM = left in RTL) -->
+                  <div class="p3__body-illustration">
+
+                    <!-- Body outline -->
+                    <div class="p3__body-figure">
+                      <img src="Union.svg" alt="גוף אנושי" class="p3__body-outline">
+                    </div>
+
+                    <!-- Shapes + labels overlay -->
+                    <div class="p3__body-shapes">
+
+                      <!-- בתי שחי (armpits) -->
+                      <div class="p3__body-area p3__body-area--armpits">
+                        <div class="p3__area-label-wrap">
+                          <span class="p3__area-label">בתי שחי</span>
+                        </div>
+                        <div class="p3__area-line"></div>
+                        <img src="Vector 737.svg" alt="" class="p3__area-shape" aria-hidden="true">
+                      </div>
+
+                      <!-- מתחת לשדיים (under breasts) -->
+                      <div class="p3__body-area p3__body-area--boobs">
+                        <div class="p3__area-label-wrap">
+                          <span class="p3__area-label">מתחת לשדיים</span>
+                        </div>
+                        <div class="p3__area-line"></div>
+                        <img src="Vector 737.svg" alt="" class="p3__area-shape" aria-hidden="true">
+                      </div>
+
+                      <!-- מפשעות (groin) -->
+                      <div class="p3__body-area p3__body-area--crotch">
+                        <div class="p3__area-label-wrap">
+                          <span class="p3__area-label">מפשעות</span>
+                        </div>
+                        <div class="p3__area-line"></div>
+                        <img src="Vector 738.svg" alt="" class="p3__area-shape p3__area-shape--large" aria-hidden="true">
+                      </div>
+
+                      <!-- ישבן (buttocks) -->
+                      <div class="p3__body-area p3__body-area--butt">
+                        <div class="p3__area-label-wrap">
+                          <span class="p3__area-label">ישבן</span>
+                        </div>
+                        <div class="p3__area-line"></div>
+                        <img src="Vector 737.svg" alt="" class="p3__area-shape" aria-hidden="true">
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+                <div class="p3__item-separator" style="background:var(--color-dark)"></div>
+              </div>
+            </div>
+
+            <!-- 03 איך זה מתחיל ומחמיר? — two columns with SVG illustrations -->
+            <div class="p3__accordion-item" data-p3-item>
+              <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-label">איך זה מתחיל ומחמיר?</span><span class="p3__item-num">(03)</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
+              <div class="p3__item-separator"></div>
+              <div class="p3__item-body">
+                <div class="p3__cards-container">
+                  <div class="p3__col-content">
+
+                    <!-- two-column row (right=מחמיר, left=מתחיל in RTL) -->
+                    <div class="p3__col-row">
+
+                      <!-- Column מחמיר (right in RTL = first in DOM) -->
+                      <div class="p3__col-item">
+                        <!-- illustration (right in column = first in DOM in RTL) -->
+                        <div class="p3__col-illus p3__col-illus--03-2">
+                          <img src="Property 1=03.2.svg" alt="" aria-hidden="true">
+                        </div>
+                        <div class="p3__col-text">
+                          <p class="p3__col-subtitle">איך זה מחמיר?</p>
+                          <p class="p3__col-body">במחלה בינונית או קשה הפצעים מתפתחים לגושים נוקשים, פצעים מפרישי מוגלה ותעלות מודלקות מתחת לעור.</p>
+                        </div>
+                      </div>
+
+                      <!-- Column מתחיל (left in RTL = last in DOM) -->
+                      <div class="p3__col-item">
+                        <div class="p3__col-illus p3__col-illus--03-1">
+                          <img src="Property 1=03.1.svg" alt="" aria-hidden="true">
+                        </div>
+                        <div class="p3__col-text">
+                          <p class="p3__col-subtitle">איך זה מתחיל?</p>
+                          <p class="p3__col-body">בליטות ופצעים כואבים שחוזרים באותו מקום. עם ההחלמה, הם עלולים להשאיר צלקות ופיגמנטציה במקום הפצע.</p>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <!-- bottom text line -->
+                    <p class="p3__col-footer">ההתמודדות עם HS גובה מחיר נפשי כבד, עם סיכון מוגבר לדיכאון וחרדה, פגיעה קיצונית בדימוי הגוף ובידוד חברתי.</p>
+
+                  </div>
+                </div>
+                <div class="p3__item-separator" style="background:var(--color-dark)"></div>
+              </div>
+            </div>
+
+            <!-- 04 למה זה קורה? — single text line -->
+            <div class="p3__accordion-item" data-p3-item>
+              <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-label">למה זה קורה?</span><span class="p3__item-num">(04)</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
+              <div class="p3__item-separator"></div>
+              <div class="p3__item-body">
+                <div class="p3__cards-container">
+                  <div class="p3__simple-content">
+                    <p class="p3__simple-text">ההתמודדות עם HS גובה מחיר נפשי כבד, עם סיכון מוגבר לדיכאון וחרדה, פגיעה קיצונית בדימוי הגוף ובידוד חברתי.</p>
+                  </div>
+                </div>
+                <div class="p3__item-separator" style="background:var(--color-dark)"></div>
+              </div>
+            </div>
+
+            <!-- 05 למי זה קורה? -->
+            <div class="p3__accordion-item" data-p3-item>
+              <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-label">למי זה קורה?</span><span class="p3__item-num">(05)</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
+              <div class="p3__item-separator"></div>
+              <div class="p3__item-body">
+                <div class="p3__cards-container"><div class="p3__content-frame"><div class="p3__cards-row">
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                </div></div></div>
+                <div class="p3__item-separator" style="background:var(--color-dark)"></div>
+              </div>
+            </div>
+
+            <!-- 06 איך מאבחנים? -->
+            <div class="p3__accordion-item" data-p3-item>
+              <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-label">איך מאבחנים?</span><span class="p3__item-num">(06)</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
+              <div class="p3__item-separator"></div>
+              <div class="p3__item-body">
+                <div class="p3__cards-container"><div class="p3__content-frame"><div class="p3__cards-row">
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                </div></div></div>
+                <div class="p3__item-separator" style="background:var(--color-dark)"></div>
+              </div>
+            </div>
+
+            <!-- 07 יש תרופה? -->
+            <div class="p3__accordion-item" data-p3-item>
+              <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-label">יש תרופה?</span><span class="p3__item-num">(07)</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
+              <div class="p3__item-separator"></div>
+              <div class="p3__item-body">
+                <div class="p3__cards-container"><div class="p3__content-frame"><div class="p3__cards-row">
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                  <div class="p3__card"><div class="p3__card-inner"><div class="p3__card-front"><span class="p3__card-text">לא מדבק</span></div><div class="p3__card-back"><span class="p3__card-label">לא מדבק</span><p class="p3__card-desc">המחלה אינה עוברת מאדם לאדם בשום צורה, גם לא במגע ישיר בפצעים.</p></div></div></div>
+                </div></div></div>
+                <div class="p3__item-separator" style="background:var(--color-dark)"></div>
+              </div>
+            </div>
+
+          </div><!-- /p3__scroll-body -->
+        </section>
+
+      </div><!-- /panel__content p3 -->
+    </div><!-- /panel data-panel="3" -->
     </div>
 
     <div class="panel" data-panel="4">
@@ -2276,6 +3108,23 @@ html, body {
           }
         }
       }, { passive: true });
+    }());
+
+
+    /* ══════════════════════════════════════════
+       Panel 3 — Accordion toggle
+       ══════════════════════════════════════════ */
+    (function () {
+      document.querySelectorAll('[data-p3-item] .p3__item-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const item = header.closest('[data-p3-item]');
+          const isOpen = item.classList.contains('is-open');
+          // Close all
+          document.querySelectorAll('[data-p3-item]').forEach(i => i.classList.remove('is-open'));
+          // Open clicked (if it wasn't already open)
+          if (!isOpen) item.classList.add('is-open');
+        });
+      });
     }());
 
   </script>
