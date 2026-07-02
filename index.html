@@ -1648,7 +1648,7 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  align-items: flex-end;
+  align-items: flex-start;
   padding: 24px;
   box-sizing: border-box;
 }
@@ -2045,7 +2045,7 @@ html, body {
 /* text (Figma: 220×80px, flex, align-items center) */
 .p3__col-body {
   width: 220px;
-  height: 80px;
+  height: 100px;
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
@@ -2074,6 +2074,7 @@ html, body {
   direction: rtl;
   display: flex;
   align-items: center;
+  align-self: flex-start;
   margin: 0;
 }
 
@@ -2310,6 +2311,387 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════
+   Panel 5 — אודות ומידע נוסף
+   ═══════════════════════════════════════════ */
+.p5 {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  background: var(--color-dark);
+}
+
+/* RIGHT sidebar — illustration column (first in RTL) */
+.p5__sidebar {
+  flex: 0 0 390px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 48px;
+  box-sizing: border-box;
+  position: relative;
+  border-left: 1px solid var(--color-light);
+}
+
+.p5__illus-frame {
+  position: relative;
+  width: 294px;
+  height: 562px;
+  flex-shrink: 0;
+}
+
+.p5__illus-frame img {
+  position: absolute;
+  object-fit: contain;
+}
+.p5__shape1 { width: 136px; height: 198px; left: 147px; top: -27px; transform: scaleX(-1); }
+.p5__shape2 { width: 155px; height: 194px; left:   6px; top:  96px; }
+.p5__shape3 { width: 113px; height: 232px; left: 171px; top: 235px; }
+.p5__shape4 { width: 167px; height: 235px; left:   0px; top: 327px; }
+
+/* LEFT — scrollable main content */
+.p5__main {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+/* Top header bar */
+.p5__header {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 80px;
+  box-sizing: border-box;
+  min-height: 246px;
+}
+
+.p5__title {
+  font-family: 'Narkiss Asaf TRIAL', sans-serif;
+  font-size: 44px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+  width: 100%;
+}
+
+.p5__hdivider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+
+/* About section */
+.p5__about {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 80px;
+  gap: 60px;
+  box-sizing: border-box;
+}
+
+.p5__about-inner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 28px;
+}
+
+.p5__subtitle {
+  font-family: 'Narkiss Asaf TRIAL', sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+  width: 100%;
+}
+
+.p5__cols {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 36px;
+  width: 100%;
+}
+
+.p5__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.p5__col-text {
+  font-family: 'Simona Pro', serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 110%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+}
+
+.p5__footnote-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.p5__footnote {
+  font-family: 'Simona Pro', serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 110%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+  width: 942px;
+}
+
+/* Divider between sections */
+.p5__divider {
+  width: 100%;
+  height: 1px;
+  background: var(--color-light);
+  flex-shrink: 0;
+}
+
+/* Dropdown accordion items */
+.p5__dropdown {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.p5__dropdown-header {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 36px 80px;
+  box-sizing: border-box;
+  cursor: pointer;
+  gap: 24px;
+}
+
+.p5__dropdown-label {
+  font-family: 'Narkiss Asaf TRIAL', sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-light);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+  padding-bottom: 8px;
+}
+
+.p5__chevron {
+  width: 22px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.p5__dropdown.is-open .p5__chevron {
+  transform: rotate(180deg);
+}
+
+.p5__dropdown-body {
+  display: none;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0 80px 48px;
+  box-sizing: border-box;
+}
+
+.p5__dropdown.is-open .p5__dropdown-body {
+  display: flex;
+}
+
+/* Open state — whole item flips to light */
+.p5__dropdown.is-open {
+  background: var(--color-light);
+}
+.p5__dropdown.is-open .p5__dropdown-header {
+  padding-bottom: 28px;
+}
+.p5__dropdown.is-open .p5__dropdown-label {
+  color: var(--color-dark);
+}
+.p5__dropdown.is-open .p5__chevron {
+  transform: rotate(180deg);
+}
+.p5__dropdown.is-open .p5__chevron path {
+  stroke: var(--color-dark);
+}
+/* Divider after open dropdown → dark (light bg needs dark line) */
+.p5__dropdown.is-open + .p5__divider {
+  background: var(--color-dark);
+}
+
+/* ── Flip cards inside dropdown 1 ── */
+.p5__cards-row {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 1018px;
+  gap: 12px;
+}
+.p5__card {
+  flex: 1;
+  height: 376px;
+  perspective: 1200px;
+  cursor: pointer;
+}
+.p5__card-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease;
+}
+.p5__card:hover .p5__card-inner { transform: rotateY(180deg); }
+.p5__card-front,
+.p5__card-back {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.p5__card-front {
+  background: #F8F4EE;
+  border: 1px solid #101212;
+}
+.p5__card-back {
+  background: #101212;
+  border: 1px solid #F8F4EE;
+  transform: rotateY(180deg);
+  justify-content: center;
+  gap: 12px;
+}
+.p5__card-text {
+  font-family: 'Simona Pro';
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 100%;
+  color: #101212;
+  text-align: right;
+  direction: rtl;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.p5__card-label {
+  font-family: 'Simona Pro';
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 100%;
+  color: #F8F4EE;
+  text-align: right;
+  direction: rtl;
+  align-self: stretch;
+}
+.p5__card-desc {
+  font-family: 'Simona Pro';
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 110%;
+  color: #F8F4EE;
+  text-align: right;
+  direction: rtl;
+  align-self: stretch;
+  margin: 0;
+}
+
+/* ── Dropdown 2: links list ── */
+.p5__links-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  width: 1018px;
+}
+.p5__links-subtitle {
+  font-family: 'Simona Pro', serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+  width: 100%;
+}
+.p5__links-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+.p5__list-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.p5__link {
+  font-family: 'Simona Pro', serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 110%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  text-decoration: underline;
+  flex: 1;
+}
+.p5__link:hover { opacity: 0.65; }
+.p5__bullet {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  padding-top: 4px;
+  box-sizing: border-box;
+}
+
+/* ═══════════════════════════════════════════
    Entrance animation
    ═══════════════════════════════════════════ */
 @keyframes panel-enter {
@@ -2318,6 +2700,7 @@ html, body {
 }
 .panel--entering {
   animation: panel-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
   .panel--entering {
@@ -2339,7 +2722,7 @@ html, body {
     <!-- ─────────────────────────────
          Panel 0 — HS logo / anchor
          ───────────────────────────── -->
-    <div class="panel panel--active" data-panel="0">
+    <div class="panel" data-panel="0">
       <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 0 — HS">
         <img src="Logo small.svg"       alt="HS" class="panel__tab-logo panel__tab-logo--light">
         <img src="Logo small balck.svg" alt=""   class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
@@ -2796,29 +3179,28 @@ html, body {
                 <div class="p3__cards-container">
                   <div class="p3__col-content">
 
-                    <!-- two-column row (right=מחמיר, left=מתחיל in RTL) -->
+                    <!-- two-column row: מתחיל RIGHT (first in DOM), מחמיר LEFT (last in DOM) -->
                     <div class="p3__col-row">
 
-                      <!-- Column מחמיר (right in RTL = first in DOM) -->
+                      <!-- Column מתחיל (right in RTL = first in DOM) — text right, illus left -->
                       <div class="p3__col-item">
-                        <!-- illustration (right in column = first in DOM in RTL) -->
+                        <div class="p3__col-text">
+                          <p class="p3__col-subtitle">איך זה מתחיל?</p>
+                          <p class="p3__col-body">בליטות ופצעים כואבים שחוזרים באותו מקום. עם ההחלמה, הם עלולים להשאיר צלקות ופיגמנטציה במקום הפצע.</p>
+                        </div>
                         <div class="p3__col-illus p3__col-illus--03-2">
                           <img src="Property 1=03.2.svg" alt="" aria-hidden="true">
                         </div>
+                      </div>
+
+                      <!-- Column מחמיר (left in RTL = last in DOM) — text right, illus left -->
+                      <div class="p3__col-item">
                         <div class="p3__col-text">
                           <p class="p3__col-subtitle">איך זה מחמיר?</p>
                           <p class="p3__col-body">במחלה בינונית או קשה הפצעים מתפתחים לגושים נוקשים, פצעים מפרישי מוגלה ותעלות מודלקות מתחת לעור.</p>
                         </div>
-                      </div>
-
-                      <!-- Column מתחיל (left in RTL = last in DOM) -->
-                      <div class="p3__col-item">
                         <div class="p3__col-illus p3__col-illus--03-1">
                           <img src="Property 1=03.1.svg" alt="" aria-hidden="true">
-                        </div>
-                        <div class="p3__col-text">
-                          <p class="p3__col-subtitle">איך זה מתחיל?</p>
-                          <p class="p3__col-body">בליטות ופצעים כואבים שחוזרים באותו מקום. עם ההחלמה, הם עלולים להשאיר צלקות ופיגמנטציה במקום הפצע.</p>
                         </div>
                       </div>
 
@@ -3063,13 +3445,123 @@ html, body {
     </div>
 
     <div class="panel" data-panel="5">
-      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 5 — מידע שימושי">
+      <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 5 — אודות ומידע נוסף">
         <div class="panel__tab-title-wrap">
-          <span class="panel__tab-title">מידע שימושי</span>
+          <span class="panel__tab-title">אודות ומידע נוסף</span>
         </div>
         <span class="panel__tab-num">5</span>
       </div>
-      <div class="panel__content" aria-hidden="true"></div>
+
+      <div class="panel__content p5" aria-hidden="true">
+
+        <!-- RIGHT: illustration sidebar (first child = rightmost in RTL) -->
+        <div class="p5__sidebar">
+          <div class="p5__illus-frame">
+            <img src="Property 1=2.svg"        alt="" aria-hidden="true" class="p5__shape1">
+            <img src="Property 1=Variant5.svg" alt="" aria-hidden="true" class="p5__shape2">
+            <img src="Frame 934.svg"            alt="" aria-hidden="true" class="p5__shape3">
+            <img src="Property 1=3.svg"        alt="" aria-hidden="true" class="p5__shape4">
+          </div>
+        </div>
+
+        <!-- LEFT: main scrollable content -->
+        <div class="p5__main">
+
+          <!-- Header -->
+          <div class="p5__header">
+            <h2 class="p5__title">תודה על ההקשבה.</h2>
+          </div>
+          <div class="p5__hdivider" role="separator"></div>
+
+          <!-- About section -->
+          <div class="p5__about">
+            <div class="p5__about-inner">
+              <h3 class="p5__subtitle">אודות ותודות</h3>
+              <!-- Two columns: right (first in DOM), left (second in DOM) -->
+              <div class="p5__cols">
+                <!-- Right column -->
+                <div class="p5__col">
+                  <p class="p5__col-text">אתר זה הוא פרויקט הגמר של אגניו טגניה ונגנה קפון, סטודנטים לתקש"ח בבצלאל.<br><br>הפרויקט צמח מתוך היכרות אישית וקרובה עם חולה HS, ועם המחיר הפיזי והנפשי שהמחלה גובה. היה לנו חשוב ליצור אתר שלא מציג רק מידע רפואי, אלא מעביר את החוויה עצמה. לכן, הפרויקט כולו נשען על מעורבות ישירה של חולות וחולי HS, שליווו את תהליך היצירה ושיתפו בחוויותיהם האישיות.</p>
+                </div>
+                <!-- Left column -->
+                <div class="p5__col">
+                  <p class="p5__col-text">תודה לחולים שלקחו חלק בפרויקט: ל-6 המרואיינות (במיוחד לש') ול-111 המשיבים לשאלון בישראל ו-195 בחו"ל - הפרויקט קיים בזכותכם.<br><br>תודה למומחי ה-HS פרופ' יובל רמות וד"ר יוסי טייב על ההסברים הרפואיים. תודה למנחים נעמה טוביאס ורונאל מור, לפרופ' עידו ברונו על הייעוץ, לאסף קליין על האיור, ולמשפחה והחברים על התמיכה האינסופית.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer note -->
+            <div class="p5__footnote-wrap">
+              <p class="p5__footnote">*המידע באתר מבוסס על עדויות חולים, מומחים ומידע מאתר איגוד רופאי העור הבריטי, ואינו מהווה תחליף לייעוץ או טיפול רופאי.</p>
+              <p class="p5__footnote">© 2026 כל הזכויות שמורות לאגניו טגניה ונגנה קפון.</p>
+            </div>
+          </div>
+
+          <!-- Dropdown 1 -->
+          <div class="p5__divider" role="separator"></div>
+          <div class="p5__dropdown" data-p5-dropdown>
+            <div class="p5__dropdown-header">
+              <p class="p5__dropdown-label">איך לתמוך באדם קרוב עם HS?</p>
+              <svg class="p5__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="p5__dropdown-body">
+              <!-- 5 cards RTL: first=rightmost visual -->
+              <div class="p5__cards-row">
+                <div class="p5__card"><div class="p5__card-inner">
+                  <div class="p5__card-front"><span class="p5__card-text">הבנה של גבולות</span></div>
+                  <div class="p5__card-back"><span class="p5__card-label">הבנה של גבולות</span><p class="p5__card-desc">לפעמים כאב דורש זמן התאוששות ומוביל לביטול תוכניות. כשהחולה רואה שאתם מקבלים את זה בהבנה ויודעים שזה לא אישי, זה מוריד ממנו הרבה לחץ.</p></div>
+                </div></div>
+                <div class="p5__card"><div class="p5__card-inner">
+                  <div class="p5__card-front"><span class="p5__card-text">עזרה מעשית</span></div>
+                  <div class="p5__card-back"><span class="p5__card-label">עזרה מעשית</span><p class="p5__card-desc">הרבה מהפצעים ממוקמים באזורים שקשה להגיע אליהם. עזרה בחבישות יכולה להיות משמעותית ומועילה עבור חולים רבים.</p></div>
+                </div></div>
+                <div class="p5__card"><div class="p5__card-inner">
+                  <div class="p5__card-front"><span class="p5__card-text">העלאת מודעות</span></div>
+                  <div class="p5__card-back"><span class="p5__card-label">העלאת מודעות</span><p class="p5__card-desc">ככל שנדבר על המחלה באופן חופשי יותר, כך נעזור לשבור את הטאבו ונמנע מאחרים אבחון שגוי.</p></div>
+                </div></div>
+                <div class="p5__card"><div class="p5__card-inner">
+                  <div class="p5__card-front"><span class="p5__card-text">הכלה וסבלנות</span></div>
+                  <div class="p5__card-back"><span class="p5__card-label">הכלה וסבלנות</span><p class="p5__card-desc">החיים עם המחלה שוחקים, ונדרש אומץ כדי לשתף בזה. הנוכחות והאכפתיות שלכם שוות המון.</p></div>
+                </div></div>
+                <div class="p5__card"><div class="p5__card-inner">
+                  <div class="p5__card-front"><span class="p5__card-text">לשאול ולהתעניין</span></div>
+                  <div class="p5__card-back"><span class="p5__card-label">לשאול ולהתעניין</span><p class="p5__card-desc">אם שיתפו אתכם, נסו ללמוד על המחלה יחד. עצם ההקשבה והשיח הפתוח איתכם מורידים הרבה מהחרדה.</p></div>
+                </div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dropdown 2 -->
+          <div class="p5__divider" role="separator"></div>
+          <div class="p5__dropdown" data-p5-dropdown>
+            <div class="p5__dropdown-header">
+              <p class="p5__dropdown-label">רוצים לדעת עוד?</p>
+              <svg class="p5__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="p5__dropdown-body">
+              <div class="p5__links-content">
+                <p class="p5__links-subtitle">לינקים שימושיים:</p>
+                <div class="p5__links-list">
+                  <!-- RTL: text first (rightmost), bullet second (leftmost) -->
+                  <div class="p5__list-item">
+                    <a href="https://www.bad.org.uk/pils/hidradenitis-suppurativa" target="_blank" rel="noopener" class="p5__link">HS באתר איגוד רופאי העור הבריטי (BAD) – מידע רפואי באנגלית.</a>
+                    <img src="list poin 05.svg" class="p5__bullet" alt="">
+                  </div>
+                  <div class="p5__list-item">
+                    <a href="https://www.clalit.co.il/he/your_health/family/Pages/hidradenitis_suppurativa.aspx" target="_blank" rel="noopener" class="p5__link">HS באתר קופת חולים "כללית" – מידע רפואי בעברית.</a>
+                    <img src="list poin 05.svg" class="p5__bullet" alt="">
+                  </div>
+                  <div class="p5__list-item">
+                    <a href="https://www.facebook.com/groups/1587557678179297/?locale=he_IL" target="_blank" rel="noopener" class="p5__link">קבוצת הפייסבוק של HS בישראל (לחולים בלבד).</a>
+                    <img src="list poin 05.svg" class="p5__bullet" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.p5__main -->
+      </div><!-- /.panel__content.p5 -->
     </div>
 
   </main>
@@ -3350,11 +3842,14 @@ html, body {
       let completed = 0;
 
       function onAllEntered() {
-        // Brief pause, then expand panel 1
-        setTimeout(() => {
-          const p0 = allPanels.find(p => p.dataset.panel === '0');
-          if (p0) p0.classList.add('panel--active');
-        }, 80);
+        // Let the browser paint one frame (all panel--entering removed),
+        // then open panel 0 so the flex transition fires cleanly.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const p0 = allPanels.find(p => p.dataset.panel === '0');
+            if (p0) p0.classList.add('panel--active');
+          });
+        });
       }
 
       allPanels.forEach((panel, i) => {
@@ -3375,9 +3870,9 @@ html, body {
             p.classList.remove('panel--entering');
             p.style.animationDelay = '';
           });
-          const p1 = allPanels.find(p => p.dataset.panel === '1');
-          if (p1 && !p1.classList.contains('panel--active')) {
-            p1.classList.add('panel--active');
+          const p0 = allPanels.find(p => p.dataset.panel === '0');
+          if (p0 && !p0.classList.contains('panel--active')) {
+            p0.classList.add('panel--active');
           }
         }
       }, (allPanels.length - 1) * STAGGER + 600);
@@ -3584,6 +4079,67 @@ html, body {
           if (!isOpen) item.classList.add('is-open');
         });
       });
+    }());
+
+    /* ══════════════════════════════════════════
+       Panel 5 — Dropdown toggle
+       ══════════════════════════════════════════ */
+    (function () {
+      document.querySelectorAll('[data-p5-dropdown] .p5__dropdown-header').forEach(header => {
+        header.addEventListener('click', () => {
+          const item = header.closest('[data-p5-dropdown]');
+          const isOpen = item.classList.contains('is-open');
+          document.querySelectorAll('[data-p5-dropdown]').forEach(d => d.classList.remove('is-open'));
+          if (!isOpen) item.classList.add('is-open');
+        });
+      });
+    }());
+
+    /* ══════════════════════════════════════════
+       Panel 5 — Shapes fall animation
+       ══════════════════════════════════════════ */
+    (function () {
+      const panel5 = document.querySelector('.panel[data-panel="5"]');
+      if (!panel5) return;
+
+      const shapeDefs = [
+        { sel: '.p5__shape1', delay:   0, extra: 'scaleX(-1)' },
+        { sel: '.p5__shape2', delay: 130, extra: ''            },
+        { sel: '.p5__shape3', delay: 280, extra: ''            },
+        { sel: '.p5__shape4', delay: 440, extra: ''            },
+      ];
+
+      const shapes = shapeDefs
+        .map(d => ({ el: panel5.querySelector(d.sel), delay: d.delay, extra: d.extra }))
+        .filter(d => d.el);
+
+      let runningAnims = [];
+
+      function runFall() {
+        runningAnims.forEach(a => { try { a.cancel(); } catch (_) {} });
+        runningAnims = shapes.map(({ el, delay, extra }) =>
+          el.animate([
+            { transform: `translateY(-680px) ${extra}`, opacity: 0,   offset: 0    },
+            { transform: `translateY(0)      ${extra}`, opacity: 1,   offset: 0.72 },
+            { transform: `translateY(14px)   ${extra}`, opacity: 1,   offset: 0.83 },
+            { transform: `translateY(-5px)   ${extra}`, opacity: 1,   offset: 0.91 },
+            { transform: `translateY(2px)    ${extra}`, opacity: 1,   offset: 0.96 },
+            { transform: `translateY(0)      ${extra}`, opacity: 1,   offset: 1    },
+          ], {
+            duration: 720,
+            delay,
+            easing: 'ease-in',
+            fill: 'both',
+          })
+        );
+      }
+
+      let wasActive = false;
+      new MutationObserver(() => {
+        const isActive = panel5.classList.contains('panel--active');
+        if (isActive && !wasActive) runFall();
+        wasActive = isActive;
+      }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
     }());
 
   </script>
