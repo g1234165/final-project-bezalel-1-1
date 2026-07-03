@@ -200,6 +200,14 @@ html, body {
   width: 1px;
   background: var(--color-light);
   pointer-events: none;
+  z-index: 1;
+}
+/* Panel 3: accordion open-items share the same light color as the ::before,
+   so disable the pseudo-element and use a real border on the content-area instead.
+   A border lives outside the element's content box and cannot be covered by
+   the accordion items' backgrounds. */
+.panel--active .panel__content.p3::before {
+  content: none;
 }
 
 /* ═══════════════════════════════════════════
@@ -1470,6 +1478,8 @@ html, body {
   height: 100%;
   overflow: hidden;
   min-width: 0;
+  border-left: 1px solid var(--color-light);
+  box-sizing: border-box;
 }
 .p3__header {
   flex: 0 0 22.991cqh;
