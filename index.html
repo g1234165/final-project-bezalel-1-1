@@ -1712,7 +1712,7 @@ html, body {
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 36px 80px 44px;
+  padding: 0 76px 44px 0;
   box-sizing: border-box;
   background: #F8F4EE;
   gap: 10px;
@@ -1755,6 +1755,7 @@ html, body {
   display: flex;
   flex-direction: row;
   align-items: center;
+  direction: ltr;
 }
 .p3__la-text {
   font-family: 'Simona Pro';
@@ -1793,18 +1794,7 @@ html, body {
 .p3__la--butt .p3__la-line { width: 4.980cqw; }
 .p3__la--butt .p3__la-shape { width: 3.414cqw; height: 6.923cqh; }
 
-/* ── Panel 3 item 02: body illustration layout ── */
-.p3__body-content {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 36px 80px 44px;
-  box-sizing: border-box;
-  gap: 28px;
-  width: 100%;
-  background: var(--color-light);
-}
+/* ── Panel 3 item 02: body illustration layout (legacy selectors, kept for reference) ── */
 
 /* Right side: description text (first in DOM = right in RTL) */
 .p3__body-text-wrap {
@@ -4034,17 +4024,58 @@ html, body {
 
 
     /* ══════════════════════════════════════════
-       Panel 3 — Accordion toggle
+       Panel 3 — Accordion toggle (animated)
        ══════════════════════════════════════════ */
     (function () {
+      function slideDown(el) {
+        el.style.display = 'flex';
+        el.style.flexDirection = 'column';
+        el.style.overflow = 'hidden';
+        el.style.height = '0';
+        el.offsetHeight; // force reflow
+        el.style.transition = 'height 0.42s ease';
+        el.style.height = el.scrollHeight + 'px';
+        function onEnd() {
+          el.style.height = '';
+          el.style.overflow = '';
+          el.style.transition = '';
+          el.removeEventListener('transitionend', onEnd);
+        }
+        el.addEventListener('transitionend', onEnd);
+      }
+
+      function slideUp(el) {
+        el.style.height = el.offsetHeight + 'px';
+        el.style.overflow = 'hidden';
+        el.offsetHeight; // force reflow
+        el.style.transition = 'height 0.42s ease';
+        el.style.height = '0';
+        function onEnd() {
+          el.style.height = '';
+          el.style.overflow = '';
+          el.style.transition = '';
+          el.style.display = 'none';
+          el.removeEventListener('transitionend', onEnd);
+        }
+        el.addEventListener('transitionend', onEnd);
+      }
+
       document.querySelectorAll('[data-p3-item] .p3__item-header').forEach(header => {
         header.addEventListener('click', () => {
           const item = header.closest('[data-p3-item]');
           const isOpen = item.classList.contains('is-open');
-          // Close all
-          document.querySelectorAll('[data-p3-item]').forEach(i => i.classList.remove('is-open'));
-          // Open clicked (if it wasn't already open)
-          if (!isOpen) item.classList.add('is-open');
+
+          // Close all open items
+          document.querySelectorAll('[data-p3-item].is-open').forEach(openItem => {
+            openItem.classList.remove('is-open');
+            slideUp(openItem.querySelector('.p3__item-body'));
+          });
+
+          // Open clicked item if it was closed
+          if (!isOpen) {
+            item.classList.add('is-open');
+            slideDown(item.querySelector('.p3__item-body'));
+          }
         });
       });
     }());
