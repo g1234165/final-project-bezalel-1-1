@@ -1110,23 +1110,29 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
 }
+
 .p4__popup-text {
   align-self: stretch;
   position: relative;
   line-height: 100%;
-  font-family: 'Narkiss Asaf TRIAL';
+  font-family: var(--font-heading); /* שימוש בטוקן של הפונט */
   font-weight: 400;
   text-align: right;
   direction: rtl;
   word-break: break-word;
+  margin: 0;
 }
-.p4__popup--small .p4__popup-text { font-size: 28px; }
-.p4__popup--big   .p4__popup-text { font-size: 44px; }
-.p4__popup--xl    .p4__popup-text { font-size: clamp(40px, 3.906cqw, 80px); line-height: 1; }
-.p4__popup--dark  .p4__popup-text { color: #F8F4EE; }
-.p4__popup--white .p4__popup-text { color: #101212; }
 
+/* הגדרות גדלים מבוססות טוקנים (Design Tokens) */
+.p4__popup--small .p4__popup-text { font-size: var(--fs-h3); }
+.p4__popup--big   .p4__popup-text { font-size: var(--fs-h3); }
+.p4__popup--xl    .p4__popup-text { font-size: clamp(40px, 3.906cqw, 80px); line-height: 1; }
+
+/* הגדרות צבעים */
+.p4__popup--dark  .p4__popup-text { color: var(--color-light); }
+.p4__popup--white .p4__popup-text { color: var(--color-dark); }
 /* Opening quote — right (21px frame, flex-end) */
 .p4__popup-qopen {
   width: 21px;
