@@ -3875,29 +3875,33 @@ html, body {
       }
 
       /* ── 16 cards, scattered across the content area (~1100×820px) ── */
-      const POPUPS = [
-        // כאב שקוף (cards 1–6) — מפוזר על כל רוחב הפאנל
-        { size:'small', type:'dark',  top:220, left: 350, rot:-8,  text:'צועקים ולא שומעים אותנו.' },
-        { size:'small', type:'dark',  top: 60, left: 820, rot:11,  text:'לא מבינים למה אתה לא מתפקד.' },
-        { size:'big',   type:'dark',  top:400, left:  50, rot:-6,  text:'את רמת הכאב, אנשים לא רואים. גם אם רואים פצע קטן, לא מבינים עד כמה הוא כואב.' },
-        { size:'small', type:'dark',  top: 55, left:1100, rot: 7,  text:'אנשים לא יבינו מה זה אומר שכואב לשבת.' },
-        { size:'big',   type:'dark',  top:380, left: 680, rot: 5,  text:'אף אחד לא ירגיש את הכאב הפיזי/הנפשי שלנו ואף אחד לא מבין.' },
-        { size:'small', type:'dark',  top:160, left: 200, rot:-12, text:'חושבים שאני מתרצת כשאני לא יכולה לצאת מהמיטה.' },
-        // דימוי גוף (cards 7–11)
-        { size:'small', type:'white', top:270, left: 950, rot: 9,  text:'שאלות כמו \'למה את עם מכנסיים\' כשאני בים.' },
-        { size:'small', type:'white', top: 90, left: 540, rot:-7,  text:'לחיות בהסתרה מתמדת גם אם זה בפרצוף.' },
-        { size:'big',   type:'white', top:460, left: 300, rot: 4,  text:'הכתמים השחורים באזורים הכי אינטימיים והצלקות שלא עוברות.' },
-        { size:'small', type:'dark',  top:210, left: 700, rot:-14, text:'בגדים מתלכלכים בגלל הפצעים, מביך.' },
-        { size:'small', type:'dark',  top:530, left:1050, rot:11,  text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' },
-        // אינטימיות (cards 12–13)
-        { size:'big',   type:'dark',  top:195, left: 130, rot:-9,  text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
-        { size:'small', type:'dark',  top:390, left: 900, rot: 6,  text:'השפעה על הדימוי העצמי וזוגיות.' },
-        // עומס נפשי (cards 14–15)
-        { size:'big',   type:'white', top:345, left: 490, rot:-4,  text:'זה מרגיש שאתה תלותי במחלה כמו מערכת יחסים רעילה.' },
-        { size:'small', type:'dark',  top:115, left:1150, rot: 8,  text:'הכי קשה לראות את הגוף נאכל יום אחרי יום ולדעת שלא תמיד יש מה לעשות.' },
-        // הנפש מצולקת — XL white (card 16)
-        { size:'xl',    type:'white', top: 60, left: 380, rot: 2,  text:'הנפש מצולקת.' },
-      ];
+     const POPUPS = [
+  // כאב שקוף
+  { size:'small', type:'dark',  top:220, left: 350, rot:-8,  text:'צועקים ולא שומעים אותנו.' },
+  { size:'small', type:'dark',  top: 60, left: 720, rot:11,  text:'לא מבינים למה אתה לא מתפקד.' }, /* הוקטן מ-820 */
+  { size:'big',   type:'dark',  top:400, left:  50, rot:-6,  text:'את רמת הכאב, אנשים לא רואים. גם אם רואים פצע קטן, לא מבינים עד כמה הוא כואב.' },
+  { size:'small', type:'dark',  top: 55, left: 780, rot: 7,  text:'אנשים לא יבינו מה זה אומר שכואב לשבת.' }, /* הוקטן משמעותית מ-1100 */
+  { size:'big',   type:'dark',  top:380, left: 600, rot: 5,  text:'אף אחד לא ירגיש את הכאב הפיזי/הנפשי שלנו ואף אחד לא מבין.' }, /* הוקטן מ-680 */
+  { size:'small', type:'dark',  top:160, left: 200, rot:-12, text:'חושבים שאני מתרצת כשאני לא יכולה לצאת מהמיטה.' },
+  
+  // דימוי גוף
+  { size:'small', type:'white', top:270, left: 750, rot: 9,  text:'שאלות כמו \'למה את עם מכנסיים\' כשאני בים.' }, /* הוקטן מ-950 */
+  { size:'small', type:'white', top: 90, left: 440, rot:-7,  text:'לחיות בהסתרה מתמדת גם אם זה בפרצוף.' }, /* הוקטן מ-540 */
+  { size:'big',   type:'white', top:460, left: 300, rot: 4,  text:'הכתמים השחורים באזורים הכי אינטימיים והצלקות שלא עוברות.' },
+  { size:'small', type:'dark',  top:210, left: 600, rot:-14, text:'בגדים מתלכלכים בגלל הפצעים, מביך.' }, /* הוקטן מ-700 */
+  { size:'small', type:'dark',  top:530, left: 800, rot:11,  text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' }, /* הוקטן מ-1050 */
+  
+  // אינטימיות
+  { size:'big',   type:'dark',  top:195, left: 130, rot:-9,  text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
+  { size:'small', type:'dark',  top:390, left: 700, rot: 6,  text:'השפעה על הדימוי העצמי וזוגיות.' }, /* הוקטן מ-900 */
+  
+  // עומס נפשי
+  { size:'big',   type:'white', top:345, left: 490, rot:-4,  text:'זה מרגיש שאתה תלותי במחלה כמו מערכת יחסים רעילה.' },
+  { size:'small', type:'dark',  top:115, left: 820, rot: 8,  text:'הכי קשה לראות את הגוף נאכל יום אחרי יום ולדעת שלא תמיד יש מה לעשות.' }, /* הוקטן משמעותית מ-1150 */
+  
+  // הנפש מצולקת
+  { size:'xl',    type:'white', top: 60, left: 380, rot: 2,  text:'הנפש מצולקת.' },
+];
 
       let shown      = 0;
       let falling    = false;
