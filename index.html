@@ -464,12 +464,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease, opacity 0.4s ease;
+  transition: transform 0.15s ease;
 }
 .p1__star:hover,
 .p1__star:focus-visible {
   transform: scale(1.2);
-  opacity: 1 !important;
   outline: none;
 }
 .p1__star svg {
@@ -3769,7 +3768,6 @@ html, body {
       if (quoteSpan) quoteSpan.textContent = '';
       document.querySelectorAll('.p1__star').forEach(star => {
         const active = filter === null || star.dataset.tags.split(',').includes(filter);
-        star.style.opacity       = active ? '1'    : '0.2';
         star.style.pointerEvents = active ? 'auto' : 'none';
         star.innerHTML           = makeStar(active);
       });
