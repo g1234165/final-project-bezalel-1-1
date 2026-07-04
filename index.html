@@ -471,6 +471,17 @@ html, body {
   height: 100%;
   display: block;
 }
+@keyframes p1-hint-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.p1__star--hint svg {
+  animation: p1-hint-spin 3s linear infinite;
+  transform-origin: center;
+}
+.p1__star--hint:hover svg {
+  animation-play-state: paused;
+}
 
 /* ── Scroll interaction ── */
 .p1__doctors-sticky {
@@ -3689,7 +3700,7 @@ html, body {
           const idx    = row * 10 + col;
           const doctor = shuffledDoctors[idx];
           const cell   = document.createElement('div');
-          cell.className = 'p1__star';
+          cell.className = idx === 0 ? 'p1__star p1__star--hint' : 'p1__star';
           cell.setAttribute('role', 'listitem');
           cell.setAttribute('tabindex', '0');
           cell.setAttribute('aria-label', `רופא/ה ${idx + 1}`);
