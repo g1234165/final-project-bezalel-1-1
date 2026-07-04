@@ -981,7 +981,7 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
+  overflow: visible; /* חייב להישאר visible */
   min-width: 0;
 }
 .p4__header {
@@ -1032,9 +1032,17 @@ html, body {
 /* ── Popup cards (Figma-exact structure) ── */
 .p4__popup-stage {
   position: absolute;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  
+  /* כאן הקסם: אנחנו מושכים את התיבה אל מחוץ לגבולות המקוריים שלה */
+  right: -60px; /* גולש ימינה על הנביגיישן. תשחקי עם המספר הזה עד שזה ייראה כמו בפיגמה */
+  left: -20px;  /* גולש טיפה שמאלה על האזור של המידע השימושי */
+  
+  overflow: hidden; /* חותך את הקלפים בדיוק בקווי הגלישה החדשים שהגדרנו */
+  
   pointer-events: none;
-  z-index: 10;
+  z-index: 100;
 }
 
 /* Base card — absolute, rotated, hidden until .p4--visible */
