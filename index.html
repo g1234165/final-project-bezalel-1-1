@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <title>HS</title>
   <style>
 
@@ -2361,6 +2362,7 @@ html, body {
   width: 14.355cqw;
   height: 52.523cqh;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .p5__illus-frame img {
@@ -4129,48 +4131,132 @@ html, body {
     }());
 
     /* ══════════════════════════════════════════
-       Panel 5 — Shapes fall animation
+       Panel 5 — Matter.js physics shapes
        ══════════════════════════════════════════ */
     (function () {
       const panel5 = document.querySelector('.panel[data-panel="5"]');
-      if (!panel5) return;
+      if (!panel5 || typeof Matter === 'undefined') return;
 
-      const shapeDefs = [
-        { sel: '.p5__shape1', delay:   0, extra: 'scaleX(-1)' },
-        { sel: '.p5__shape2', delay: 130, extra: ''            },
-        { sel: '.p5__shape3', delay: 280, extra: ''            },
-        { sel: '.p5__shape4', delay: 440, extra: ''            },
+      const frame  = panel5.querySelector('.p5__illus-frame');
+      const imgEls = [
+        panel5.querySelector('.p5__shape1'),
+        panel5.querySelector('.p5__shape2'),
+        panel5.querySelector('.p5__shape3'),
+        panel5.querySelector('.p5__shape4'),
+      ].filter(Boolean);
+
+      if (!frame || imgEls.length < 4) return;
+
+      // Shape sizes as fraction of frame (from CSS %)
+      // sx: horizontal flip flag (shape1 uses scaleX(-1) in original CSS)
+      const defs = [
+        { wF: 0.4626, hF: 0.3523, sx: -1 },
+        { wF: 0.5272, hF: 0.3452, sx:  1 },
+        { wF: 0.3844, hF: 0.4128, sx:  1 },
+        { wF: 0.5680, hF: 0.4181, sx:  1 },
       ];
 
-      const shapes = shapeDefs
-        .map(d => ({ el: panel5.querySelector(d.sel), delay: d.delay, extra: d.extra }))
-        .filter(d => d.el);
+      const { Engine, World, Bodies, Body, Mouse, MouseConstraint } = Matter;
 
-      let runningAnims = [];
+      let engine, world, bodies, mouseConstraint, animId, lastT;
 
-      function runFall() {
-        runningAnims.forEach(a => { try { a.cancel(); } catch (_) {} });
-        runningAnims = shapes.map(({ el, delay, extra }) =>
-          el.animate([
-            { transform: `translateY(-680px) ${extra}`, opacity: 0,   offset: 0    },
-            { transform: `translateY(0)      ${extra}`, opacity: 1,   offset: 0.72 },
-            { transform: `translateY(14px)   ${extra}`, opacity: 1,   offset: 0.83 },
-            { transform: `translateY(-5px)   ${extra}`, opacity: 1,   offset: 0.91 },
-            { transform: `translateY(2px)    ${extra}`, opacity: 1,   offset: 0.96 },
-            { transform: `translateY(0)      ${extra}`, opacity: 1,   offset: 1    },
-          ], {
-            duration: 720,
-            delay,
-            easing: 'ease-in',
-            fill: 'both',
-          })
-        );
+      function startPhysics() {
+        const rect = frame.getBoundingClientRect();
+        const W = rect.width;
+        const H = rect.height;
+
+        engine = Engine.create({ gravity: { x: 0, y: 1.2 } });
+        world  = engine.world;
+
+        // ── Invisible static boundaries ──────────────────
+        const thick = 80;
+        World.add(world, [
+          // floor
+          Bodies.rectangle(W / 2, H + thick / 2, W + thick * 2, thick,
+            { isStatic: true, friction: 0.55, restitution: 0.05 }),
+          // left wall
+          Bodies.rectangle(-thick / 2, H / 2, thick, H * 4,
+            { isStatic: true, friction: 0.3, restitution: 0.1 }),
+          // right wall
+          Bodies.rectangle(W + thick / 2, H / 2, thick, H * 4,
+            { isStatic: true, friction: 0.3, restitution: 0.1 }),
+        ]);
+
+        // ── One physics body per shape ────────────────────
+        bodies = defs.map((d, i) => {
+          const bw = W * d.wF;
+          const bh = H * d.hF;
+          // Stagger starting positions horizontally and above the top edge
+          const startX = W * (0.18 + i * 0.21);
+          const startY = -(bh * 0.5 + i * bh * 0.55);
+          const b = Bodies.rectangle(startX, startY, bw, bh, {
+            restitution: 0.22,
+            friction:    0.45,
+            frictionAir: 0.012,
+            density:     0.003,
+            chamfer: { radius: 5 },
+          });
+          // Small random tumble so they don't fall perfectly flat
+          Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.07);
+          return b;
+        });
+        World.add(world, bodies);
+
+        // ── Mouse drag + throw ────────────────────────────
+        const mouse = Mouse.create(frame);
+        mouseConstraint = MouseConstraint.create(engine, {
+          mouse,
+          constraint: { stiffness: 0.2, damping: 0.1, render: { visible: false } },
+        });
+        World.add(world, mouseConstraint);
+
+        // ── rAF loop: sync DOM images to physics bodies ───
+        lastT = 0;
+        function loop(t) {
+          animId = requestAnimationFrame(loop);
+          const dt = lastT ? Math.min(t - lastT, 50) : 16.667;
+          lastT = t;
+          Engine.update(engine, dt);
+
+          bodies.forEach((b, i) => {
+            const img = imgEls[i];
+            const d   = defs[i];
+            const bw  = W * d.wF;
+            const bh  = H * d.hF;
+            const { x, y } = b.position;
+            const a = b.angle;
+            const flip = d.sx === -1 ? ' scaleX(-1)' : '';
+            // Anchor img at top-left of frame, then place via transform
+            img.style.left            = '0';
+            img.style.top             = '0';
+            img.style.width           = bw + 'px';
+            img.style.height          = bh + 'px';
+            img.style.transformOrigin = '0 0';
+            // translate to body centre → rotate → offset back to top-left
+            img.style.transform =
+              `translate(${x}px,${y}px) rotate(${a}rad) translate(${-bw / 2}px,${-bh / 2}px)${flip}`;
+          });
+        }
+        animId = requestAnimationFrame(loop);
+      }
+
+      function stopPhysics() {
+        if (animId) { cancelAnimationFrame(animId); animId = null; }
+        if (engine) { Matter.World.clear(engine.world); Matter.Engine.clear(engine); engine = null; }
+        bodies = null; mouseConstraint = null; lastT = 0;
+        // Restore original CSS so the panel looks right if revisited before re-activating
+        imgEls.forEach(img => {
+          img.style.left = img.style.top = img.style.width = img.style.height = '';
+          img.style.transformOrigin = '';
+          img.style.transform = '';
+        });
       }
 
       let wasActive = false;
       new MutationObserver(() => {
         const isActive = panel5.classList.contains('panel--active');
-        if (isActive && !wasActive) runFall();
+        if  (isActive && !wasActive) startPhysics();
+        else if (!isActive && wasActive) stopPhysics();
         wasActive = isActive;
       }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
     }());
