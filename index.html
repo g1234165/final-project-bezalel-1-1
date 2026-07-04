@@ -72,22 +72,16 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════
-   Accordion canvas — 2048 × 1070 scaled
+   Accordion canvas — full-screen stretch
    ═══════════════════════════════════════════ */
 .accordion {
   display: flex;
   flex-direction: row;
-  width: 2048px;
-  height: 1070px;
+  width: 100dvw;
+  height: 100dvh;
   background: var(--color-dark);
   container-type: size;
   container-name: accordion;
-}
-@media (min-width: 1024px) {
-  .accordion {
-    width: min(100dvw, calc(100dvh * (2048 / 1070)));
-    height: min(100dvh, calc(100dvw * (1070 / 2048)));
-  }
 }
 
 /* ═══════════════════════════════════════════
