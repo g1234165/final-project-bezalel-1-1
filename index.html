@@ -1491,6 +1491,10 @@ html, body {
   min-width: 0;
   border-left: 1px solid var(--color-light);
   box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+.p3__content-area:has(.p3__accordion-item.is-open) {
+  border-left-color: var(--color-dark);
 }
 .p3__header {
   flex: 0 0 22.991cqh;
@@ -1521,6 +1525,10 @@ html, body {
   flex: 1;
   overflow-y: auto;
   min-width: 0;
+  scrollbar-width: none;
+}
+.p3__scroll-body::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Accordion items ── */
