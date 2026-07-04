@@ -1090,27 +1090,6 @@ html, body {
 .p4__popup--dark  { background: #101212; border: 1px solid #F8F4EE; }
 .p4__popup--white { background: #F8F4EE; border: 1px solid #101212; }
 
-/* ── Header: category label rotated -90deg ── */
-.p4__popup-header {
-  width: 100%;
-  padding: 48px 0 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.p4__popup-cat {
-  position: relative;
-  line-height: 110%;
-  font-family: 'Simona Pro';
-  font-size: var(--fs-body);
-  font-weight: 400;
-  transform: rotate(-90deg);
-  white-space: nowrap;
-}
-.p4__popup--dark  .p4__popup-cat { color: #F8F4EE; }
-.p4__popup--white .p4__popup-cat { color: #101212; }
-
 /* ── Body: quote marks + text (Figma frame-parent) ── */
 .p4__popup-body {
   flex: 1;
@@ -1126,7 +1105,7 @@ html, body {
 .p4__popup-qclose {
   width: 21px;
   flex-shrink: 0;
-  align-self: flex-end;
+  align-self: flex-start;
   line-height: 100%;
   font-size: var(--fs-h2);
   font-family: 'Narkiss Asaf TRIAL';
@@ -2771,7 +2750,7 @@ html, body {
                 <div class="p0__opening-row">
                   <!-- navigation-barlogo-hs -->
                   <div class="p0__logo-nav">
-                    <img src="/SVG/logo HS big.svg" alt="HS" class="p0__hs-logo">
+                    <img src="SVG/logo HS big.svg" alt="HS" class="p0__hs-logo">
                   </div>
                   <!-- opening-text -->
                   <div class="p0__opening-text">
@@ -3899,26 +3878,26 @@ html, body {
       /* ── 16 cards, scattered across the content area (~1100×820px) ── */
       const POPUPS = [
         // כאב שקוף (cards 1–6) — מפוזר על כל רוחב הפאנל
-        { size:'small', type:'dark',  top:220, left: 350, rot:-8,  cat:'כאב שקוף',  text:'צועקים ולא שומעים אותנו.' },
-        { size:'small', type:'dark',  top: 60, left: 820, rot:11,  cat:'כאב שקוף',  text:'לא מבינים למה אתה לא מתפקד.' },
-        { size:'big',   type:'dark',  top:400, left:  50, rot:-6,  cat:'כאב שקוף',  text:'את רמת הכאב, אנשים לא רואים. גם אם רואים פצע קטן, לא מבינים עד כמה הוא כואב.' },
-        { size:'small', type:'dark',  top: 55, left:1100, rot: 7,  cat:'כאב שקוף',  text:'אנשים לא יבינו מה זה אומר שכואב לשבת.' },
-        { size:'big',   type:'dark',  top:380, left: 680, rot: 5,  cat:'כאב שקוף',  text:'אף אחד לא ירגיש את הכאב הפיזי/הנפשי שלנו ואף אחד לא מבין.' },
-        { size:'small', type:'dark',  top:160, left: 200, rot:-12, cat:'כאב שקוף',  text:'חושבים שאני מתרצת כשאני לא יכולה לצאת מהמיטה.' },
+        { size:'small', type:'dark',  top:220, left: 350, rot:-8,  text:'צועקים ולא שומעים אותנו.' },
+        { size:'small', type:'dark',  top: 60, left: 820, rot:11,  text:'לא מבינים למה אתה לא מתפקד.' },
+        { size:'big',   type:'dark',  top:400, left:  50, rot:-6,  text:'את רמת הכאב, אנשים לא רואים. גם אם רואים פצע קטן, לא מבינים עד כמה הוא כואב.' },
+        { size:'small', type:'dark',  top: 55, left:1100, rot: 7,  text:'אנשים לא יבינו מה זה אומר שכואב לשבת.' },
+        { size:'big',   type:'dark',  top:380, left: 680, rot: 5,  text:'אף אחד לא ירגיש את הכאב הפיזי/הנפשי שלנו ואף אחד לא מבין.' },
+        { size:'small', type:'dark',  top:160, left: 200, rot:-12, text:'חושבים שאני מתרצת כשאני לא יכולה לצאת מהמיטה.' },
         // דימוי גוף (cards 7–11)
-        { size:'small', type:'white', top:270, left: 950, rot: 9,  cat:'דימוי גוף', text:'שאלות כמו \'למה את עם מכנסיים\' כשאני בים.' },
-        { size:'small', type:'white', top: 90, left: 540, rot:-7,  cat:'דימוי גוף', text:'לחיות בהסתרה מתמדת גם אם זה בפרצוף.' },
-        { size:'big',   type:'white', top:460, left: 300, rot: 4,  cat:'דימוי גוף', text:'הכתמים השחורים באזורים הכי אינטימיים והצלקות שלא עוברות.' },
-        { size:'small', type:'dark',  top:210, left: 700, rot:-14, cat:'דימוי גוף', text:'בגדים מתלכלכים בגלל הפצעים, מביך.' },
-        { size:'small', type:'dark',  top:530, left:1050, rot:11,  cat:'דימוי גוף', text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' },
+        { size:'small', type:'white', top:270, left: 950, rot: 9,  text:'שאלות כמו \'למה את עם מכנסיים\' כשאני בים.' },
+        { size:'small', type:'white', top: 90, left: 540, rot:-7,  text:'לחיות בהסתרה מתמדת גם אם זה בפרצוף.' },
+        { size:'big',   type:'white', top:460, left: 300, rot: 4,  text:'הכתמים השחורים באזורים הכי אינטימיים והצלקות שלא עוברות.' },
+        { size:'small', type:'dark',  top:210, left: 700, rot:-14, text:'בגדים מתלכלכים בגלל הפצעים, מביך.' },
+        { size:'small', type:'dark',  top:530, left:1050, rot:11,  text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' },
         // אינטימיות (cards 12–13)
-        { size:'big',   type:'dark',  top:195, left: 130, rot:-9,  cat:'אינטימיות', text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
-        { size:'small', type:'dark',  top:390, left: 900, rot: 6,  cat:'אינטימיות', text:'השפעה על הדימוי העצמי וזוגיות.' },
+        { size:'big',   type:'dark',  top:195, left: 130, rot:-9,  text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
+        { size:'small', type:'dark',  top:390, left: 900, rot: 6,  text:'השפעה על הדימוי העצמי וזוגיות.' },
         // עומס נפשי (cards 14–15)
-        { size:'big',   type:'white', top:345, left: 490, rot:-4,  cat:'עומס נפשי', text:'זה מרגיש שאתה תלותי במחלה כמו מערכת יחסים רעילה.' },
-        { size:'small', type:'dark',  top:115, left:1150, rot: 8,  cat:'עומס נפשי', text:'הכי קשה לראות את הגוף נאכל יום אחרי יום ולדעת שלא תמיד יש מה לעשות.' },
+        { size:'big',   type:'white', top:345, left: 490, rot:-4,  text:'זה מרגיש שאתה תלותי במחלה כמו מערכת יחסים רעילה.' },
+        { size:'small', type:'dark',  top:115, left:1150, rot: 8,  text:'הכי קשה לראות את הגוף נאכל יום אחרי יום ולדעת שלא תמיד יש מה לעשות.' },
         // הנפש מצולקת — XL white (card 16)
-        { size:'xl',    type:'white', top: 60, left: 380, rot: 2,  cat:'עומס נפשי', text:'הנפש מצולקת.' },
+        { size:'xl',    type:'white', top: 60, left: 380, rot: 2,  text:'הנפש מצולקת.' },
       ];
 
       let shown      = 0;
@@ -3932,9 +3911,6 @@ html, body {
         el.className = `p4__popup p4__popup--${p.size} p4__popup--${p.type}`;
         el.style.cssText = `top:${p.top}px;left:${p.left}px;--rot:${p.rot}deg;z-index:${10+i};`;
         el.innerHTML = `
-          <div class="p4__popup-header">
-            <span class="p4__popup-cat">${p.cat}</span>
-          </div>
           <div class="p4__popup-body">
             <span class="p4__popup-qclose">"</span>
             <div class="p4__popup-middle">
