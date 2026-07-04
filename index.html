@@ -3992,6 +3992,15 @@ html, body {
         scrollEl.scrollTop = 0;
       }
 
+      const p4ContentEl = document.querySelector('.panel__content.p4');
+      if (p4ContentEl) {
+        p4ContentEl.addEventListener('wheel', (e) => {
+          if (falling) return;
+          e.preventDefault();
+          scrollEl.scrollTop += e.deltaY;
+        }, { passive: false });
+      }
+
       scrollEl.addEventListener('scroll', () => {
         if (falling) return;
         const { scrollTop, scrollHeight, clientHeight } = scrollEl;
@@ -4000,7 +4009,7 @@ html, body {
 
         const N        = POPUPS.length;
         const progress = scrollTop / maxScroll;
-        const newShown = Math.min(N, Math.floor(progress * (N + 2)));
+        const newShown = Math.min(N, Math.floor(progress * (N + 2)) + 1);
 
         if (newShown > shown) {
           while (shown < newShown && shown < N) revealCard(shown++);
