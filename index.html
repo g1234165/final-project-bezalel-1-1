@@ -2365,7 +2365,7 @@ html, body {
   inset: 0;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .p5__illus-frame img {
@@ -4218,14 +4218,14 @@ html, body {
 
       if (!frame || imgEls.length < 4) return;
 
-      // Shape sizes as fraction of frame (from CSS %)
-      // sx: horizontal flip flag (shape1 uses scaleX(-1) in original CSS)
-      // wF based on 13.818cqw / 19.043cqw (sidebar); hF from each SVG's intrinsic h/w ratio
+      // wF: shape width as fraction of sidebar width (13.818cqw / 19.043cqw)
+      // aspect: SVG natural height/width ratio — bh is derived from bw, not from H
+      // sx: horizontal flip flag
       const defs = [
-        { wF: 0.7256, hF: 0.344, sx:  1 },  // p-1.svg  313×438
-        { wF: 0.7256, hF: 0.356, sx:  1 },  // p2.svg   254×368
-        { wF: 0.7256, hF: 0.309, sx: -1 },  // p-3.svg  288×363
-        { wF: 0.7256, hF: 0.509, sx:  1 },  // p-4.svg  208×431
+        { wF: 0.7256, aspect: 438 / 313, sx:  1 },  // p-1.svg  313×438
+        { wF: 0.7256, aspect: 368 / 254, sx:  1 },  // p2.svg   254×368
+        { wF: 0.7256, aspect: 363 / 288, sx: -1 },  // p-3.svg  288×363
+        { wF: 0.7256, aspect: 431 / 208, sx:  1 },  // p-4.svg  208×431
       ];
 
       const { Engine, World, Bodies, Body, Mouse, MouseConstraint } = Matter;
@@ -4257,19 +4257,17 @@ html, body {
         // ── One physics body per shape ────────────────────
         bodies = defs.map((d, i) => {
           const bw = W * d.wF;
-          const bh = H * d.hF;
-          // Stagger starting positions horizontally and above the top edge
-          const startX = W * (0.18 + i * 0.21);
-          const startY = -(bh * 0.5 + i * bh * 0.55);
+          const bh = bw * d.aspect;           // height from true SVG aspect ratio
+          // All shapes fall from above centre; small horizontal jitter
+          const startX = W / 2 + (Math.random() - 0.5) * W * 0.08;
+          const startY = -(bh / 2 + i * bh * 0.6);
           const b = Bodies.rectangle(startX, startY, bw, bh, {
-            restitution: 0.22,
-            friction:    0.45,
-            frictionAir: 0.012,
+            restitution: 0.04,   // minimal bounce → shapes settle and stack
+            friction:    0.85,   // high friction → shapes don't slide off each other
+            frictionAir: 0.018,
             density:     0.003,
-            chamfer: { radius: 5 },
           });
-          // Small random tumble so they don't fall perfectly flat
-          Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.07);
+          Body.setAngularVelocity(b, (Math.random() - 0.5) * 0.06);
           return b;
         });
         World.add(world, bodies);
@@ -4294,17 +4292,13 @@ html, body {
           const dt = lastT ? Math.min(t - lastT, 50) : 16.667;
           lastT = t;
 
-          // Keep mouse offset fresh — panel may have moved since startPhysics()
-          const fr = frame.getBoundingClientRect();
-          Matter.Mouse.setOffset(mouse, { x: fr.left, y: fr.top });
-
           Engine.update(engine, dt);
 
           bodies.forEach((b, i) => {
             const img = imgEls[i];
             const d   = defs[i];
             const bw  = W * d.wF;
-            const bh  = H * d.hF;
+            const bh  = bw * d.aspect;
             const { x, y } = b.position;
             const a = b.angle;
             const flip = d.sx === -1 ? ' scaleX(-1)' : '';
