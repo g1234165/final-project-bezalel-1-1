@@ -1734,8 +1734,8 @@ html, body {
   margin: 0;
 }
 
-/* ── Item 02: body illustration — absolute-positioned labels ── */
-/* outer two-column layout */
+/* ── Item 02: body illustration — single pre-composed SVG ── */
+/* outer two-column layout, clipped to a fixed-size frame */
 .p3__body-content {
   display: flex;
   flex-direction: row;
@@ -1745,6 +1745,10 @@ html, body {
   box-sizing: border-box;
   background: #F8F4EE;
   gap: 10px;
+  position: relative;
+  overflow: hidden;
+  height: 612px;
+  max-height: 612px;
 }
 /* right: description text */
 .p3__body-text-02 {
@@ -1761,6 +1765,17 @@ html, body {
   display: flex;
   align-items: center;
   height: 10.280cqh;
+  position: relative;
+  z-index: 2;
+}
+/* left: illustration, flush against the frame's edges */
+.p3__body-svg-clean {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: auto;
+  z-index: 1;
 }
 
 
@@ -2922,41 +2937,8 @@ html, body {
                   <!-- RIGHT: description text (first in DOM = right in RTL) -->
                   <p class="p3__body-text-02">פצעי HS עשויים להופיע כמעט בכל מקום, אך נוטים לפגוע בעיקר באזורי חיכוך ובקפלי עור כגון בתי שחי, מפשעות, ישבן ומתחת לשדיים (אצל נשים).</p>
 
-                  <!-- LEFT: body illustration with absolute labels -->
-                  <div class="p3__body-wrap-02">
-
-                    <!-- Union SVG: positioned to show torso -->
-                    <img src="Union.svg" alt="גוף אנושי" class="p3__body-svg-02">
-
-                    <!-- בתי שחי -->
-                    <div class="p3__la p3__la--armpits">
-                      <span class="p3__la-text">בתי שחי</span>
-                      <div class="p3__la-line"></div>
-                      <img src="Vector 737.svg" alt="" class="p3__la-shape" aria-hidden="true">
-                    </div>
-
-                    <!-- מתחת לשדיים -->
-                    <div class="p3__la p3__la--boobs">
-                      <span class="p3__la-text">מתחת לשדיים</span>
-                      <div class="p3__la-line"></div>
-                      <img src="Vector 737.svg" alt="" class="p3__la-shape" aria-hidden="true">
-                    </div>
-
-                    <!-- מפשעות -->
-                    <div class="p3__la p3__la--crotch">
-                      <span class="p3__la-text">מפשעות</span>
-                      <div class="p3__la-line"></div>
-                      <img src="Vector 738.svg" alt="" class="p3__la-shape" style="width:5.781cqw;height:11.776cqh;transform:rotate(3.03deg)" aria-hidden="true">
-                    </div>
-
-                    <!-- ישבן -->
-                    <div class="p3__la p3__la--butt">
-                      <span class="p3__la-text">ישבן</span>
-                      <div class="p3__la-line"></div>
-                      <img src="Vector 737.svg" alt="" class="p3__la-shape" aria-hidden="true">
-                    </div>
-
-                  </div>
+                  <!-- LEFT: body illustration (single pre-composed SVG, includes labels) -->
+                  <img src="SVG/p3 where it happens illustration 2.svg" alt="Illustration" class="p3__body-svg-clean">
                 </div>
               </div>
             </div>
