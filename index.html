@@ -2351,32 +2351,30 @@ html, body {
 .p5__sidebar {
   flex: 0 0 19.043cqw;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-end;
-  padding: 48px;
-  box-sizing: border-box;
   position: relative;
   border-left: 1px solid var(--color-light);
+  cursor: grab;
+}
+.p5__sidebar:active {
+  cursor: grabbing;
 }
 
 .p5__illus-frame {
-  position: relative;
-  width: 14.355cqw;
-  height: 52.523cqh;
-  flex-shrink: 0;
-  overflow: hidden;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
 .p5__illus-frame img {
   position: absolute;
   object-fit: contain;
 }
-.p5__shape1 { width: 46.26%; height: 35.23%; left: 50.00%; top: -4.80%; transform: scaleX(-1); }
-.p5__shape2 { width: 52.72%; height: 34.52%; left: 2.04%;  top: 17.08%; }
-.p5__shape3 { width: 38.44%; height: 41.28%; left: 58.16%; top: 41.82%; }
-.p5__shape4 { width: 56.80%; height: 41.81%; left: 0%;     top: 58.15%; }
+.p5__shape1 { width: 72.56%; height: 34.40%; left: 14%; top: -40%; }
+.p5__shape2 { width: 72.56%; height: 35.60%; left: 14%; top: -90%; }
+.p5__shape3 { width: 72.56%; height: 30.90%; left: 14%; top: -140%; }
+.p5__shape4 { width: 72.56%; height: 50.90%; left: 14%; top: -200%; }
 
 /* LEFT — scrollable main content */
 .p5__main {
@@ -3471,10 +3469,10 @@ html, body {
         <!-- RIGHT: illustration sidebar (first child = rightmost in RTL) -->
         <div class="p5__sidebar">
           <div class="p5__illus-frame">
-            <img src="Property 1=2.svg"        alt="" aria-hidden="true" class="p5__shape1">
-            <img src="Property 1=Variant5.svg" alt="" aria-hidden="true" class="p5__shape2">
-            <img src="Frame 934.svg"            alt="" aria-hidden="true" class="p5__shape3">
-            <img src="Property 1=3.svg"        alt="" aria-hidden="true" class="p5__shape4">
+            <img src="p-1.svg" alt="" aria-hidden="true" class="p5__shape1">
+            <img src="p2.svg"  alt="" aria-hidden="true" class="p5__shape2">
+            <img src="p-3.svg" alt="" aria-hidden="true" class="p5__shape3">
+            <img src="p-4.svg" alt="" aria-hidden="true" class="p5__shape4">
           </div>
         </div>
 
@@ -4146,7 +4144,7 @@ html, body {
       const panel5 = document.querySelector('.panel[data-panel="5"]');
       if (!panel5 || typeof Matter === 'undefined') return;
 
-      const frame  = panel5.querySelector('.p5__illus-frame');
+      const frame  = panel5.querySelector('.p5__sidebar');
       const imgEls = [
         panel5.querySelector('.p5__shape1'),
         panel5.querySelector('.p5__shape2'),
@@ -4158,11 +4156,12 @@ html, body {
 
       // Shape sizes as fraction of frame (from CSS %)
       // sx: horizontal flip flag (shape1 uses scaleX(-1) in original CSS)
+      // wF based on 13.818cqw / 19.043cqw (sidebar); hF from each SVG's intrinsic h/w ratio
       const defs = [
-        { wF: 0.4626, hF: 0.3523, sx: -1 },
-        { wF: 0.5272, hF: 0.3452, sx:  1 },
-        { wF: 0.3844, hF: 0.4128, sx:  1 },
-        { wF: 0.5680, hF: 0.4181, sx:  1 },
+        { wF: 0.7256, hF: 0.344, sx:  1 },  // p-1.svg  313×438
+        { wF: 0.7256, hF: 0.356, sx:  1 },  // p2.svg   254×368
+        { wF: 0.7256, hF: 0.309, sx: -1 },  // p-3.svg  288×363
+        { wF: 0.7256, hF: 0.509, sx:  1 },  // p-4.svg  208×431
       ];
 
       const { Engine, World, Bodies, Body, Mouse, MouseConstraint } = Matter;
@@ -4213,11 +4212,16 @@ html, body {
 
         // ── Mouse drag + throw ────────────────────────────
         const mouse = Mouse.create(frame);
+        Matter.Mouse.setScale(mouse, { x: 1, y: 1 });
         mouseConstraint = MouseConstraint.create(engine, {
           mouse,
-          constraint: { stiffness: 0.2, damping: 0.1, render: { visible: false } },
+          constraint: { stiffness: 0.35, damping: 0.1, render: { visible: false } },
         });
         World.add(world, mouseConstraint);
+
+        // Cursor feedback
+        Matter.Events.on(mouseConstraint, 'startdrag', () => { frame.style.cursor = 'grabbing'; });
+        Matter.Events.on(mouseConstraint, 'enddrag',   () => { frame.style.cursor = 'grab'; });
 
         // ── rAF loop: sync DOM images to physics bodies ───
         lastT = 0;
@@ -4225,6 +4229,11 @@ html, body {
           animId = requestAnimationFrame(loop);
           const dt = lastT ? Math.min(t - lastT, 50) : 16.667;
           lastT = t;
+
+          // Keep mouse offset fresh — panel may have moved since startPhysics()
+          const fr = frame.getBoundingClientRect();
+          Matter.Mouse.setOffset(mouse, { x: fr.left, y: fr.top });
+
           Engine.update(engine, dt);
 
           bodies.forEach((b, i) => {
@@ -4235,13 +4244,11 @@ html, body {
             const { x, y } = b.position;
             const a = b.angle;
             const flip = d.sx === -1 ? ' scaleX(-1)' : '';
-            // Anchor img at top-left of frame, then place via transform
             img.style.left            = '0';
             img.style.top             = '0';
             img.style.width           = bw + 'px';
             img.style.height          = bh + 'px';
             img.style.transformOrigin = '0 0';
-            // translate to body centre → rotate → offset back to top-left
             img.style.transform =
               `translate(${x}px,${y}px) rotate(${a}rad) translate(${-bw / 2}px,${-bh / 2}px)${flip}`;
           });
