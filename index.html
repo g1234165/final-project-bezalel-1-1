@@ -1539,6 +1539,9 @@ html, body {
 }
 .p3__accordion-item.is-open {
   background: var(--color-light);
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
 }
 .p3__accordion-item.is-open::after {
   content: '';
@@ -1568,8 +1571,11 @@ html, body {
   border-bottom: none;
 }
 
-/* Title row inside header */
+/* Title row inside header — raised above the item-02 illustration bleed
+   so the header's own text/chevron always stay legible on top of it */
 .p3__item-title-row {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -1639,7 +1645,6 @@ html, body {
 /* Expanded body */
 .p3__item-body {
   display: none;
-  background: var(--color-light);
   flex-direction: column;
 }
 .p3__accordion-item.is-open .p3__item-body {
@@ -1734,8 +1739,9 @@ html, body {
   margin: 0;
 }
 
-/* ── Item 02: body illustration — single pre-composed SVG ── */
-/* outer two-column layout, clipped to a fixed-size frame */
+/* ── Item 02: body illustration — bleeds behind the item header ── */
+/* outer two-column layout; min-height reserves room for the illustration,
+   in cqh so it scales with the real container instead of a fixed px guess */
 .p3__body-content {
   display: flex;
   flex-direction: row;
@@ -1743,12 +1749,9 @@ html, body {
   align-items: flex-start;
   padding: 0 76px 44px 0;
   box-sizing: border-box;
-  background: #F8F4EE;
   gap: 10px;
   position: relative;
-  overflow: hidden;
-  height: 612px;
-  max-height: 612px;
+  min-height: 57.192cqh;
 }
 /* right: description text */
 .p3__body-text-02 {
@@ -1765,17 +1768,21 @@ html, body {
   display: flex;
   align-items: center;
   height: 10.280cqh;
-  position: relative;
-  z-index: 2;
 }
-/* left: illustration, flush against the frame's edges */
+/* left: illustration, sized to match the body's own reserved height
+   (same scale as the rest of the figure), then shifted up by exactly the
+   header's height (10.093cqh) so it extends into the header area (the
+   header turns the same cream color as the body when open, so this reads
+   as one continuous illustration). z-index 0 puts it above the header's
+   own background so it's visible there, not hidden; .p3__item-title-row
+   is raised above it separately so the header's text/chevron stay legible. */
 .p3__body-svg-clean {
   position: absolute;
-  top: 0;
+  top: -10.093cqh;
   left: 0;
-  height: 100%;
+  height: calc(100% + 10.093cqh);
   width: auto;
-  z-index: 1;
+  z-index: 0;
 }
 
 
