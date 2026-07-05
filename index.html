@@ -1536,6 +1536,7 @@ html, body {
   display: flex;
   flex-direction: column;
   width: 100%;
+  transition: background-color 0.32s ease;
 }
 .p3__accordion-item.is-open {
   background: var(--color-light);
@@ -1623,7 +1624,7 @@ html, body {
 .p3__chevron {
   width: 22px;
   height: 14px;
-  transition: transform 0.3s ease;
+  transition: transform 0.48s cubic-bezier(0.34, 1.38, 0.64, 1);
   overflow: visible;
 }
 .p3__chevron path { transition: stroke 0.3s ease; }
@@ -2513,6 +2514,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  transition: background-color 0.32s ease;
 }
 
 .p5__dropdown-header {
@@ -2543,7 +2545,7 @@ html, body {
   width: 22px;
   height: 14px;
   flex-shrink: 0;
-  transition: transform 0.3s ease;
+  transition: transform 0.48s cubic-bezier(0.34, 1.38, 0.64, 1);
 }
 
 .p5__dropdown.is-open .p5__chevron {
@@ -4067,72 +4069,134 @@ html, body {
 
 
     /* ══════════════════════════════════════════
-       Panel 3 — Accordion toggle (animated)
+       Unified Accordion — Panel 3 + Panel 5
+       Spring height, staggered child reveal,
+       smart scroll to keep header in view.
        ══════════════════════════════════════════ */
     (function () {
-      function slideDown(el) {
-        el.style.display = 'flex';
-        el.style.flexDirection = 'column';
-        el.style.overflow = 'hidden';
-        el.style.height = '0';
-        el.offsetHeight; // force reflow
-        el.style.transition = 'height 0.42s ease';
-        el.style.height = el.scrollHeight + 'px';
-        function onEnd() {
-          el.style.height = '';
-          el.style.overflow = '';
-          el.style.transition = '';
-          el.removeEventListener('transitionend', onEnd);
-        }
-        el.addEventListener('transitionend', onEnd);
+      // ── Tunable parameters ──────────────────────
+      const SPRING_OPEN  = 'cubic-bezier(0.34, 1.38, 0.64, 1)'; // overshoot ~38%
+      const EASE_CLOSE   = 'cubic-bezier(0.4, 0, 0.6, 1)';
+      const DUR_OPEN     = 500;   // ms
+      const DUR_CLOSE    = 300;   // ms
+      const STAGGER_BASE = 160;   // ms delay before first child reveals
+      const STAGGER_STEP = 60;    // ms between each child
+
+      // ── Core open/close ─────────────────────────
+      function openBody(body) {
+        if (body._accAnim) { body._accAnim.cancel(); body._accAnim = null; }
+
+        body.style.display        = 'flex';
+        body.style.flexDirection  = 'column';
+        body.style.overflow       = 'hidden';
+        body.style.height         = '0px';
+        body.offsetHeight; // reflow
+
+        const fullH = body.scrollHeight;
+        const anim  = body.animate(
+          [{ height: '0px' }, { height: fullH + 'px' }],
+          { duration: DUR_OPEN, easing: SPRING_OPEN, fill: 'forwards' }
+        );
+        body._accAnim = anim;
+        anim.onfinish = () => {
+          if (body._accAnim !== anim) return;
+          body.style.height   = '';
+          body.style.overflow = '';
+          body._accAnim       = null;
+        };
+
+        // Stagger direct children: fade + slide from above
+        Array.from(body.children).forEach((child, i) => {
+          child.animate(
+            [
+              { opacity: '0', transform: 'translateY(-10px)' },
+              { opacity: '1', transform: 'translateY(0)'     }
+            ],
+            {
+              duration: 380,
+              delay: STAGGER_BASE + i * STAGGER_STEP,
+              easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+              fill: 'both',
+            }
+          );
+        });
       }
 
-      function slideUp(el) {
-        el.style.height = el.offsetHeight + 'px';
-        el.style.overflow = 'hidden';
-        el.offsetHeight; // force reflow
-        el.style.transition = 'height 0.42s ease';
-        el.style.height = '0';
-        function onEnd() {
-          el.style.height = '';
-          el.style.overflow = '';
-          el.style.transition = '';
-          el.style.display = 'none';
-          el.removeEventListener('transitionend', onEnd);
-        }
-        el.addEventListener('transitionend', onEnd);
+      function closeBody(body) {
+        if (body._accAnim) { body._accAnim.cancel(); body._accAnim = null; }
+        Array.from(body.children).forEach(c => c.getAnimations().forEach(a => a.cancel()));
+
+        const curH = body.offsetHeight;
+        body.style.height   = curH + 'px';
+        body.style.overflow = 'hidden';
+        body.offsetHeight;
+
+        const anim = body.animate(
+          [{ height: curH + 'px' }, { height: '0px' }],
+          { duration: DUR_CLOSE, easing: EASE_CLOSE, fill: 'forwards' }
+        );
+        body._accAnim = anim;
+        anim.onfinish = () => {
+          if (body._accAnim !== anim) return;
+          body.style.height   = '';
+          body.style.overflow = '';
+          body.style.display  = ''; // let CSS baseline (display:none) take over
+          body._accAnim       = null;
+        };
       }
 
+      // ── Smart scroll ────────────────────────────
+      // Scrolls the header into view within its scroll container
+      // if it's outside the visible area; delays so the height
+      // animation has had time to start.
+      function smartScroll(header, scrollEl) {
+        setTimeout(() => {
+          const hRect = header.getBoundingClientRect();
+          const sRect = scrollEl.getBoundingClientRect();
+          if (hRect.top < sRect.top + 8 || hRect.bottom > sRect.bottom - 8) {
+            const target = scrollEl.scrollTop + (hRect.top - sRect.top) - 20;
+            scrollEl.scrollTo({ top: Math.max(0, target), behavior: 'smooth' });
+          }
+        }, 100);
+      }
+
+      // ── Panel 3 ─────────────────────────────────
+      const p3Scroll = document.querySelector('#p3-scroll');
       document.querySelectorAll('[data-p3-item] .p3__item-header').forEach(header => {
         header.addEventListener('click', () => {
-          const item = header.closest('[data-p3-item]');
+          const item   = header.closest('[data-p3-item]');
           const isOpen = item.classList.contains('is-open');
 
-          // Close all open items
           document.querySelectorAll('[data-p3-item].is-open').forEach(openItem => {
             openItem.classList.remove('is-open');
-            slideUp(openItem.querySelector('.p3__item-body'));
+            closeBody(openItem.querySelector('.p3__item-body'));
           });
 
-          // Open clicked item if it was closed
           if (!isOpen) {
             item.classList.add('is-open');
-            slideDown(item.querySelector('.p3__item-body'));
+            openBody(item.querySelector('.p3__item-body'));
+            if (p3Scroll) smartScroll(header, p3Scroll);
           }
         });
       });
-    }());
 
-    /* ══════════════════════════════════════════
-       Panel 5 — Dropdown toggle
-       ══════════════════════════════════════════ */
-    (function () {
+      // ── Panel 5 ─────────────────────────────────
+      const p5Scroll = document.querySelector('.p5__main');
       document.querySelectorAll('[data-p5-dropdown] .p5__dropdown-header').forEach(header => {
         header.addEventListener('click', () => {
-          const item = header.closest('[data-p5-dropdown]');
+          const item   = header.closest('[data-p5-dropdown]');
           const isOpen = item.classList.contains('is-open');
-          document.querySelectorAll('[data-p5-dropdown]').forEach(d => d.classList.remove('is-open'));
-          if (!isOpen) item.classList.add('is-open');
+
+          document.querySelectorAll('[data-p5-dropdown].is-open').forEach(openItem => {
+            openItem.classList.remove('is-open');
+            closeBody(openItem.querySelector('.p5__dropdown-body'));
+          });
+
+          if (!isOpen) {
+            item.classList.add('is-open');
+            openBody(item.querySelector('.p5__dropdown-body'));
+            if (p5Scroll) smartScroll(header, p5Scroll);
+          }
         });
       });
     }());
