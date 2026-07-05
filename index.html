@@ -466,6 +466,10 @@ html, body {
   justify-content: center;
   transition: transform 0.15s ease;
 }
+.panel--active .p1__star {
+  animation: p1-star-enter 0.4s ease-out both;
+  animation-delay: calc(var(--i, 0) * 0.02s);
+}
 .p1__star:hover,
 .p1__star:focus-visible {
   transform: scale(1.2);
@@ -476,6 +480,10 @@ html, body {
   height: 100%;
   display: block;
 }
+@keyframes p1-star-enter {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
 @keyframes p1-hint-spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
@@ -483,9 +491,6 @@ html, body {
 .p1__star--hint svg {
   animation: p1-hint-spin 3s linear infinite;
   transform-origin: center;
-}
-.p1__star--hint:hover svg {
-  animation-play-state: paused;
 }
 
 /* ── Scroll interaction ── */
@@ -3705,13 +3710,17 @@ html, body {
           const doctor = shuffledDoctors[idx];
           const cell   = document.createElement('div');
           cell.className = idx === 0 ? 'p1__star p1__star--hint' : 'p1__star';
+          cell.style.setProperty('--i', idx);
           cell.setAttribute('role', 'listitem');
           cell.setAttribute('tabindex', '0');
           cell.setAttribute('aria-label', `רופא/ה ${idx + 1}`);
           cell.dataset.tags = doctor.tags.join(',');
           cell.innerHTML = makeStar(true);
 
-          cell.addEventListener('mouseenter', () => { quoteEl.textContent = doctor.quote; });
+          cell.addEventListener('mouseenter', () => {
+            cell.classList.remove('p1__star--hint');
+            quoteEl.textContent = doctor.quote;
+          });
           cell.addEventListener('mouseleave', () => { quoteEl.textContent = ''; });
           cell.addEventListener('focus',      () => { quoteEl.textContent = doctor.quote; });
           cell.addEventListener('blur',       () => { quoteEl.textContent = ''; });
@@ -3770,6 +3779,7 @@ html, body {
         const active = filter === null || star.dataset.tags.split(',').includes(filter);
         star.style.pointerEvents = active ? 'auto' : 'none';
         star.innerHTML           = makeStar(active);
+        if (!active) star.classList.remove('p1__star--hint');
       });
     }
 
