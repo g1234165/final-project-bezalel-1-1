@@ -1741,8 +1741,11 @@ html, body {
 
 /* ── Item 02: body illustration — bleeds behind the item header ── */
 /* outer two-column layout; min-height reserves room for the illustration,
-   in cqh so it scales with the real container instead of a fixed px guess */
+   in cqh so it scales with the real container instead of a fixed px guess.
+   --p3-item02-body-h is the one number to tweak if the size still needs
+   adjusting after a visual check. */
 .p3__body-content {
+  --p3-item02-body-h: 36cqh;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -1751,7 +1754,7 @@ html, body {
   box-sizing: border-box;
   gap: 10px;
   position: relative;
-  min-height: 57.192cqh;
+  min-height: var(--p3-item02-body-h);
 }
 /* right: description text */
 .p3__body-text-02 {
