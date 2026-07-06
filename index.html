@@ -15,15 +15,15 @@
   --color-light:       #F8F4EE;
   --font-body:         'Simona Pro', serif;
   --font-heading:      'Narkiss Asaf TRIAL', serif;
-  --fs-body:           clamp(11px, 0.9vw,  18px);
-  --fs-h2:             clamp(22px, 2.2vw,  44px);
-  --fs-h3:             clamp(15px, 1.4vw,  28px);
+  --fs-body:           clamp(11px, 0.879cqw, 18px);
+  --fs-h2:             clamp(22px, 2.148cqw, 44px);
+  --fs-h3:             clamp(15px, 1.367cqw, 28px);
   --lh-body:           1.1;
   --lh-heading:        1;
-  --sp-pad:            48px;
-  --sp-content:        80px;
-  --nav-w:             80px;
-  --sidebar-w:         470px;
+  --sp-pad:            4.484cqh;
+  --sp-content:        7.477cqh;
+  --nav-w:             3.906cqw;
+  --sidebar-w:         22.949cqw;
 }
 
 /* ═══════════════════════════════════════════
@@ -81,6 +81,8 @@ html, body {
   width: 100dvw;
   height: 100dvh;
   background: var(--color-dark);
+  container-type: size;
+  container-name: accordion;
 }
 
 /* ═══════════════════════════════════════════
@@ -233,7 +235,7 @@ html, body {
 /* Logo section — open-episode-frame-logo */
 .p1__logo-section {
   width: 100%;
-  height: 631px;
+  height: 58.972cqh;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -248,7 +250,7 @@ html, body {
 /* logo-big */
 .p1__logo-big {
   align-self: stretch;
-  width: 303px;
+  width: 14.795cqw;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -259,15 +261,15 @@ html, body {
 }
 /* logo-big-child */
 .p1__logo-big-child {
-  width: 303px;
-  height: 442px;
+  width: 14.795cqw;
+  height: 41.308cqh;
   position: relative;
   flex-shrink: 0;
 }
 /* vector-icon (the SVG image) */
 .p1__vector-icon {
   width: 100%;
-  height: 567px;
+  height: 52.944cqh;
   position: relative;
   max-width: 100%;
   overflow: hidden;
@@ -364,14 +366,14 @@ html, body {
 
 /* Title bar */
 .p1__doctors-header {
-  flex: 0 0 246px;
+  flex: 0 0 22.991cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   width: 100%;
 }
 .p1__doctors-title {
-  min-height: 184px;
+  min-height: 17.196cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -408,7 +410,7 @@ html, body {
 .p1__quote {
   width: 100%;
   flex-shrink: 0;
-  height: 80px;
+  height: 7.477cqh;
   position: relative;
   display: flex;
   align-items: center;
@@ -424,9 +426,9 @@ html, body {
 .p1__quote-text {
   position: relative;
   z-index: 1;
-  width: 702px;
+  width: 34.277cqw;
   font-family: 'Simona Pro';
-  font-size: clamp(14px, 1.2vw, 24px);
+  font-size: clamp(14px, 1.172cqw, 24px);
   font-weight: 400;
   line-height: 100%;
   color: #F8F4EE;
@@ -442,7 +444,7 @@ html, body {
 
 /* Stars grid */
 .p1__stars-grid {
-  width: 935px;
+  width: 45.654cqw;
   max-width: 100%;
   display: flex;
   flex-direction: column;
@@ -495,13 +497,13 @@ html, body {
 .p1__doctors-sticky {
   position: sticky;
   top: 0;
-  height: 1070px;
+  height: 100cqh;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
 }
 .p1__scroll-track {
-  height: 428px;
+  height: 40cqh;
   flex-shrink: 0;
   pointer-events: none;
 }
@@ -525,7 +527,7 @@ html, body {
 }
 .p2__logo-section {
   width: 100%;
-  height: 631px;
+  height: 58.972cqh;
   flex-shrink: 0;
   overflow: hidden;
   display: flex;
@@ -538,7 +540,7 @@ html, body {
 }
 .p2__logo-big {
   align-self: stretch;
-  width: 303px;
+  width: 14.795cqw;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -548,7 +550,7 @@ html, body {
   box-sizing: border-box;
 }
 .p2__vector-icon {
-  width: 283px;
+  width: 13.818cqw;
   height: auto;
   display: block;
 }
@@ -623,14 +625,14 @@ html, body {
   min-width: 0;
 }
 .p2__schedule-header {
-  flex: 0 0 246px;
+  flex: 0 0 22.991cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   width: 100%;
 }
 .p2__title {
-  min-height: 184px;
+  min-height: 17.196cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -658,12 +660,12 @@ html, body {
 }
 .p2__schedule-frame {
   width: 100%;
-  min-height: 2129px;
+  min-height: 199.0cqh;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding: 80px 36px 90px 0;
+  padding: 7.477cqh 1.758cqw 8.411cqh 0;
   box-sizing: border-box;
 }
 
@@ -756,7 +758,7 @@ html, body {
 .p2__tasks {
   position: absolute;
   left: 0;
-  top: 152px;
+  top: 14.206cqh;
   width: 100%;
   font-family: 'Narkiss Asaf TRIAL';
 }
@@ -764,8 +766,8 @@ html, body {
 /* wrapper: has the task's exact height — both states sit inside */
 .p2__task-wrap {
   position: absolute;
-  left: 30px;
-  width: 920px;
+  left: 1.465cqw;
+  width: 44.922cqw;
   overflow: visible;
 }
 
@@ -886,7 +888,7 @@ html, body {
 .p2__task-reason {
   align-self: stretch;
   font-family: 'Simona Pro';
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
   color: #F8F4EE;
   text-align: right;
@@ -916,7 +918,7 @@ html, body {
 }
 .p4__logo-section {
   width: 100%;
-  height: 631px;
+  height: 58.972cqh;
   flex-shrink: 0;
   overflow: hidden;
   display: flex;
@@ -929,7 +931,7 @@ html, body {
 }
 .p4__logo-big {
   align-self: stretch;
-  width: 303px;
+  width: 14.795cqw;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -939,7 +941,7 @@ html, body {
   box-sizing: border-box;
 }
 .p4__vector-icon {
-  width: 283px;
+  width: 13.818cqw;
   height: auto;
   display: block;
 }
@@ -1013,14 +1015,14 @@ html, body {
   min-width: 0;
 }
 .p4__header {
-  flex: 0 0 246px;
+  flex: 0 0 22.991cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   width: 100%;
 }
 .p4__title {
-  min-height: 184px;
+  min-height: 17.196cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -1047,13 +1049,13 @@ html, body {
   position: relative;
 }
 .p4__scroll-track {
-  height: 6420px;
+  height: 600cqh;
   pointer-events: none;
 }
 .p4__sticky {
   position: sticky;
   top: 0;
-  height: 1070px;
+  height: 100cqh;
   overflow: hidden;
 }
 
@@ -1097,9 +1099,9 @@ html, body {
 }
 
 /* Sizes */
-.p4__popup--small { width: 480px; min-height: 302px; }
-.p4__popup--big   { width: 680px; min-height: 423px; }
-.p4__popup--xl    { width: 850px; min-height: 713px; }
+.p4__popup--small { width: 23.438cqw; min-height: 28.224cqh; }
+.p4__popup--big   { width: 33.203cqw; min-height: 39.533cqh; }
+.p4__popup--xl    { width: 41.504cqw; min-height: 66.636cqh; }
 
 /* Colors */
 .p4__popup--dark  { background: #101212; border: 1px solid #F8F4EE; }
@@ -1151,7 +1153,7 @@ html, body {
 }
 .p4__popup--small .p4__popup-text { font-size: 28px; }
 .p4__popup--big   .p4__popup-text { font-size: 44px; }
-.p4__popup--xl    .p4__popup-text { font-size: clamp(40px, 4.0vw, 80px); line-height: 1; }
+.p4__popup--xl    .p4__popup-text { font-size: clamp(40px, 3.906cqw, 80px); line-height: 1; }
 .p4__popup--dark  .p4__popup-text { color: #F8F4EE; }
 .p4__popup--white .p4__popup-text { color: #101212; }
 
@@ -1215,14 +1217,14 @@ html, body {
 .p0__illustration {
   width: 100%;
   height: 100%;
-  max-height: 689px;
+  max-height: 64.393cqh;
   object-fit: contain;
 }
 
 /* lower-frame-home — flex COLUMN, 248px */
 .p0__lower-frame {
   width: 100%;
-  height: 248px;
+  height: 23.178cqh;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1265,7 +1267,7 @@ html, body {
 /* big-right-frame */
 .p0__big-right-frame {
   align-self: stretch;
-  max-width: 1024px; width: 100%;
+  width: 50.0cqw;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1287,7 +1289,7 @@ html, body {
 
 /* opening-text wrapper */
 .p0__opening-text {
-  width: 379px;
+  width: 18.506cqw;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1310,7 +1312,7 @@ html, body {
 
 /* navigation-barlogo-hs */
 .p0__logo-nav {
-  height: 120px;
+  height: 11.215cqh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1320,8 +1322,8 @@ html, body {
 
 /* navigation-barlogo-hs-child */
 .p0__hs-logo {
-  width: 144px;
-  height: 120px;
+  width: 7.031cqw;
+  height: 11.215cqh;
   position: relative;
   object-fit: contain;
   display: block;
@@ -1353,8 +1355,8 @@ html, body {
 
 /* .hs — description text */
 .p0__desc-text {
-  width: 326px;
-  height: 112px;
+  width: 15.918cqw;
+  height: 10.467cqh;
   position: relative;
   line-height: 100%;
   display: flex;
@@ -1391,7 +1393,7 @@ html, body {
 }
 .p3__logo-section {
   width: 100%;
-  height: 631px;
+  height: 58.972cqh;
   flex-shrink: 0;
   overflow: hidden;
   display: flex;
@@ -1404,7 +1406,7 @@ html, body {
 }
 .p3__logo-big {
   align-self: stretch;
-  width: 303px;
+  width: 14.795cqw;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -1414,7 +1416,7 @@ html, body {
   box-sizing: border-box;
 }
 .p3__vector-icon {
-  width: 283px;
+  width: 13.818cqw;
   height: auto;
   display: block;
   object-fit: contain;
@@ -1495,7 +1497,7 @@ html, body {
   border-left-color: var(--color-dark);
 }
 .p3__header {
-  flex: 0 0 246px;
+  flex: 0 0 22.991cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -1538,9 +1540,6 @@ html, body {
 }
 .p3__accordion-item.is-open {
   background: var(--color-light);
-  position: relative;
-  z-index: 0;
-  overflow: hidden;
 }
 .p3__accordion-item.is-open::after {
   content: '';
@@ -1553,7 +1552,7 @@ html, body {
 
 /* Header row: 108px, padding 36px 80px */
 .p3__item-header {
-  height: 108px;
+  height: 10.093cqh;
   background: var(--color-dark);
   display: flex;
   flex-direction: row;
@@ -1570,11 +1569,8 @@ html, body {
   border-bottom: none;
 }
 
-/* Title row inside header — raised above the item-02 illustration bleed
-   so the header's own text/chevron always stay legible on top of it */
+/* Title row inside header */
 .p3__item-title-row {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -1644,6 +1640,7 @@ html, body {
 /* Expanded body */
 .p3__item-body {
   display: none;
+  background: var(--color-light);
   flex-direction: column;
 }
 .p3__accordion-item.is-open .p3__item-body {
@@ -1659,13 +1656,13 @@ html, body {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  max-width: 942px; width: 100%;
+  width: 46.0cqw;
   gap: 12px;
 }
 /* Each card: flex:1, 376px tall — flip on hover */
 .p3__card {
   flex: 1;
-  height: 376px;
+  height: 35.14cqh;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -1707,7 +1704,7 @@ html, body {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   line-height: 100%;
   color: #101212;
   text-align: right;
@@ -1718,7 +1715,7 @@ html, body {
 }
 .p3__card-label {
   font-family: 'Simona Pro';
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
   line-height: 100%;
   color: #F8F4EE;
@@ -1738,9 +1735,8 @@ html, body {
   margin: 0;
 }
 
-/* ── Item 02: body illustration — bleeds behind the item header ── */
-/* outer two-column layout; min-height reserves room for the illustration,
-   in px (converted from cq units) */
+/* ── Item 02: body illustration — absolute-positioned labels ── */
+/* outer two-column layout */
 .p3__body-content {
   display: flex;
   flex-direction: row;
@@ -1748,17 +1744,16 @@ html, body {
   align-items: flex-start;
   padding: 0 76px 44px 0;
   box-sizing: border-box;
+  background: #F8F4EE;
   gap: 10px;
-  position: relative;
-  min-height: 612px;
 }
 /* right: description text */
 .p3__body-text-02 {
-  width: 316px;
+  width: 15.430cqw;
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   line-height: 100%;
   color: #101212;
   text-align: right;
@@ -1766,24 +1761,242 @@ html, body {
   margin: 0;
   display: flex;
   align-items: center;
-  height: 110px;
+  height: 10.280cqh;
 }
-/* left: illustration, sized to match the body's own reserved height
-   (same scale as the rest of the figure), then shifted up by exactly the
-   header's height (108px) so it extends into the header area (the
-   header turns the same cream color as the body when open, so this reads
-   as one continuous illustration). z-index 0 puts it above the header's
-   own background so it's visible there, not hidden; .p3__item-title-row
-   is raised above it separately so the header's text/chevron stay legible. */
-.p3__body-svg-clean {
+/* left: body illustration container */
+.p3__body-wrap-02 {
+  position: relative;
+  width: 21.191cqw;
+  height: 43.738cqh;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+/* Union.svg — positioned to show torso area */
+.p3__body-svg-02 {
   position: absolute;
-  top: -108px;
-  left: 0;
-  height: calc(100% + 108px);
-  width: auto;
+  width: 79.28%;
+  height: 195.27%;
+  top: -35.26%;
+  left: 20.72%;
+}
+/* Each label group: absolute, flex row [text — line — shape] */
+.p3__la {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  direction: ltr;
+}
+.p3__la-text {
+  font-family: 'Simona Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: 110%;
+  color: #101212;
+  text-align: right;
+  white-space: nowrap;
+  padding: 0 12px;
+  margin: 0 -8px;
+  flex-shrink: 0;
+}
+.p3__la-line {
+  height: 0;
+  border-top: 0.692308px solid #101212;
+  flex-shrink: 0;
+  margin: 0 -8px;
+}
+.p3__la-shape { display: block; flex-shrink: 0; }
+/* Per-label positions & line widths */
+.p3__la--armpits { top: 9.19%;  left: 0; }
+.p3__la--armpits .p3__la-line { width: 11.768cqw; }
+.p3__la--armpits .p3__la-shape { width: 3.414cqw; height: 6.923cqh; }
+
+.p3__la--boobs { top: 17.74%; left: 26.96%; }
+.p3__la--boobs .p3__la-line { width: 3.857cqw; }
+.p3__la--boobs .p3__la-shape { width: 3.414cqw; height: 6.923cqh; }
+
+.p3__la--crotch { top: 56.84%; left: 0; }
+.p3__la--crotch .p3__la-line { width: 7.422cqw; }
+.p3__la--crotch .p3__la-shape { width: 5.781cqw; height: 11.776cqh; transform: rotate(3.03deg); }
+
+.p3__la--butt { top: 78.85%; left: 38.48%; }
+.p3__la--butt .p3__la-line { width: 4.980cqw; }
+.p3__la--butt .p3__la-shape { width: 3.414cqw; height: 6.923cqh; }
+
+/* ── Panel 3 item 02: body illustration layout (legacy selectors, kept for reference) ── */
+
+/* Right side: description text (first in DOM = right in RTL) */
+.p3__body-text-wrap {
+  width: 19.141cqw;
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  padding-top: 4px;
+}
+.p3__body-desc {
+  font-family: 'Simona Pro';
+  font-size: clamp(13px, 1.074cqw, 22px);
+  font-weight: 400;
+  line-height: 100%;
+  color: var(--color-dark);
+  text-align: right;
+  direction: rtl;
+  margin: 0;
+  width: 316px;
+}
+
+/* Left side: illustration (last in DOM = left in RTL) */
+/* illustration container — justify: center clips the CENTER of the tall body figure */
+.p3__body-illustration {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 0;
+  isolation: isolate;
+  width: 434px;
+  height: 468px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* body figure (flex child, NOT absolute) — 1029.85px tall, overflows & is clipped */
+.p3__body-figure {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 116px 0 0;
+  width: 434px;
+  height: 1029.85px;
+  flex-shrink: 0;
   z-index: 0;
 }
 
+/* Union.svg — exact Figma dimensions */
+.p3__body-outline {
+  width: 344.08px;
+  height: 913.85px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Shapes + labels overlay (position: absolute, z-index: 1) */
+.p3__body-shapes {
+  position: absolute;
+  top: 0; left: 0;
+  width: 380.92px;
+  height: 426.3px;
+  padding: 60px 0 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 1;
+}
+
+/* ── armpits: full width, padding-bottom 20px, margin -44px ── */
+.p3__body-area--armpits {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 0 20px;
+  width: 380.92px;
+  height: 94.08px;
+  flex-shrink: 0;
+  margin: -44px 0;
+}
+/* ── boobs: narrower, justify flex-end, margin -44px ── */
+.p3__body-area--boobs {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0;
+  width: 263.92px;
+  height: 74.08px;
+  flex-shrink: 0;
+  margin: -44px 0;
+}
+/* ── crotch: 124px top padding, margin -44px ── */
+.p3__body-area--crotch {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 124px 0 0;
+  width: 349.87px;
+  height: 256.07px;
+  flex-shrink: 0;
+  margin: -44px 0;
+}
+/* ── butt: narrow, justify flex-end, no margin ── */
+.p3__body-area--butt {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0;
+  width: 213.92px;
+  height: 74.08px;
+  flex-shrink: 0;
+}
+
+/* Label wrapper (Frame 979) — specific width per area + margin: 0 -8px */
+.p3__area-label-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 12px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: 0 -8px;
+}
+.p3__body-area--armpits .p3__area-label-wrap { width: 86px; }
+.p3__body-area--boobs   .p3__area-label-wrap { width: 131px; }
+.p3__body-area--crotch  .p3__area-label-wrap { width: 89px; }
+.p3__body-area--butt    .p3__area-label-wrap { width: 58px; }
+
+.p3__area-label {
+  font-family: 'Simona Pro';
+  font-style: normal;
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: 110%;
+  color: var(--color-dark);
+  text-align: right;
+  white-space: nowrap;
+  align-self: stretch;
+}
+
+/* Line 276 — border (not background), specific width per area, margin: 0 -8px */
+.p3__area-line {
+  height: 0;
+  border-top: 0.692308px solid var(--color-dark);
+  flex-shrink: 0;
+  margin: 0 -8px;
+}
+.p3__body-area--armpits .p3__area-line { width: 241px; }
+.p3__body-area--boobs   .p3__area-line { width: 79px; }
+.p3__body-area--crotch  .p3__area-line { width: 152px; }
+.p3__body-area--butt    .p3__area-line { width: 102px; }
+
+/* Shape images (Vector 737 / Vector 738) */
+.p3__area-shape {
+  width: 69.92px;
+  height: 74.08px;
+  display: block;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.p3__area-shape--large {
+  width: 118.38px;
+  height: 126px;
+  transform: rotate(3.03deg);
+}
 
 /* ── Panel 3 item 03: two-column with illustrations ── */
 .p3__col-content {
@@ -1801,7 +2014,7 @@ html, body {
   justify-content: flex-end;
   align-items: flex-start;
   gap: 46px;
-  max-width: 942px; width: 100%;
+  width: 46.0cqw;
 }
 .p3__col-item {
   display: flex;
@@ -1809,8 +2022,8 @@ html, body {
   justify-content: flex-end;
   align-items: flex-start;
   gap: 28px;
-  width: 448px;
-  height: 148px;
+  width: 21.875cqw;
+  height: 13.832cqh;
   flex: 1;
 }
 .p3__col-illus {
@@ -1818,8 +2031,8 @@ html, body {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  width: 200px;
-  height: 148px;
+  width: 9.766cqw;
+  height: 13.832cqh;
   flex: 1;
   flex-shrink: 0;
 }
@@ -1827,24 +2040,24 @@ html, body {
   display: block;
   object-fit: contain;
 }
-.p3__col-illus--03-1 img { width: 124px; height: 148px; }
-.p3__col-illus--03-2 img { width: 21px; height: 69px; transform: rotate(32.67deg); }
+.p3__col-illus--03-1 img { width: 6.055cqw; height: 13.832cqh; }
+.p3__col-illus--03-2 img { width: 1.022cqw; height: 6.442cqh; transform: rotate(32.67deg); }
 .p3__col-text {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
-  width: 220px;
+  width: 10.742cqw;
   flex-shrink: 0;
 }
 /* sub-title (Figma: 220×22px, flex, align-items center) */
 .p3__col-subtitle {
-  width: 220px;
-  height: 22px;
+  width: 10.742cqw;
+  height: 2.056cqh;
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   line-height: 100%;
   color: var(--color-dark);
   text-align: right;
@@ -1858,8 +2071,8 @@ html, body {
 
 /* text (Figma: 220×80px, flex, align-items center) */
 .p3__col-body {
-  width: 220px;
-  height: 100px;
+  width: 10.742cqw;
+  height: 9.346cqh;
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
@@ -1877,7 +2090,7 @@ html, body {
 
 /* footer text (item 03 bottom line) */
 .p3__col-footer {
-  width: 839px;
+  width: 40.967cqw;
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
@@ -1893,17 +2106,17 @@ html, body {
 }
 
 /* ── Item 05 illustration sizes ── */
-.p3__col-illus--05-1 img { width: 154px; height: 170px; transform: rotate(90deg); }
-.p3__col-illus--05-2 img { width: 163px; height: 151px; }
-.p3__col-illus--06-1 img { width: 150px; height: 68px; }
-.p3__col-illus--06-2 img { width: 134px; height: 67px; }
-.p3__col-row--tall    { height: 218px; }
-.p3__col-item--tall   { height: 218px; }
-.p3__col-illus--tall  { height: 218px; }
+.p3__col-illus--05-1 img { width: 7.520cqw; height: 15.888cqh; transform: rotate(90deg); }
+.p3__col-illus--05-2 img { width: 7.957cqw; height: 14.089cqh; }
+.p3__col-illus--06-1 img { width: 7.324cqw; height: 6.355cqh; }
+.p3__col-illus--06-2 img { width: 6.543cqw; height: 6.262cqh; }
+.p3__col-row--tall    { height: 20.374cqh; }
+.p3__col-item--tall   { height: 20.374cqh; }
+.p3__col-illus--tall  { height: 20.374cqh; }
 
 /* ── Bullet list — list-frame, list-05, div, list-poin-05 (Figma-exact) ── */
 .p3__list {
-  width: 220px;
+  width: 10.742cqw;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1915,7 +2128,7 @@ html, body {
   font-family: 'Simona Pro';
 }
 .p3__list-item {
-  width: 220px;
+  width: 10.742cqw;
   height: 20px;
   display: flex;
   align-items: center;
@@ -1949,8 +2162,8 @@ html, body {
   justify-content: flex-end;
   align-items: flex-start;
   gap: 8px;
-  max-width: 942px; width: 100%;
-  height: 90px;
+  width: 46.0cqw;
+  height: 8.411cqh;
 }
 /* left sign: closing " — bottom aligned */
 .p3__quote-sign-left {
@@ -1959,7 +2172,7 @@ html, body {
   justify-content: flex-end;
   align-items: flex-end;
   width: 21px;
-  height: 90px;
+  height: 8.411cqh;
   flex-shrink: 0;
 }
 /* right sign: opening " — top aligned */
@@ -1968,7 +2181,7 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   width: 21px;
-  height: 90px;
+  height: 8.411cqh;
   flex-shrink: 0;
 }
 .p3__quote-char {
@@ -1988,13 +2201,13 @@ html, body {
   align-items: flex-end;
   padding: 32px 0 36px;
   flex: 1;
-  height: 90px;
+  height: 8.411cqh;
 }
 .p3__quote-text {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   line-height: 100%;
   color: var(--color-dark);
   text-align: right;
@@ -2009,7 +2222,7 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
-  max-width: 942px; width: 100%;
+  width: 46.0cqw;
 }
 
 /* card row: 2 cards, 942×260px, gap 12px */
@@ -2018,15 +2231,15 @@ html, body {
   flex-direction: row;
   align-items: center;
   gap: 12px;
-  max-width: 942px; width: 100%;
-  height: 260px;
+  width: 46.0cqw;
+  height: 24.299cqh;
   flex-shrink: 0;
 }
 
 /* item 07 flip card */
 .p3__card-07 {
   flex: 1;
-  height: 260px;
+  height: 24.299cqh;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -2067,7 +2280,7 @@ html, body {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   line-height: 100%;
   text-align: right;
   direction: rtl;
@@ -2118,7 +2331,7 @@ html, body {
   color: var(--color-dark);
   text-align: right;
   direction: rtl;
-  width: 839px;
+  width: 40.967cqw;
   display: flex;
   align-items: center;
   margin: 0;
@@ -2137,7 +2350,7 @@ html, body {
 
 /* RIGHT sidebar — illustration column (first in RTL) */
 .p5__sidebar {
-  flex: 0 0 390px;
+  flex: 0 0 19.043cqw;
   height: 100%;
   position: relative;
   border-left: 1px solid var(--color-light);
@@ -2185,7 +2398,7 @@ html, body {
   align-items: flex-end;
   padding: 80px;
   box-sizing: border-box;
-  min-height: 246px;
+  min-height: 22.991cqh;
 }
 
 .p5__title {
@@ -2257,7 +2470,7 @@ html, body {
 
 .p5__col-text {
   font-family: 'Simona Pro', serif;
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
   line-height: 110%;
   color: var(--color-light);
@@ -2283,7 +2496,7 @@ html, body {
   text-align: right;
   direction: rtl;
   margin: 0;
-  max-width: 942px; width: 100%;
+  width: 46.0cqw;
 }
 
 /* Divider between sections */
@@ -2378,12 +2591,12 @@ html, body {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  width: 1018px;
+  width: 49.707cqw;
   gap: 12px;
 }
 .p5__card {
   flex: 1;
-  height: 376px;
+  height: 35.14cqh;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -2420,7 +2633,7 @@ html, body {
 }
 .p5__card-text {
   font-family: 'Simona Pro';
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
   line-height: 100%;
   color: #101212;
@@ -2432,7 +2645,7 @@ html, body {
 }
 .p5__card-label {
   font-family: 'Simona Pro';
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
   line-height: 100%;
   color: #F8F4EE;
@@ -2458,11 +2671,11 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   gap: 16px;
-  width: 1018px;
+  width: 49.707cqw;
 }
 .p5__links-subtitle {
   font-family: 'Simona Pro', serif;
-  font-size: clamp(13px, 1.1vw, 22px);
+  font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
   line-height: 100%;
   color: var(--color-dark);
@@ -2522,28 +2735,6 @@ html, body {
     animation-duration: 0.01ms;
     animation-delay:    0ms !important;
   }
-}
-
-/* ═══════════════════════════════════════════
-   Scrollbar styling — Phase 4
-   ═══════════════════════════════════════════ */
-.p2__scroll-body, .p3__scroll-body, .p4__scroll-body, .p5__main {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-light) transparent;
-}
-
-/* ═══════════════════════════════════════════
-   Responsive breakpoint — Phase 5
-   ═══════════════════════════════════════════ */
-@media (max-width: 1366px) {
-  :root {
-    --sidebar-w:  380px;
-    --sp-pad:     32px;
-    --sp-content: 48px;
-    --nav-w:      64px;
-  }
-  .p4__popup--xl  { width: 720px; }
-  .p4__popup--big { width: 560px; }
 }
 
   </style>
@@ -2794,7 +2985,7 @@ html, body {
               <div class="p2__tasks">
 
                 <!-- 1. מקלחת — thorn.svg (אורגני לבן, טקסט כהה) -->
-                <div class="p2__task-wrap" style="top:0;height:120px">
+                <div class="p2__task-wrap" style="top:0;height:11.215cqh">
                   <div class="p2__task-ideal">
                     <span class="p2__task-label">מקלחת והתארגנות</span>
                   </div>
@@ -2809,7 +3000,7 @@ html, body {
                 </div>
 
                 <!-- 2. פרזנטציה — dark card -->
-                <div class="p2__task-wrap" style="top:146px;height:162px">
+                <div class="p2__task-wrap" style="top:13.645cqh;height:15.14cqh">
                   <div class="p2__task-ideal">
                     <span class="p2__task-label">פרזנטציה חשובה בעבודה</span>
                   </div>
@@ -2820,7 +3011,7 @@ html, body {
                 </div>
 
                 <!-- 3. עבודה — Vector.svg (צורה כהה גדולה) -->
-                <div class="p2__task-wrap" style="top:334px;height:840px">
+                <div class="p2__task-wrap" style="top:31.215cqh;height:78.505cqh">
                   <div class="p2__task-ideal">
                     <span class="p2__task-label">יום עבודה במשרד</span>
                   </div>
@@ -2832,7 +3023,7 @@ html, body {
                 </div>
 
                 <!-- 4. קניות — dark card -->
-                <div class="p2__task-wrap" style="top:1200px;height:120px">
+                <div class="p2__task-wrap" style="top:112.15cqh;height:11.215cqh">
                   <div class="p2__task-ideal">
                     <span class="p2__task-label">קניות בסופר בדרך חזרה הביתה</span>
                   </div>
@@ -2843,7 +3034,7 @@ html, body {
                 </div>
 
                 <!-- 5. ספורט — dark card -->
-                <div class="p2__task-wrap" style="top:1346px;height:120px">
+                <div class="p2__task-wrap" style="top:125.79cqh;height:11.215cqh">
                   <div class="p2__task-ideal">
                     <span class="p2__task-label">אימון כושר עם חברה</span>
                   </div>
@@ -2855,7 +3046,7 @@ html, body {
                 </div>
 
                 <!-- 6. דייט — thorn3.svg (אורגני לבן, טקסט כהה) -->
-                <div class="p2__task-wrap" style="top:1492px;height:158px">
+                <div class="p2__task-wrap" style="top:139.44cqh;height:14.766cqh">
                   <div class="p2__task-ideal">
                     <span class="p2__task-label">דייט ראשון</span>
                   </div>
@@ -2870,7 +3061,7 @@ html, body {
                 </div>
 
                 <!-- 7. שינה — dark card -->
-                <div class="p2__task-wrap" style="top:1676px;height:120px">
+                <div class="p2__task-wrap" style="top:156.64cqh;height:11.215cqh">
                   <div class="p2__task-ideal">
                     <span class="p2__task-label">התארגנות לשינה</span>
                   </div>
@@ -2965,8 +3156,41 @@ html, body {
                   <!-- RIGHT: description text (first in DOM = right in RTL) -->
                   <p class="p3__body-text-02">פצעי HS עשויים להופיע כמעט בכל מקום, אך נוטים לפגוע בעיקר באזורי חיכוך ובקפלי עור כגון בתי שחי, מפשעות, ישבן ומתחת לשדיים (אצל נשים).</p>
 
-                  <!-- LEFT: body illustration (single pre-composed SVG, includes labels) -->
-                  <img src="SVG/p3 where it happens illustration 2.svg" alt="Illustration" class="p3__body-svg-clean">
+                  <!-- LEFT: body illustration with absolute labels -->
+                  <div class="p3__body-wrap-02">
+
+                    <!-- Union SVG: positioned to show torso -->
+                    <img src="Union.svg" alt="גוף אנושי" class="p3__body-svg-02">
+
+                    <!-- בתי שחי -->
+                    <div class="p3__la p3__la--armpits">
+                      <span class="p3__la-text">בתי שחי</span>
+                      <div class="p3__la-line"></div>
+                      <img src="Vector 737.svg" alt="" class="p3__la-shape" aria-hidden="true">
+                    </div>
+
+                    <!-- מתחת לשדיים -->
+                    <div class="p3__la p3__la--boobs">
+                      <span class="p3__la-text">מתחת לשדיים</span>
+                      <div class="p3__la-line"></div>
+                      <img src="Vector 737.svg" alt="" class="p3__la-shape" aria-hidden="true">
+                    </div>
+
+                    <!-- מפשעות -->
+                    <div class="p3__la p3__la--crotch">
+                      <span class="p3__la-text">מפשעות</span>
+                      <div class="p3__la-line"></div>
+                      <img src="Vector 738.svg" alt="" class="p3__la-shape" style="width:5.781cqw;height:11.776cqh;transform:rotate(3.03deg)" aria-hidden="true">
+                    </div>
+
+                    <!-- ישבן -->
+                    <div class="p3__la p3__la--butt">
+                      <span class="p3__la-text">ישבן</span>
+                      <div class="p3__la-line"></div>
+                      <img src="Vector 737.svg" alt="" class="p3__la-shape" aria-hidden="true">
+                    </div>
+
+                  </div>
                 </div>
               </div>
             </div>
@@ -3994,7 +4218,7 @@ html, body {
 
       if (!frame || imgEls.length < 4) return;
 
-      // wF: shape width as fraction of sidebar width (283px / 390px sidebar)
+      // wF: shape width as fraction of sidebar width (13.818cqw / 19.043cqw)
       // aspect: SVG natural height/width ratio — bh is derived from bw, not from H
       // sx: horizontal flip flag
       const defs = [
@@ -4109,17 +4333,6 @@ html, body {
         else if (!isActive && wasActive) stopPhysics();
         wasActive = isActive;
       }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
-
-      let resizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => {
-          if (panel5.classList.contains('panel--active')) {
-            stopPhysics();
-            startPhysics();
-          }
-        }, 250);
-      });
     }());
 
   </script>
