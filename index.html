@@ -94,7 +94,9 @@ html, body {
   height: 100%;
   overflow: hidden;
   flex: 0 0 var(--nav-w);
-  transition: flex-basis 0.6s ease, flex-grow 0.6s ease;
+  /* Circ in-out: deep initial resistance → powerful sweep → smooth landing */
+  transition: flex-basis 0.75s cubic-bezier(0.76, 0, 0.24, 1),
+              flex-grow   0.75s cubic-bezier(0.76, 0, 0.24, 1);
 }
 .panel--active {
   flex: 1 0 0px;
@@ -115,6 +117,10 @@ html, body {
   border-left: 1px solid var(--color-light);
   cursor: pointer;
   transition: background-color 0.2s ease;
+  /* Required for bruise ripple */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
 }
 .panel--active .panel__tab {
   border-left: none;
@@ -173,23 +179,36 @@ html, body {
 /* ═══════════════════════════════════════════
    Panel content
    ═══════════════════════════════════════════ */
+/*
+  All structural layout props live here (not gated on --active)
+  so no reflow fires at the moment of click — only opacity
+  and visibility transition. This eliminates the layout jump.
+*/
 .panel__content {
   flex: 1;
-  overflow: hidden;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.25s ease 0s, visibility 0s ease 0.25s;
-}
-.panel--active .panel__content {
-  opacity: 1;
-  visibility: visible;
-  overflow: visible;
-  transition: opacity 0.3s ease 0.45s;
-  height: 100%;
   display: flex;
   flex-direction: row;
   position: relative;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  /* fast hide on close */
+  transition: opacity 0.18s ease,
+              visibility 0s linear 0.18s;
+}
+/*
+  Content fades in at 0.52s — when the panel is ~70% expanded
+  and wide enough to show content without crowding.
+  overflow stays hidden during expansion; JS transitionend
+  switches it to visible after the full 0.75s flex animation.
+*/
+.panel--active .panel__content {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.30s ease 0.52s,
+              visibility 0s linear 0s;
 }
 /* Left-edge separator as pseudo-element — avoids border corner artifacts */
 .panel--active .panel__content::before {
@@ -2526,6 +2545,43 @@ html, body {
   }
 }
 
+/* ═══════════════════════════════════════════
+   Tender Touch — bruise ripple
+   A slow, dark bloom that originates from the
+   click point and dissolves over 1.5 s.
+   Heavy, organic, not playful.
+   ═══════════════════════════════════════════ */
+.panel__bruise {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  /* dark bruise core that bleeds outward */
+  background: radial-gradient(circle,
+    rgba(4, 3, 3, 0.72) 0%,
+    rgba(16, 18, 18, 0.38) 38%,
+    transparent 68%
+  );
+  /* soft, amorphous edge — not a clean circle */
+  filter: blur(16px);
+  pointer-events: none;
+  z-index: 0;
+  /* centered on the click coordinates via JS left/top */
+  transform: translate(-50%, -50%) scale(0);
+  will-change: transform, opacity;
+}
+.panel__bruise--spreading {
+  /* expo-out: fast initial expansion that slows as it spreads */
+  animation: bruise-spread 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes bruise-spread {
+  0%   { transform: translate(-50%, -50%) scale(0);   opacity: 1;    }
+  20%  { transform: translate(-50%, -50%) scale(0.45); opacity: 0.88; }
+  55%  { transform: translate(-50%, -50%) scale(1.2);  opacity: 0.52; }
+  88%  { transform: translate(-50%, -50%) scale(2.0);  opacity: 0.14; }
+  100% { transform: translate(-50%, -50%) scale(2.4);  opacity: 0;    }
+}
+
   </style>
 </head>
 <body>
@@ -3562,19 +3618,49 @@ html, body {
 
       const activate = () => {
         if (panel.classList.contains('panel--active')) return;
+        // Close all panels, clear any inline overflow from previous open
         panels.forEach(p => {
           p.classList.remove('panel--active');
           const c = p.querySelector('.panel__content');
-          if (c) c.setAttribute('aria-hidden', 'true');
+          if (c) {
+            c.setAttribute('aria-hidden', 'true');
+            c.style.overflow = ''; // reset inline overflow
+          }
         });
         panel.classList.add('panel--active');
         const c = panel.querySelector('.panel__content');
         if (c) c.removeAttribute('aria-hidden');
       };
 
-      tab.addEventListener('click', activate);
+      // ── Tender Touch: bruise ripple on click ────────────
+      tab.addEventListener('click', e => {
+        if (!panel.classList.contains('panel--active')) {
+          const rect   = tab.getBoundingClientRect();
+          const bruise = document.createElement('span');
+          bruise.className    = 'panel__bruise';
+          bruise.style.left   = (e.clientX - rect.left)  + 'px';
+          bruise.style.top    = (e.clientY - rect.top)   + 'px';
+          tab.appendChild(bruise);
+          bruise.offsetWidth; // force reflow so animation fires from scale(0)
+          bruise.classList.add('panel__bruise--spreading');
+          bruise.addEventListener('animationend', () => bruise.remove(), { once: true });
+        }
+        activate();
+      });
+
       tab.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+      });
+
+      // ── Overflow unlock after full panel expansion ───────
+      // Keeps overflow:hidden during the flex transition (prevents
+      // content bleeding into adjacent panels mid-animation), then
+      // switches to visible once the panel has fully opened.
+      panel.addEventListener('transitionend', e => {
+        if (e.propertyName !== 'flex-basis') return;
+        if (!panel.classList.contains('panel--active')) return;
+        const c = panel.querySelector('.panel__content');
+        if (c) c.style.overflow = 'visible';
       });
     });
 
