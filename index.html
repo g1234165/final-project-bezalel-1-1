@@ -381,6 +381,7 @@ html, body {
   min-width: 0;
   max-width: 100%;
   position: relative;
+  scroll-snap-type: y mandatory;
 }
 
 /* Title bar */
@@ -525,6 +526,42 @@ html, body {
   height: 40cqh;
   flex-shrink: 0;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+}
+.p1__snap-start {
+  height: 0;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.p1__snap-zone {
+  flex: 1;
+  scroll-snap-align: end;
+  scroll-snap-stop: always;
+}
+.p1__progress {
+  position: absolute;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  z-index: 5;
+}
+.p1__progress-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(248,244,238,0.22);
+  transition: background 0.4s ease, transform 0.4s ease;
+  flex-shrink: 0;
+}
+.p1__progress-dot--active {
+  background: rgba(248,244,238,0.85);
+  transform: scale(1.5);
 }
 /* ═══════════════════════════════════════════
    Panel 2 — Schedule
@@ -2689,7 +2726,15 @@ html, body {
         <!-- Doctors area: title + quote + grid -->
         <section class="p1__doctors-area" aria-label="60 רופאים ורופאות">
           <div class="p1__doctors-main">
+            <div class="p1__snap-start" aria-hidden="true"></div>
             <div class="p1__doctors-sticky">
+
+              <div class="p1__progress" aria-hidden="true">
+                <div class="p1__progress-dot p1__progress-dot--active" data-section="0"></div>
+                <div class="p1__progress-dot" data-section="1"></div>
+                <div class="p1__progress-dot" data-section="2"></div>
+                <div class="p1__progress-dot" data-section="3"></div>
+              </div>
 
               <header class="p1__doctors-header">
                 <h1 class="p1__doctors-title">
@@ -2718,7 +2763,11 @@ html, body {
               </div>
 
             </div>
-            <div class="p1__scroll-track" aria-hidden="true"></div>
+            <div class="p1__scroll-track" aria-hidden="true">
+              <div class="p1__snap-zone"></div>
+              <div class="p1__snap-zone"></div>
+              <div class="p1__snap-zone"></div>
+            </div>
           </div>
         </section>
 
@@ -3554,27 +3603,34 @@ html, body {
       { title: 'רק רופא אחד ידע לתת לזה שם',                      filter: 'diagnosed' },
     ];
 
-    let typewriterGen  = 0;
-    let currentSection = 0;
+    let typewriterGen   = 0;
+    let typewriterTimer = null;
+    let currentSection  = 0;
 
     function typewrite(el, newText) {
       const gen = ++typewriterGen;
+      if (typewriterTimer) { clearTimeout(typewriterTimer); typewriterTimer = null; }
+
+      function schedule(fn, delay) {
+        if (gen !== typewriterGen) return;
+        typewriterTimer = setTimeout(() => { typewriterTimer = null; fn(); }, delay);
+      }
 
       function backspace() {
         if (gen !== typewriterGen) return;
         const t = el.textContent;
         if (t.length > 0) {
           el.textContent = t.slice(0, -1);
-          setTimeout(backspace, 22);
+          schedule(backspace, 14);
         } else {
-          setTimeout(() => forward(0), 60);
+          schedule(() => forward(0), 50);
         }
       }
 
       function forward(i) {
         if (gen !== typewriterGen) return;
         el.textContent = newText.slice(0, i);
-        if (i <= newText.length) setTimeout(() => forward(i + 1), 48);
+        if (i < newText.length) schedule(() => forward(i + 1), 44);
       }
 
       backspace();
@@ -3588,6 +3644,9 @@ html, body {
       if (titleEl) typewrite(titleEl, title);
       const quoteSpan = document.getElementById('quote-text');
       if (quoteSpan) quoteSpan.textContent = '';
+      document.querySelectorAll('.p1__progress-dot').forEach(dot => {
+        dot.classList.toggle('p1__progress-dot--active', +dot.dataset.section === idx);
+      });
       document.querySelectorAll('.p1__star').forEach(star => {
         const active = filter === null || star.dataset.tags.split(',').includes(filter);
         star.style.pointerEvents = active ? 'auto' : 'none';
