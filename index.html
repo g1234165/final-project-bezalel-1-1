@@ -521,6 +521,8 @@ html, body {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 .p1__scroll-track {
   height: 40cqh;
@@ -528,12 +530,6 @@ html, body {
   pointer-events: none;
   display: flex;
   flex-direction: column;
-}
-.p1__snap-start {
-  height: 0;
-  flex-shrink: 0;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 .p1__snap-zone {
   flex: 1;
@@ -2729,7 +2725,6 @@ html, body {
         <!-- Doctors area: title + quote + grid -->
         <section class="p1__doctors-area" aria-label="60 רופאים ורופאות">
           <div class="p1__doctors-main">
-            <div class="p1__snap-start" aria-hidden="true"></div>
             <div class="p1__doctors-sticky">
 
               <div class="p1__progress" aria-hidden="true">
