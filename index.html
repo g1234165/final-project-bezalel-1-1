@@ -726,10 +726,11 @@ html, body {
 .p2__tasks {
   --p2-card-height: 80px;       /* fixed card height — change this one value only */
   --p2-card-gap: 10px;          /* vertical spacing between cards */
-  --p2-explode-duration: 0.6s;  /* how long the full goo-tear sequence runs */
-  --p2-goo-blob-height: 60%;    /* pill height relative to card — how "fat" each blob is */
-  --p2-goo-blob-width: 22px;    /* pill base width before stretching — the "size" knob */
-  --p2-strike-delay: 1.5s;      /* real seconds after the card settles before the strikethrough appears — tune 1–2s here */
+  --p2-explode-duration: 0.6s;  /* how long the full splat-burst sequence runs */
+  --p2-spike-size: 26px;        /* base spike-blob size — the "size" knob for the splat */
+  --p2-strike-top: 60%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
+  --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
+  --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
   display: flex;
   flex-direction: column;
   gap: var(--p2-card-gap);
@@ -747,50 +748,78 @@ html, body {
   background: var(--color-dark);
   border: 0.9px solid var(--color-light);
   padding: 14px 20px;
-  overflow: hidden; /* subtitle + blobs must stay inside the fixed-height box */
+  overflow: hidden; /* subtitle must stay inside the fixed-height box; the splat's spikes
+                       are let out temporarily via .p2--bursting below */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  /* the color flip is delayed until the goo blobs have mostly bridged
-     together, then snaps (very short duration) instead of fading — see
-     .p2--exploding / .p2__goo-blob below */
+  /* the color flip is timed to land right as the splat reaches its held peak
+     (see @keyframes p2-spike-pop's 55% mark), then snaps (very short
+     duration) instead of fading — see .p2--exploding below */
   transition: background-color 0.06s linear, border-color 0.06s linear;
-  transition-delay: calc(var(--p2-explode-duration) * 0.65);
+  transition-delay: calc(var(--p2-explode-duration) * 0.5);
+}
+/* Temporarily lifts the card's own clipping so the splat's spikes and the
+   drips can extend past the card's rounded edge during the burst. Applied/
+   removed by JS around the animation window (see runExplode in the script),
+   not left on permanently, so the fixed-height card stays safely clipped
+   once settled. */
+.p2__task-card.p2--bursting {
+  overflow: visible;
 }
 
-/* ── Goo blob layer: 5 pills that stretch/merge/retract to visually "tear"
-   the white Reality color across the dark card. Sits behind the text. ── */
+/* ── Goo layer: a ring of "spike" blobs fused by the #p2-goo filter into one
+   jagged splat silhouette, plus a couple of "drip" blobs that separate from
+   its underside and fall away. Sits behind the text. ── */
 .p2__goo-layer {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
   filter: url(#p2-goo); /* shared static filter — see <svg><filter id="p2-goo"> in the markup */
   pointer-events: none;
   z-index: 1;
 }
-.p2__goo-blob {
+.p2__goo-spike {
   position: absolute;
-  top: 20%;
-  height: var(--p2-goo-blob-height);
-  width: var(--p2-goo-blob-width);
+  left: 50%;
+  top: 50%;
+  width: var(--p2-spike-size);
+  height: var(--p2-spike-size);
+  margin: calc(var(--p2-spike-size) / -2);
   border-radius: 999px;
   background: var(--color-light);
-  transform: scaleX(0);
-  transform-origin: center;
+  transform: scale(0);
 }
-/* Evenly spaced starting points + a small per-blob horizontal drift and
-   stagger delay so the 5 blobs don't move in perfect lockstep. This is the
-   "size and distance of the bursting fragments" knob: edit the `left` /
-   --p2-goo-travel pairs to change spacing/drift, and the delay values to
-   change how loose the stagger feels. */
-.p2__goo-blob:nth-child(1) { left:  4%; --p2-goo-travel:  4px; animation-delay: 0ms;   }
-.p2__goo-blob:nth-child(2) { left: 22%; --p2-goo-travel: -6px; animation-delay: 40ms;  }
-.p2__goo-blob:nth-child(3) { left: 42%; --p2-goo-travel:  5px; animation-delay: 80ms;  }
-.p2__goo-blob:nth-child(4) { left: 62%; --p2-goo-travel: -4px; animation-delay: 120ms; }
-.p2__goo-blob:nth-child(5) { left: 80%; --p2-goo-travel:  6px; animation-delay: 160ms; }
+/* --p2-spike-x / --p2-spike-y nudge the direction each point pops toward;
+   --p2-spike-dist is how far that point reaches out at peak — the jaggedness
+   of the splat's silhouette comes entirely from these 9 distances being
+   uneven. This is the main "shape" tuning knob. */
+.p2__goo-spike:nth-child(1) { --p2-spike-x: 0px;   --p2-spike-y: -6px;  --p2-spike-dist: 1.9; animation-delay: 0ms;  }
+.p2__goo-spike:nth-child(2) { --p2-spike-x: 16px;  --p2-spike-y: -14px; --p2-spike-dist: 1.3; animation-delay: 20ms; }
+.p2__goo-spike:nth-child(3) { --p2-spike-x: 26px;  --p2-spike-y: 2px;   --p2-spike-dist: 1.7; animation-delay: 5ms;  }
+.p2__goo-spike:nth-child(4) { --p2-spike-x: 20px;  --p2-spike-y: 18px;  --p2-spike-dist: 1.1; animation-delay: 30ms; }
+.p2__goo-spike:nth-child(5) { --p2-spike-x: 0px;   --p2-spike-y: 22px;  --p2-spike-dist: 1.6; animation-delay: 10ms; }
+.p2__goo-spike:nth-child(6) { --p2-spike-x: -22px; --p2-spike-y: 16px;  --p2-spike-dist: 1.0; animation-delay: 40ms; }
+.p2__goo-spike:nth-child(7) { --p2-spike-x: -28px; --p2-spike-y: -2px;  --p2-spike-dist: 1.8; animation-delay: 15ms; }
+.p2__goo-spike:nth-child(8) { --p2-spike-x: -18px; --p2-spike-y: -16px; --p2-spike-dist: 1.2; animation-delay: 35ms; }
+.p2__goo-spike:nth-child(9) { --p2-spike-x: -4px;  --p2-spike-y: -22px; --p2-spike-dist: 1.5; animation-delay: 25ms; }
+
+.p2__goo-drip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--p2-spike-size) * 0.5);
+  height: calc(var(--p2-spike-size) * 0.5);
+  margin: calc(var(--p2-spike-size) * -0.25);
+  border-radius: 999px;
+  background: var(--color-light);
+  transform: scale(0);
+}
+/* nth-child counts across all .p2__goo-layer children (9 spikes then these 2
+   drips) — adjust the numbers if you change the spike count. */
+.p2__goo-drip:nth-child(10) { left: 38%; animation-delay: 60ms;  }
+.p2__goo-drip:nth-child(11) { left: 46%; animation-delay: 110ms; }
 
 .p2__task-title,
 .p2__task-subtitle {
@@ -808,7 +837,7 @@ html, body {
   text-align: right;
   direction: rtl;
   transition: color 0.06s linear;
-  transition-delay: calc(var(--p2-explode-duration) * 0.65);
+  transition-delay: calc(var(--p2-explode-duration) * 0.5);
 }
 
 /* Inner wrapper shrinks to the actual rendered text width (the outer
@@ -820,13 +849,14 @@ html, body {
   display: inline-block;
 }
 /* Ultra-thin, dead-straight strikethrough — a strict 1px line, not
-   text-decoration (which is too thick and sits too high on Hebrew glyphs). */
+   text-decoration (which is too thick and sits too high on Hebrew glyphs).
+   top/delay/draw-duration are all tunable via the --p2-strike-* vars above. */
 .p2__task-title-text::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  top: 50%;
+  top: var(--p2-strike-top);
   height: 1px;
   max-height: 1px;
   background: var(--color-dark);
@@ -834,10 +864,13 @@ html, body {
   transform-origin: right center; /* draws on from the right — natural reading start in RTL */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  /* opacity fades in quickly so the line becomes visible right away, while
+     the scaleX draw takes much longer — the line visibly draws itself
+     across the text instead of snapping fully on. */
+  transition: opacity 0.2s ease, transform var(--p2-strike-draw-duration) ease;
 }
-/* Only draws in a full 1–2 real seconds after the card has fully settled
-   into Reality mode — tune via --p2-strike-delay above. */
+/* Starts appearing shortly after the card has settled into Reality mode —
+   tune via --p2-strike-delay above. */
 .p2__task-card.p2--active .p2__task-title-text::after {
   opacity: 1;
   transform: translateY(-50%) scaleX(1);
@@ -874,25 +907,34 @@ html, body {
   transform: none;
 }
 
-/* ── "Gooey liquid tear" — the 5 .p2__goo-blob pills swell and drift, bridge
-   together into one fluid white sheet (the #p2-goo filter fuses them once
-   they're close enough), hold briefly once fully merged, then thin back down
-   to nothing right as the card's real background-color has already flipped
-   underneath — so the retraction reads as a clean liquid snap-back rather
-   than a visible seam. No shake/rotate/clip-path on the card itself anymore;
-   .p2--exploding now only exists as a marker class, all motion lives on the
-   blobs. Tune via --p2-explode-duration (total length) and
-   --p2-goo-blob-width / the per-blob `left` + --p2-goo-travel values above
-   (size/spacing/drift of the blobs). ── */
-.p2__task-card.p2--exploding .p2__goo-blob {
-  animation: p2-goo-stretch var(--p2-explode-duration) cubic-bezier(0.65, 0, 0.35, 1) both;
+/* ── "Popping balloon" splat burst — 9 spike blobs pop outward by uneven
+   amounts (fused by the #p2-goo filter into one jagged silhouette, matching
+   the reference "pow" shape), hold briefly at peak, then retract back into a
+   plain fused disc that matches the settled card's own color. Two drip blobs
+   separate from underneath and fall away/fade independently. No shake/
+   rotate/clip-path on the card itself anymore; .p2--exploding is just a
+   marker class, all motion lives on the spikes/drips. Tune via
+   --p2-explode-duration (total length), --p2-spike-size (blob size), and the
+   per-spike --p2-spike-dist values above (how jagged/far the splat reaches). ── */
+.p2__task-card.p2--exploding .p2__goo-spike {
+  animation: p2-spike-pop var(--p2-explode-duration) cubic-bezier(0.22, 0.9, 0.3, 1) both;
 }
-@keyframes p2-goo-stretch {
-  0%   { transform: scaleX(0.15) translateX(0); }
-  40%  { transform: scaleX(1.4) translateX(var(--p2-goo-travel)); }              /* blobs swell and start bridging */
-  65%  { transform: scaleX(2.8) translateX(var(--p2-goo-travel)); }              /* fully merged into one fluid sheet — card reads as white */
-  80%  { transform: scaleX(2.2) translateX(var(--p2-goo-travel)); }              /* the "thread" moment — starting to thin/snap */
-  100% { transform: scaleX(0.1) translateX(var(--p2-goo-travel)); opacity: 0; }  /* smoothly shrinks away, leaving the flat white card */
+@keyframes p2-spike-pop {
+  0%   { transform: translate(0, 0) scale(0); }
+  25%  { transform: translate(calc(var(--p2-spike-x) * 0.4), calc(var(--p2-spike-y) * 0.4)) scale(calc(var(--p2-spike-dist) * 1.15)); } /* fast pop out — the "explosive" beat */
+  55%  { transform: translate(var(--p2-spike-x), var(--p2-spike-y)) scale(var(--p2-spike-dist)); }                                       /* holds near peak — the jagged splat silhouette */
+  100% { transform: translate(0, 0) scale(1); }                                                                                          /* retracts back to a plain fused disc matching the settled card */
+}
+
+.p2__task-card.p2--exploding .p2__goo-drip {
+  animation: p2-drip-fall var(--p2-explode-duration) cubic-bezier(0.4, 0, 0.7, 1) both;
+}
+@keyframes p2-drip-fall {
+  0%   { transform: translateY(0) scale(0); opacity: 1; }
+  35%  { transform: translateY(10px) scale(1); opacity: 1; }     /* still fused to the splat's underside */
+  55%  { transform: translateY(26px) scale(0.9); opacity: 1; }   /* stretching away — the goo filter shows this as a thinning neck */
+  75%  { transform: translateY(40px) scale(0.6); opacity: 1; }   /* the "snap" — visually detached from the splat now */
+  100% { transform: translateY(56px) scale(0.2); opacity: 0; }   /* falls further and fades away */
 }
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
@@ -2729,19 +2771,21 @@ html, body {
       <div class="panel__content p2">
 
         <!-- "Gooey" filter used by the task-card explode animation (see CSS
-             .p2__goo-layer / .p2__goo-blob). Zero-size + aria-hidden so it
-             never renders on its own — only referenced via filter: url(#p2-goo).
-             Blurs the blobs together then snaps the blur back to hard edges
-             via an extreme alpha contrast matrix, so overlapping/near blobs
-             read as one fluid, merging shape (classic gooey-menu technique).
-             Tune the two numbers marked below to change how "sticky"/far-
-             reaching the merge is. -->
+             .p2__goo-layer / .p2__goo-spike / .p2__goo-drip). Zero-size +
+             aria-hidden so it never renders on its own — only referenced via
+             filter: url(#p2-goo). Blurs the spikes/drips together then snaps
+             the blur back to hard edges via an extreme alpha contrast matrix,
+             so overlapping/near blobs fuse into one connected shape with
+             visible neck/thread connections (classic gooey-menu technique) —
+             this is what turns 9 separate circles into one jagged splat
+             silhouette. Tune the two numbers marked below to change how
+             "sticky"/far-reaching the merge is. -->
         <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
           <defs>
             <filter id="p2-goo">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/> <!-- ↑ raise for blobs to bridge from further apart -->
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/> <!-- ↑ raise for blobs to bridge from further apart -->
               <feColorMatrix in="blur" mode="matrix"
-                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="goo"/> <!-- 22/-11 = threshold sharpness; raise 22 for crisper edges -->
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="goo"/> <!-- higher first number = crisper/more pointed edges -->
               <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
             </filter>
           </defs>
@@ -2789,11 +2833,17 @@ html, body {
                 <!-- 1. מקלחת -->
                 <article class="p2__task-card">
                   <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-drip"></span>
+                    <span class="p2__goo-drip"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
                   <span class="p2__task-subtitle">התפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליחה ללבוש מכנסיים</span>
@@ -2802,11 +2852,17 @@ html, body {
                 <!-- 2. פרזנטציה -->
                 <article class="p2__task-card">
                   <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-drip"></span>
+                    <span class="p2__goo-drip"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
                   <span class="p2__task-subtitle">מגיע באיחור, מתכווצת מכאב מול כולם ומשקרת שרק נתפס לי שריר</span>
@@ -2815,11 +2871,17 @@ html, body {
                 <!-- 3. עבודה -->
                 <article class="p2__task-card">
                   <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-drip"></span>
+                    <span class="p2__goo-drip"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
                   <span class="p2__task-subtitle">מחליפה תחבושות בסתר בשירותים ולא מצליחה לשבת על הכיסא</span>
@@ -2828,11 +2890,17 @@ html, body {
                 <!-- 4. קניות -->
                 <article class="p2__task-card">
                   <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-drip"></span>
+                    <span class="p2__goo-drip"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
                   <span class="p2__task-subtitle">חותכת הביתה, מותשת לגמרי מהמאמץ הנפשי להסתיר</span>
@@ -2841,11 +2909,17 @@ html, body {
                 <!-- 5. ספורט -->
                 <article class="p2__task-card">
                   <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-drip"></span>
+                    <span class="p2__goo-drip"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חברה</span></span>
                   <span class="p2__task-subtitle">בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים</span>
@@ -2854,11 +2928,17 @@ html, body {
                 <!-- 6. דייט -->
                 <article class="p2__task-card">
                   <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-drip"></span>
+                    <span class="p2__goo-drip"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
                   <span class="p2__task-subtitle">ביטלתי, משותקת מהחרדה שייגעל מהריח או מכתם פתאומי</span>
@@ -2867,11 +2947,17 @@ html, body {
                 <!-- 7. שינה -->
                 <article class="p2__task-card">
                   <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
-                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-spike"></span>
+                    <span class="p2__goo-drip"></span>
+                    <span class="p2__goo-drip"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
                   <span class="p2__task-subtitle">פורסת מגבת מתחת לסדין ונאבקת למצוא תנוחה שלא תכאיב</span>
@@ -3724,17 +3810,22 @@ html, body {
       }
 
       function runExplode(card, onDone) {
-        card.classList.add('p2--exploding'); // triggers the goo-blob stretch keyframe on this card's blobs
+        card.classList.add('p2--exploding'); // triggers the spike-pop / drip-fall keyframes on this card's blobs
         card.classList.add('p2--active');    // triggers the color-snap / subtitle / strikethrough transitions
+        card.classList.add('p2--bursting');  // temporarily lets the splat's spikes escape the card's own clipping box
         observer.unobserve(card);            // one-way reveal — doesn't revert on scroll-up
 
-        // The stretch animation lives on the 5 child .p2__goo-blob spans, not
-        // on the card itself, so we wait for the last blob's animationend
-        // (all 5 share the same --p2-explode-duration, just staggered by a
-        // few ms via animation-delay) before letting the queue advance.
-        const lastBlob = card.querySelector('.p2__goo-blob:last-child');
-        lastBlob.addEventListener('animationend', function handler() {
-          lastBlob.removeEventListener('animationend', handler);
+        // Wait for the last drip's animationend (every spike/drip shares the
+        // same --p2-explode-duration, just staggered by animation-delay, so
+        // whichever element is literally last in the DOM finishes last) to
+        // know the whole sequence has settled — restore clipping and let the
+        // queue advance. Uses :last-child (position-based), not :last-of-type
+        // (tag-based) — spikes and drips are both <span>s, so :last-of-type
+        // would not reliably resolve to a drip.
+        const lastEl = card.querySelector('.p2__goo-drip:last-child');
+        lastEl.addEventListener('animationend', function handler() {
+          lastEl.removeEventListener('animationend', handler);
+          card.classList.remove('p2--bursting');
           onDone();
         }, { once: true });
       }
