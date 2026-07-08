@@ -712,243 +712,97 @@ html, body {
 }
 .p2__schedule-frame {
   width: 100%;
-  min-height: 199.0cqh;
-  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   padding: 7.477cqh 1.758cqw 8.411cqh 0;
   box-sizing: border-box;
 }
 
-/* Hours + grid (Figma-exact) */
-.p2__hours-and-grid {
-  align-self: stretch;
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 20px;
-  direction: ltr;
-  text-align: left;
-  font-size: var(--fs-body);
-  color: var(--color-light);
-  font-family: var(--font-body);
-}
-/* grid — first child (Figma: grid on left in LTR) */
-.p2__grid {
-  align-self: stretch;
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-}
-/* horizontal lines inside grid */
-.p2__grid-lines {
-  align-self: stretch;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-}
-/* vertical separator inside grid */
-.p2__vert-line {
-  align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-.p2__vert-line-inner {
-  width: 1px;
-  flex: 1;
-  position: relative;
-  max-width: 100%;
-  overflow: hidden;
-  max-height: 100%;
-  background: var(--color-light);
-}
-/* hours frame — second child (Figma: hours on right in LTR) */
-.p2__hours-col {
-  align-self: stretch;
-  width: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-}
-.p2__hour-wrap {
-  width: 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.p2__hour {
-  position: relative;
-  line-height: 110%;
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
-  font-weight: 400;
-  color: var(--color-light);
-}
-.p2__line {
-  align-self: stretch;
-  height: 0.9px;
-  position: relative;
-  max-width: 100%;
-  overflow: hidden;
-  background: var(--color-light);
-  flex-shrink: 0;
-}
-
-/* ── Task cards + Crushing Scroll (crossfade in-place) ── */
+/* ── Task cards: fixed-height explode list ──
+   All sizing/timing knobs live here as custom properties — tweak these,
+   not the rules below, to adjust the card height, spacing, or the
+   "explode" punch feel. */
 .p2__tasks {
-  position: absolute;
-  left: 0;
-  top: 14.206cqh;
+  --p2-card-height: 120px;      /* fixed card height — change this one value only */
+  --p2-card-gap: 12px;          /* vertical spacing between cards */
+  --p2-explode-duration: 0.45s; /* how long the punch animation runs */
+  --p2-explode-scale: 1.06;     /* how far the card overshoots when it "explodes" */
+  display: flex;
+  flex-direction: column;
+  gap: var(--p2-card-gap);
   width: 100%;
   font-family: 'Narkiss Asaf TRIAL';
 }
 
-/* wrapper: has the task's exact height — both states sit inside */
-.p2__task-wrap {
-  position: absolute;
-  left: 1.465cqw;
-  width: 44.922cqw;
-  overflow: visible;
-}
-
-/* Both states fill the wrapper completely */
-.p2__task-ideal,
-.p2__task-reality {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+/* ── Card: black/bordered by default, flips to solid cream when active ── */
+.p2__task-card {
+  height: var(--p2-card-height);
+  flex-shrink: 0;
   box-sizing: border-box;
   border-radius: 15px;
-}
-
-/* ── Ideal: dark card, visible by default ── */
-.p2__task-ideal {
-  background: #101212;
-  border: 0.9px solid #F8F4EE;
+  background: var(--color-dark);
+  border: 0.9px solid var(--color-light);
   padding: 24px 24px 36px 36px;
+  overflow: hidden; /* subtitle must stay inside the fixed-height box */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  z-index: 2;
-  opacity: 1;
-  transition: opacity 0.4s ease;
-}
-.p2__task-wrap.p2--crushed .p2__task-ideal {
-  animation: p2-shake 0.1s ease 5;
-  opacity: 0;
-}
-@keyframes p2-shake {
-  0%, 100% { transform: none; }
-  30% { transform: translateX(-3px) rotate(-0.3deg); }
-  70% { transform: translateX(3px)  rotate(0.3deg); }
-}
-
-/* ── Reality: hidden, overlaid on top, fades in on crush ── */
-.p2__task-reality {
-  z-index: 3;
-  opacity: 0;
-  overflow: visible;
-  transition: opacity 0.45s ease 0.08s;
-  /* default dark card */
-  background: #101212;
-  border: 0.9px solid #F8F4EE;
-  padding: 24px 24px 36px 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  justify-content: center;
   gap: 8px;
-}
-.p2__task-wrap.p2--crushed .p2__task-reality {
-  opacity: 1;
-}
-/* light-thorn variant: thorn is the background */
-.p2__task-reality--light {
-  background: transparent;
-  border: none;
-  padding: 0;
+  transition: background-color 0.35s ease, border-color 0.35s ease;
 }
 
-/* ── Thorn SVG shapes ── */
-.p2__task-thorn {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-}
-/* thorn.svg — 972×188, horizontal flip */
-.p2__task-thorn--thorn {
-  width: calc(100% + 62px);
-  left: -31px;
-  top: -39px;
-  transform: scaleX(-1);
-}
-/* thorn3.svg — 1020×246, vertical flip */
-.p2__task-thorn--thorn3 {
-  width: calc(100% + 107px);
-  left: -53.5px;
-  top: -39px;
-  transform: scaleY(-1);
-}
-/* Vector.svg — 1042×981, vertical flip */
-.p2__task-thorn--vector {
-  width: 115%;
-  left: -7.05%;
-  top: -8.55%;
-  transform: scaleY(-1);
-}
-
-/* Text container for light-thorn (sits above thorn at z-index 2) */
-.p2__task-reality-text {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  padding: 24px 24px 36px 36px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  z-index: 2;
-}
-
-/* ── Typography ── */
-.p2__task-label,
-.p2__task-del {
+.p2__task-title {
   align-self: stretch;
-  position: relative;
   line-height: 100%;
   font-family: 'Narkiss Asaf TRIAL';
   font-size: var(--fs-h3);
   font-weight: 400;
-  color: #F8F4EE;
+  color: var(--color-light);
   text-align: right;
   direction: rtl;
+  transition: color 0.35s ease;
 }
-.p2__task-del { text-decoration: line-through; }
-.p2__task-reality--light .p2__task-del { color: #101212; }
 
-.p2__task-reason {
+.p2__task-subtitle {
   align-self: stretch;
   font-family: 'Simona Pro';
   font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
-  color: #F8F4EE;
+  color: var(--color-dark);
   text-align: right;
   line-height: 100%;
   direction: rtl;
+  opacity: 0;
+  transform: translateY(6px);
+  /* delayed slightly so the subtitle reveals just after the punch lands */
+  transition: opacity 0.3s ease 0.12s, transform 0.3s ease 0.12s;
 }
-.p2__task-reality--light .p2__task-reason { color: #101212; }
 
+/* ── Active "Reality" state: solid cream card, dark text, subtitle revealed ── */
+.p2__task-card.p2--active {
+  background: var(--color-light);
+  border-color: var(--color-light);
+}
+.p2__task-card.p2--active .p2__task-title {
+  color: var(--color-dark);
+  text-decoration: line-through;
+}
+.p2__task-card.p2--active .p2__task-subtitle {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── "Explode" punch: a quick scale overshoot, triggered once per card ── */
+.p2__task-card.p2--exploding {
+  animation: p2-explode var(--p2-explode-duration) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes p2-explode {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(var(--p2-explode-scale)); }
+  100% { transform: scale(1); }
+}
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
    ═══════════════════════════════════════════ */
@@ -2819,148 +2673,50 @@ html, body {
           <div class="p2__scroll-body">
             <div class="p2__schedule-frame">
 
-              <!-- Hours column + grid lines -->
-              <div class="p2__hours-and-grid">
-
-                <!-- grid: horizontal-lines + lines (Figma order) -->
-                <div class="p2__grid">
-                  <div class="p2__grid-lines" aria-hidden="true">
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                    <div class="p2__line"></div>
-                  </div>
-                  <div class="p2__vert-line" aria-hidden="true">
-                    <div class="p2__vert-line-inner"></div>
-                  </div>
-                </div>
-
-                <!-- hours-frame: second child = physical right in LTR -->
-                <div class="p2__hours-col" aria-hidden="true">
-                  <div class="p2__hour-wrap"><span class="p2__hour">06</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">07</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">08</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">09</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">10</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">11</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">12</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">13</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">14</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">15</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">16</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">17</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">18</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">19</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">20</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">21</span></div>
-                  <div class="p2__hour-wrap"><span class="p2__hour">22</span></div>
-                </div>
-
-              </div>
-
-              <!-- Task cards: ideal ↔ reality crossfade in-place -->
+              <!-- Task cards: fixed-height, flip to "reality" (active) on scroll -->
               <div class="p2__tasks">
 
-                <!-- 1. מקלחת — thorn.svg (אורגני לבן, טקסט כהה) -->
-                <div class="p2__task-wrap" style="top:0;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">מקלחת והתארגנות</span>
-                  </div>
-                  <div class="p2__task-reality p2__task-reality--light">
-                    <img src="thorn.svg" class="p2__task-thorn p2__task-thorn--thorn" aria-hidden="true">
-                    <div class="p2__task-reality-text">
-                      <span class="p2__task-del">מקלחת והתארגנות</span>
-                      <span class="p2__task-reason">התפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליחה ללבוש מכנסיים
-</span>
-                    </div>
-                  </div>
-                </div>
+                <!-- 1. מקלחת -->
+                <article class="p2__task-card">
+                  <span class="p2__task-title">מקלחת והתארגנות</span>
+                  <span class="p2__task-subtitle">התפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליחה ללבוש מכנסיים</span>
+                </article>
 
-                <!-- 2. פרזנטציה — dark card -->
-                <div class="p2__task-wrap" style="top:13.645cqh;height:15.14cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">פרזנטציה חשובה בעבודה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">פרזנטציה חשובה בעבודה</span>
-                    <span class="p2__task-reason">מגיע באיחור, מתכווצת מכאב מול כולם ומשקרת שרק נתפס לי שריר</span>
-                  </div>
-                </div>
+                <!-- 2. פרזנטציה -->
+                <article class="p2__task-card">
+                  <span class="p2__task-title">פרזנטציה חשובה בעבודה</span>
+                  <span class="p2__task-subtitle">מגיע באיחור, מתכווצת מכאב מול כולם ומשקרת שרק נתפס לי שריר</span>
+                </article>
 
-                <!-- 3. עבודה — Vector.svg (צורה כהה גדולה) -->
-                <div class="p2__task-wrap" style="top:31.215cqh;height:78.505cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">יום עבודה במשרד</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <img src="Vector.svg" class="p2__task-thorn p2__task-thorn--vector" aria-hidden="true">
-                    <span class="p2__task-del" style="position:relative;z-index:2">יום עבודה במשרד</span>
-                    <span class="p2__task-reason" style="position:relative;z-index:2">מחליפה תחבושות בסתר בשירותים ולא מצליחה לשבת על הכיסא</span>
-                  </div>
-                </div>
+                <!-- 3. עבודה -->
+                <article class="p2__task-card">
+                  <span class="p2__task-title">יום עבודה במשרד</span>
+                  <span class="p2__task-subtitle">מחליפה תחבושות בסתר בשירותים ולא מצליחה לשבת על הכיסא</span>
+                </article>
 
-                <!-- 4. קניות — dark card -->
-                <div class="p2__task-wrap" style="top:112.15cqh;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">קניות בסופר בדרך חזרה הביתה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">קניות בסופר בדרך חזרה הביתה</span>
-                    <span class="p2__task-reason">חותכת הביתה, מותשת לגמרי מהמאמץ הנפשי להסתיר</span>
-                  </div>
-                </div>
+                <!-- 4. קניות -->
+                <article class="p2__task-card">
+                  <span class="p2__task-title">קניות בסופר בדרך חזרה הביתה</span>
+                  <span class="p2__task-subtitle">חותכת הביתה, מותשת לגמרי מהמאמץ הנפשי להסתיר</span>
+                </article>
 
-                <!-- 5. ספורט — dark card -->
-                <div class="p2__task-wrap" style="top:125.79cqh;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">אימון כושר עם חברה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">אימון כושר עם חברה</span>
-                    <span class="p2__task-reason">בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים
-</span>
-                  </div>
-                </div>
+                <!-- 5. ספורט -->
+                <article class="p2__task-card">
+                  <span class="p2__task-title">אימון כושר עם חברה</span>
+                  <span class="p2__task-subtitle">בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים</span>
+                </article>
 
-                <!-- 6. דייט — thorn3.svg (אורגני לבן, טקסט כהה) -->
-                <div class="p2__task-wrap" style="top:139.44cqh;height:14.766cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">דייט ראשון</span>
-                  </div>
-                  <div class="p2__task-reality p2__task-reality--light">
-                    <img src="thorn3.svg" class="p2__task-thorn p2__task-thorn--thorn3" aria-hidden="true">
-                    <div class="p2__task-reality-text">
-                      <span class="p2__task-del">דייט ראשון</span>
-                      <span class="p2__task-reason">ביטלתי, משותקת מהחרדה שייגעל מהריח או מכתם פתאומי
-</span>
-                    </div>
-                  </div>
-                </div>
+                <!-- 6. דייט -->
+                <article class="p2__task-card">
+                  <span class="p2__task-title">דייט ראשון</span>
+                  <span class="p2__task-subtitle">ביטלתי, משותקת מהחרדה שייגעל מהריח או מכתם פתאומי</span>
+                </article>
 
-                <!-- 7. שינה — dark card -->
-                <div class="p2__task-wrap" style="top:156.64cqh;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">התארגנות לשינה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">התארגנות לשינה</span>
-                    <span class="p2__task-reason">פורסת מגבת מתחת לסדין ונאבקת למצוא תנוחה שלא תכאיב
-</span>
-                  </div>
-                </div>
+                <!-- 7. שינה -->
+                <article class="p2__task-card">
+                  <span class="p2__task-title">התארגנות לשינה</span>
+                  <span class="p2__task-subtitle">פורסת מגבת מתחת לסדין ונאבקת למצוא תנוחה שלא תכאיב</span>
+                </article>
 
               </div>
 
@@ -3772,26 +3528,43 @@ html, body {
 
 
     /* ══════════════════════════════════════════
-       Panel 2 — Crushing Scroll (crossfade in-place)
+       Panel 2 — Explode-on-scroll (IntersectionObserver)
+       Each card flips from "ideal" (black) to "reality" (cream, active)
+       the moment it crosses a trigger line as the user scrolls past it.
        ══════════════════════════════════════════ */
     (function () {
-      const scrollEl  = document.querySelector('.p2__scroll-body');
-      const taskWraps = Array.from(document.querySelectorAll('.p2__task-wrap'));
-      if (!scrollEl || !taskWraps.length) return;
+      const scrollEl = document.querySelector('.p2__scroll-body');
+      const cards = Array.from(document.querySelectorAll('.p2__task-card'));
+      if (!scrollEl || !cards.length) return;
       const p2Panel = scrollEl.closest('.panel');
 
-      scrollEl.addEventListener('scroll', () => {
-        if (!p2Panel || !p2Panel.classList.contains('panel--active') || scrollEl.clientHeight === 0) return;
-        const viewBottom = scrollEl.scrollTop + scrollEl.clientHeight;
-        taskWraps.forEach(wrap => {
-          if (wrap.classList.contains('p2--crushed')) return;
-          const wrapTop = parseFloat(wrap.style.top) || 0;
-          const wrapH   = parseFloat(wrap.style.height) || 120;
-          if (wrapTop + wrapH * 0.5 < viewBottom - 40) {
-            wrap.classList.add('p2--crushed');
-          }
+      // ── Tweak these two to change WHEN a card triggers ──
+      // threshold: 0 means "fire as soon as any pixel crosses the trigger line".
+      // rootMargin: shrinks the observed area of the scroll container to a thin
+      // horizontal band. '-45% 0px -45% 0px' means only count intersections in
+      // the middle 10% of the container's height (i.e. roughly its center).
+      // Move both percentages toward 50% to make the trigger line thinner/more
+      // precise, or lower them (e.g. -30%) to trigger earlier/later relative
+      // to the center.
+      const OBSERVER_THRESHOLD = 0;
+      const OBSERVER_ROOT_MARGIN = '-45% 0px -45% 0px';
+
+      const observer = new IntersectionObserver((entries) => {
+        if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const card = entry.target;
+          card.classList.add('p2--exploding'); // triggers the punch keyframe (see --p2-explode-* vars)
+          card.classList.add('p2--active');     // triggers the color/subtitle transition
+          observer.unobserve(card);             // one-way reveal — doesn't revert on scroll-up
         });
-      }, { passive: true });
+      }, {
+        root: scrollEl,               // observe against the scroll container, not the window
+        threshold: OBSERVER_THRESHOLD,
+        rootMargin: OBSERVER_ROOT_MARGIN,
+      });
+
+      cards.forEach((card) => observer.observe(card));
     }());
 
 
