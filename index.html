@@ -726,9 +726,10 @@ html, body {
 .p2__tasks {
   --p2-card-height: 80px;       /* fixed card height — change this one value only */
   --p2-card-gap: 10px;          /* vertical spacing between cards */
-  --p2-explode-duration: 0.6s;  /* how long the full shake+distort+glitch sequence runs */
-  --p2-explode-scale: 1.08;     /* peak overshoot size during the burst frame */
-  --p2-explode-shake: 6px;      /* how far the card jitters side-to-side while shaking */
+  --p2-explode-duration: 0.6s;  /* how long the full goo-tear sequence runs */
+  --p2-goo-blob-height: 60%;    /* pill height relative to card — how "fat" each blob is */
+  --p2-goo-blob-width: 22px;    /* pill base width before stretching — the "size" knob */
+  --p2-strike-delay: 1.5s;      /* real seconds after the card settles before the strikethrough appears — tune 1–2s here */
   display: flex;
   flex-direction: column;
   gap: var(--p2-card-gap);
@@ -738,6 +739,7 @@ html, body {
 
 /* ── Card: black/bordered by default, flips to solid cream when active ── */
 .p2__task-card {
+  position: relative; /* anchors the absolutely-positioned .p2__goo-layer below */
   height: var(--p2-card-height);
   flex-shrink: 0;
   box-sizing: border-box;
@@ -745,16 +747,55 @@ html, body {
   background: var(--color-dark);
   border: 0.9px solid var(--color-light);
   padding: 14px 20px;
-  overflow: hidden; /* subtitle must stay inside the fixed-height box */
+  overflow: hidden; /* subtitle + blobs must stay inside the fixed-height box */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  /* the color flip is delayed until the shake/glitch has mostly settled, then
-     snaps (very short duration) instead of fading — see p2--exploding below */
+  /* the color flip is delayed until the goo blobs have mostly bridged
+     together, then snaps (very short duration) instead of fading — see
+     .p2--exploding / .p2__goo-blob below */
   transition: background-color 0.06s linear, border-color 0.06s linear;
   transition-delay: calc(var(--p2-explode-duration) * 0.65);
+}
+
+/* ── Goo blob layer: 5 pills that stretch/merge/retract to visually "tear"
+   the white Reality color across the dark card. Sits behind the text. ── */
+.p2__goo-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  filter: url(#p2-goo); /* shared static filter — see <svg><filter id="p2-goo"> in the markup */
+  pointer-events: none;
+  z-index: 1;
+}
+.p2__goo-blob {
+  position: absolute;
+  top: 20%;
+  height: var(--p2-goo-blob-height);
+  width: var(--p2-goo-blob-width);
+  border-radius: 999px;
+  background: var(--color-light);
+  transform: scaleX(0);
+  transform-origin: center;
+}
+/* Evenly spaced starting points + a small per-blob horizontal drift and
+   stagger delay so the 5 blobs don't move in perfect lockstep. This is the
+   "size and distance of the bursting fragments" knob: edit the `left` /
+   --p2-goo-travel pairs to change spacing/drift, and the delay values to
+   change how loose the stagger feels. */
+.p2__goo-blob:nth-child(1) { left:  4%; --p2-goo-travel:  4px; animation-delay: 0ms;   }
+.p2__goo-blob:nth-child(2) { left: 22%; --p2-goo-travel: -6px; animation-delay: 40ms;  }
+.p2__goo-blob:nth-child(3) { left: 42%; --p2-goo-travel:  5px; animation-delay: 80ms;  }
+.p2__goo-blob:nth-child(4) { left: 62%; --p2-goo-travel: -4px; animation-delay: 120ms; }
+.p2__goo-blob:nth-child(5) { left: 80%; --p2-goo-travel:  6px; animation-delay: 160ms; }
+
+.p2__task-title,
+.p2__task-subtitle {
+  position: relative; /* sit above the .p2__goo-layer (z-index: 1) */
+  z-index: 2;
 }
 
 .p2__task-title {
@@ -768,6 +809,39 @@ html, body {
   direction: rtl;
   transition: color 0.06s linear;
   transition-delay: calc(var(--p2-explode-duration) * 0.65);
+}
+
+/* Inner wrapper shrinks to the actual rendered text width (the outer
+   .p2__task-title is stretched to the full card width for RTL alignment),
+   so the strikethrough below only spans the real text, not the empty space
+   beside it. */
+.p2__task-title-text {
+  position: relative;
+  display: inline-block;
+}
+/* Ultra-thin, dead-straight strikethrough — a strict 1px line, not
+   text-decoration (which is too thick and sits too high on Hebrew glyphs). */
+.p2__task-title-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  max-height: 1px;
+  background: var(--color-dark);
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: right center; /* draws on from the right — natural reading start in RTL */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+/* Only draws in a full 1–2 real seconds after the card has fully settled
+   into Reality mode — tune via --p2-strike-delay above. */
+.p2__task-card.p2--active .p2__task-title-text::after {
+  opacity: 1;
+  transform: translateY(-50%) scaleX(1);
+  transition-delay: var(--p2-strike-delay);
 }
 
 .p2__task-subtitle {
@@ -793,36 +867,32 @@ html, body {
 }
 .p2__task-card.p2--active .p2__task-title {
   color: var(--color-dark);
-  text-decoration: line-through;
+  /* strikethrough is drawn by .p2__task-title-text::after — see above */
 }
 .p2__task-card.p2--active .p2__task-subtitle {
   opacity: 1;
   transform: none;
 }
 
-/* ── "Explode" — violent shake + scale distortion + clip-path glitch, then a
-   hard snap into Reality mode (the snap itself is driven by the transition-
-   delay rules above, timed off the same --p2-explode-duration). Tune via
-   --p2-explode-duration (total length), --p2-explode-scale (peak burst
-   size), and --p2-explode-shake (side-to-side jitter distance). ── */
-.p2__task-card.p2--exploding {
-  animation: p2-explode var(--p2-explode-duration) cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-  will-change: transform, clip-path;
+/* ── "Gooey liquid tear" — the 5 .p2__goo-blob pills swell and drift, bridge
+   together into one fluid white sheet (the #p2-goo filter fuses them once
+   they're close enough), hold briefly once fully merged, then thin back down
+   to nothing right as the card's real background-color has already flipped
+   underneath — so the retraction reads as a clean liquid snap-back rather
+   than a visible seam. No shake/rotate/clip-path on the card itself anymore;
+   .p2--exploding now only exists as a marker class, all motion lives on the
+   blobs. Tune via --p2-explode-duration (total length) and
+   --p2-goo-blob-width / the per-blob `left` + --p2-goo-travel values above
+   (size/spacing/drift of the blobs). ── */
+.p2__task-card.p2--exploding .p2__goo-blob {
+  animation: p2-goo-stretch var(--p2-explode-duration) cubic-bezier(0.65, 0, 0.35, 1) both;
 }
-@keyframes p2-explode {
-  0%   { transform: translate(0, 0) scale(1) rotate(0deg); clip-path: inset(0 0 0 0); filter: brightness(1); }
-  8%   { transform: translate(calc(var(--p2-explode-shake) * -1), 2px) rotate(-1.5deg); }
-  16%  { transform: translate(var(--p2-explode-shake), -2px) rotate(1.5deg);
-         clip-path: polygon(0 0, 100% 0, 100% 60%, 92% 60%, 92% 100%, 0 100%); }
-  24%  { transform: translate(calc(var(--p2-explode-shake) * -1), 1px) rotate(-1deg);
-         clip-path: polygon(0 0, 8% 0, 8% 40%, 100% 40%, 100% 100%, 0 100%); }
-  32%  { transform: translate(var(--p2-explode-shake), -1px) rotate(1deg); clip-path: inset(0 0 0 0); }
-  40%  { transform: scale(0.94) rotate(-0.5deg); filter: brightness(1.6) contrast(1.2); }
-  50%  { transform: scale(var(--p2-explode-scale)) rotate(0.4deg);
-         clip-path: polygon(0 0, 100% 0, 100% 100%, 55% 100%, 55% 70%, 0 70%); filter: brightness(1.8); }
-  62%  { transform: scale(calc(var(--p2-explode-scale) * 0.9)) rotate(-0.3deg);
-         clip-path: inset(0 0 0 0); filter: brightness(1.1); }
-  100% { transform: translate(0, 0) scale(1) rotate(0deg); clip-path: inset(0 0 0 0); filter: brightness(1); }
+@keyframes p2-goo-stretch {
+  0%   { transform: scaleX(0.15) translateX(0); }
+  40%  { transform: scaleX(1.4) translateX(var(--p2-goo-travel)); }              /* blobs swell and start bridging */
+  65%  { transform: scaleX(2.8) translateX(var(--p2-goo-travel)); }              /* fully merged into one fluid sheet — card reads as white */
+  80%  { transform: scaleX(2.2) translateX(var(--p2-goo-travel)); }              /* the "thread" moment — starting to thin/snap */
+  100% { transform: scaleX(0.1) translateX(var(--p2-goo-travel)); opacity: 0; }  /* smoothly shrinks away, leaving the flat white card */
 }
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
@@ -2658,6 +2728,25 @@ html, body {
 
       <div class="panel__content p2">
 
+        <!-- "Gooey" filter used by the task-card explode animation (see CSS
+             .p2__goo-layer / .p2__goo-blob). Zero-size + aria-hidden so it
+             never renders on its own — only referenced via filter: url(#p2-goo).
+             Blurs the blobs together then snaps the blur back to hard edges
+             via an extreme alpha contrast matrix, so overlapping/near blobs
+             read as one fluid, merging shape (classic gooey-menu technique).
+             Tune the two numbers marked below to change how "sticky"/far-
+             reaching the merge is. -->
+        <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="p2-goo">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/> <!-- ↑ raise for blobs to bridge from further apart -->
+              <feColorMatrix in="blur" mode="matrix"
+                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="goo"/> <!-- 22/-11 = threshold sharpness; raise 22 for crisper edges -->
+              <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+            </filter>
+          </defs>
+        </svg>
+
         <!-- Sidebar: shape + description -->
         <aside class="p2__sidebar">
 
@@ -2699,43 +2788,92 @@ html, body {
 
                 <!-- 1. מקלחת -->
                 <article class="p2__task-card">
-                  <span class="p2__task-title">מקלחת והתארגנות</span>
+                  <span class="p2__goo-layer" aria-hidden="true">
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                  </span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
                   <span class="p2__task-subtitle">התפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליחה ללבוש מכנסיים</span>
                 </article>
 
                 <!-- 2. פרזנטציה -->
                 <article class="p2__task-card">
-                  <span class="p2__task-title">פרזנטציה חשובה בעבודה</span>
+                  <span class="p2__goo-layer" aria-hidden="true">
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                  </span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
                   <span class="p2__task-subtitle">מגיע באיחור, מתכווצת מכאב מול כולם ומשקרת שרק נתפס לי שריר</span>
                 </article>
 
                 <!-- 3. עבודה -->
                 <article class="p2__task-card">
-                  <span class="p2__task-title">יום עבודה במשרד</span>
+                  <span class="p2__goo-layer" aria-hidden="true">
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                  </span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
                   <span class="p2__task-subtitle">מחליפה תחבושות בסתר בשירותים ולא מצליחה לשבת על הכיסא</span>
                 </article>
 
                 <!-- 4. קניות -->
                 <article class="p2__task-card">
-                  <span class="p2__task-title">קניות בסופר בדרך חזרה הביתה</span>
+                  <span class="p2__goo-layer" aria-hidden="true">
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                  </span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
                   <span class="p2__task-subtitle">חותכת הביתה, מותשת לגמרי מהמאמץ הנפשי להסתיר</span>
                 </article>
 
                 <!-- 5. ספורט -->
                 <article class="p2__task-card">
-                  <span class="p2__task-title">אימון כושר עם חברה</span>
+                  <span class="p2__goo-layer" aria-hidden="true">
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                  </span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חברה</span></span>
                   <span class="p2__task-subtitle">בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים</span>
                 </article>
 
                 <!-- 6. דייט -->
                 <article class="p2__task-card">
-                  <span class="p2__task-title">דייט ראשון</span>
+                  <span class="p2__goo-layer" aria-hidden="true">
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                  </span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
                   <span class="p2__task-subtitle">ביטלתי, משותקת מהחרדה שייגעל מהריח או מכתם פתאומי</span>
                 </article>
 
                 <!-- 7. שינה -->
                 <article class="p2__task-card">
-                  <span class="p2__task-title">התארגנות לשינה</span>
+                  <span class="p2__goo-layer" aria-hidden="true">
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                    <span class="p2__goo-blob"></span>
+                  </span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
                   <span class="p2__task-subtitle">פורסת מגבת מתחת לסדין ונאבקת למצוא תנוחה שלא תכאיב</span>
                 </article>
 
@@ -3549,9 +3687,11 @@ html, body {
 
 
     /* ══════════════════════════════════════════
-       Panel 2 — Explode-on-scroll (IntersectionObserver)
-       Each card flips from "ideal" (black) to "reality" (cream, active)
-       the moment it crosses a trigger line as the user scrolls past it.
+       Panel 2 — Explode-on-scroll (IntersectionObserver + sequential queue)
+       Each card flips from "ideal" (black) to "reality" (cream, active) as
+       the user scrolls past it, one at a time — a small queue makes sure
+       that even if several cards become eligible in the same scroll tick,
+       they still animate one after another instead of all at once.
        ══════════════════════════════════════════ */
     (function () {
       const scrollEl = document.querySelector('.p2__scroll-body');
@@ -3559,11 +3699,44 @@ html, body {
       if (!scrollEl || !cards.length) return;
       const p2Panel = scrollEl.closest('.panel');
 
-      function explode(card) {
-        if (card.classList.contains('p2--active')) return; // never re-trigger
-        card.classList.add('p2--exploding'); // triggers the shake/distort/glitch keyframe (see --p2-explode-* vars)
-        card.classList.add('p2--active');    // triggers the color-snap/subtitle transition
+      // ── Tweak pacing here ──
+      // STAGGER_GAP_MS: pause AFTER one card finishes its goo-tear transition
+      // before the next one starts — raise this for a slower, more deliberate reveal.
+      const STAGGER_GAP_MS = 450;
+
+      let queue = [];
+      let isProcessing = false;
+
+      function enqueue(card) {
+        if (card.classList.contains('p2--queued') || card.classList.contains('p2--active')) return;
+        card.classList.add('p2--queued');
+        queue.push(card);
+        processQueue();
+      }
+
+      function processQueue() {
+        if (isProcessing || !queue.length) return;
+        isProcessing = true;
+        const card = queue.shift();
+        runExplode(card, () => {
+          setTimeout(() => { isProcessing = false; processQueue(); }, STAGGER_GAP_MS);
+        });
+      }
+
+      function runExplode(card, onDone) {
+        card.classList.add('p2--exploding'); // triggers the goo-blob stretch keyframe on this card's blobs
+        card.classList.add('p2--active');    // triggers the color-snap / subtitle / strikethrough transitions
         observer.unobserve(card);            // one-way reveal — doesn't revert on scroll-up
+
+        // The stretch animation lives on the 5 child .p2__goo-blob spans, not
+        // on the card itself, so we wait for the last blob's animationend
+        // (all 5 share the same --p2-explode-duration, just staggered by a
+        // few ms via animation-delay) before letting the queue advance.
+        const lastBlob = card.querySelector('.p2__goo-blob:last-child');
+        lastBlob.addEventListener('animationend', function handler() {
+          lastBlob.removeEventListener('animationend', handler);
+          onDone();
+        }, { once: true });
       }
 
       // ── Tweak these two to change WHEN a card triggers ──
@@ -3579,7 +3752,7 @@ html, body {
       const observer = new IntersectionObserver((entries) => {
         if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
         entries.forEach((entry) => {
-          if (entry.isIntersecting) explode(entry.target);
+          if (entry.isIntersecting) enqueue(entry.target);
         });
       }, {
         root: scrollEl,               // observe against the scroll container, not the window
@@ -3605,10 +3778,11 @@ html, body {
 
         // ── Bug fix: the last card's trigger line can sit past the bottom of
         // the scrollable area, so it may never scroll up to meet it. Once the
-        // user has scrolled to (essentially) the bottom, force-explode any
-        // card(s) still in "ideal" mode so the sequence always finishes. ──
+        // user has scrolled to (essentially) the bottom, queue up any card(s)
+        // still in "ideal" mode so the sequence always finishes — they still
+        // go through the same one-at-a-time queue, not an instant burst. ──
         const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 2;
-        if (atBottom) cards.forEach(explode);
+        if (atBottom) cards.forEach(enqueue);
       }, { passive: true });
     }());
 
