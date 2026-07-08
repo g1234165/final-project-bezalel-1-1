@@ -726,9 +726,9 @@ html, body {
 .p2__tasks {
   --p2-card-height: 80px;       /* fixed card height — change this one value only */
   --p2-card-gap: 10px;          /* vertical spacing between cards */
-  --p2-explode-duration: 0.6s;  /* how long the full burst sequence runs */
-  --p2-burst-size: 90px;        /* base burst-star size before scaling — the "size" knob */
-  --p2-burst-peak: 2.6;         /* peak scale multiplier — how far outside the card it explodes */
+  --p2-ideal-clear-duration: 0.2s; /* Step 1: how fast the ideal title fades out */
+  --p2-shatter-duration: 0.55s;    /* Steps 2+3: ~0.3s explode (fast ease-out) + quick snap back */
+  --p2-reveal-duration: 0.25s;     /* Step 4: how fast the reality title/subtitle fade in */
   --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
   --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
   --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
@@ -741,7 +741,7 @@ html, body {
 
 /* ── Card: black/bordered by default, flips to solid cream when active ── */
 .p2__task-card {
-  position: relative; /* anchors the absolutely-positioned .p2__burst-layer below */
+  position: relative; /* anchors the absolutely-positioned .p2__shatter-overlay below */
   height: var(--p2-card-height);
   flex-shrink: 0;
   box-sizing: border-box;
@@ -749,24 +749,22 @@ html, body {
   background: var(--color-dark);
   border: 0.9px solid var(--color-light);
   padding: 14px 20px;
-  overflow: hidden; /* subtitle must stay inside the fixed-height box; the burst
-                       is let out temporarily via .p2--bursting below */
+  overflow: hidden; /* subtitle must stay inside the fixed-height box; the shards
+                       are let out temporarily via .p2--bursting below */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  /* the color flip is timed to land right as the burst reaches its held peak
-     (see @keyframes p2-burst-pop's 45–70% window), then snaps (very short
-     duration) instead of fading — see .p2--exploding below */
-  transition: background-color 0.06s linear, border-color 0.06s linear;
-  transition-delay: calc(var(--p2-explode-duration) * 0.45);
+  /* no transition here on purpose — JS adds .p2--active at the exact instant
+     the shatter overlay has snapped back together (Step 4), so the flip is
+     just a plain instant state change, no color interpolation at all */
 }
 /* Temporarily lifts the card's own clipping AND raises it above sibling
-   cards so the burst can visibly scale past the card's own rounded edge and
-   overlap the cards above/below. Applied/removed by JS around the animation
-   window (see runExplode in the script), not left on permanently, so the
-   fixed-height card stays safely clipped once settled.
+   cards so the shards can visibly fly past the card's own rounded edge and
+   overlap the cards above/below while exploding. Applied/removed by JS
+   around the animation window (see runExplode in the script), not left on
+   permanently, so the fixed-height card stays safely clipped once settled.
    Note: .p2__scroll-body (the actual scroll container) still clips with
    overflow-y:auto/overflow-x:hidden — a card bursting right at the very
    top/bottom edge of the visible scroll viewport can still get clipped
@@ -776,48 +774,69 @@ html, body {
   z-index: 50;
 }
 
-/* ── Burst layer: one sharp vector "POW" star (no filter — a plain hard-
-   edged polygon stays razor-sharp at every frame) plus a few small teardrop
-   "drops" that shoot off independently. Sits behind the text. ── */
-.p2__burst-layer {
+/* ── Shatter overlay: 30 solid-white clip-path "shards" (a uniform 5×3 grid
+   of triangle pairs, NOT a single-point fan — every grid cell is the same
+   size, so every piece is roughly equal in length/width, not a sliver) that
+   jigsaw into one rectangle. Invisible at rest (opacity:0) — the dark Ideal
+   card is what's actually visible before the trigger fires. Sits above the
+   title/subtitle (z-index: 2) so it fully covers them while active. ── */
+.p2__shatter-overlay {
   position: absolute;
   inset: 0;
+  z-index: 3;
+  opacity: 0;
   pointer-events: none;
-  z-index: 1;
 }
-.p2__burst-shape {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--p2-burst-size);
-  height: var(--p2-burst-size);
-  margin: calc(var(--p2-burst-size) / -2);
-  fill: var(--color-light);
-  transform: scale(0);
-  transform-origin: center;
+.p2__task-card.p2--exploding .p2__shatter-overlay {
+  opacity: 1; /* Step 2: instant */
 }
 
-.p2__drop {
+.p2__shard {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 12px;
-  height: 12px;
-  margin: -6px;
-  fill: var(--color-light);
-  opacity: 0;
-  transform: translate(0, 0) scale(0);
+  inset: 0;
+  background: var(--color-light); /* solid white, no border */
+  transform: translate(0, 0) rotate(0deg);
 }
-/* Each drop gets its own outward+downward travel distance and stagger
-   delay — the "distance"/"spread" tuning knob: edit any
-   --p2-drop-dx/--p2-drop-dy pair, or add more .p2__drop elements. */
-.p2__drop:nth-of-type(1) { --p2-drop-dx: -22px; --p2-drop-dy: 34px; animation-delay: 60ms;  }
-.p2__drop:nth-of-type(2) { --p2-drop-dx:   4px; --p2-drop-dy: 42px; animation-delay: 110ms; }
-.p2__drop:nth-of-type(3) { --p2-drop-dx:  26px; --p2-drop-dy: 30px; animation-delay: 160ms; }
+/* 30 shards from a 5-column × 3-row grid (x = 0/20/40/60/80/100,
+   y = 0/33.33/66.67/100), each cell split into 2 triangles — every cell is
+   identical in size, so every piece is uniform, not a long sliver. Each
+   piece also gets its own outward --shard-dx/--shard-dy (px) + --shard-rot
+   (deg), roughly matching its grid position (top-left flies -X,-Y,
+   bottom-right flies +X,+Y) — the "distance/tumble" tuning knob. */
+.p2__shard:nth-child(1)  { clip-path: polygon(0% 0%, 20% 0%, 20% 33.33%);         --shard-dx: -55px; --shard-dy: -95px; --shard-rot: -40deg; }
+.p2__shard:nth-child(2)  { clip-path: polygon(0% 0%, 20% 33.33%, 0% 33.33%);      --shard-dx:-125px; --shard-dy: -45px; --shard-rot:  50deg; }
+.p2__shard:nth-child(3)  { clip-path: polygon(20% 0%, 40% 0%, 20% 33.33%);        --shard-dx: -10px; --shard-dy: -95px; --shard-rot:  55deg; }
+.p2__shard:nth-child(4)  { clip-path: polygon(40% 0%, 40% 33.33%, 20% 33.33%);    --shard-dx: -80px; --shard-dy: -45px; --shard-rot: -45deg; }
+.p2__shard:nth-child(5)  { clip-path: polygon(40% 0%, 60% 0%, 60% 33.33%);        --shard-dx:  35px; --shard-dy: -95px; --shard-rot: -70deg; }
+.p2__shard:nth-child(6)  { clip-path: polygon(40% 0%, 60% 33.33%, 40% 33.33%);    --shard-dx: -35px; --shard-dy: -45px; --shard-rot:  35deg; }
+.p2__shard:nth-child(7)  { clip-path: polygon(60% 0%, 80% 0%, 60% 33.33%);        --shard-dx:  80px; --shard-dy: -95px; --shard-rot: -50deg; }
+.p2__shard:nth-child(8)  { clip-path: polygon(80% 0%, 80% 33.33%, 60% 33.33%);    --shard-dx:  10px; --shard-dy: -45px; --shard-rot:  60deg; }
+.p2__shard:nth-child(9)  { clip-path: polygon(80% 0%, 100% 0%, 100% 33.33%);      --shard-dx: 125px; --shard-dy: -95px; --shard-rot:  45deg; }
+.p2__shard:nth-child(10) { clip-path: polygon(80% 0%, 100% 33.33%, 80% 33.33%);   --shard-dx:  55px; --shard-dy: -45px; --shard-rot: -55deg; }
+.p2__shard:nth-child(11) { clip-path: polygon(0% 33.33%, 20% 33.33%, 0% 66.67%);  --shard-dx:-125px; --shard-dy: -25px; --shard-rot:  40deg; }
+.p2__shard:nth-child(12) { clip-path: polygon(20% 33.33%, 20% 66.67%, 0% 66.67%); --shard-dx: -55px; --shard-dy:  25px; --shard-rot: -60deg; }
+.p2__shard:nth-child(13) { clip-path: polygon(20% 33.33%, 40% 33.33%, 40% 66.67%);--shard-dx: -10px; --shard-dy: -25px; --shard-rot:  65deg; }
+.p2__shard:nth-child(14) { clip-path: polygon(20% 33.33%, 40% 66.67%, 20% 66.67%);--shard-dx: -80px; --shard-dy:  25px; --shard-rot: -35deg; }
+.p2__shard:nth-child(15) { clip-path: polygon(40% 33.33%, 60% 33.33%, 60% 66.67%);--shard-dx:  35px; --shard-dy: -25px; --shard-rot: -75deg; }
+.p2__shard:nth-child(16) { clip-path: polygon(40% 33.33%, 60% 66.67%, 40% 66.67%);--shard-dx: -35px; --shard-dy:  25px; --shard-rot:  30deg; }
+.p2__shard:nth-child(17) { clip-path: polygon(60% 33.33%, 80% 33.33%, 60% 66.67%);--shard-dx:  80px; --shard-dy: -25px; --shard-rot: -45deg; }
+.p2__shard:nth-child(18) { clip-path: polygon(80% 33.33%, 80% 66.67%, 60% 66.67%);--shard-dx:  10px; --shard-dy:  25px; --shard-rot:  65deg; }
+.p2__shard:nth-child(19) { clip-path: polygon(80% 33.33%, 100% 33.33%, 80% 66.67%);--shard-dx: 125px; --shard-dy: -25px; --shard-rot:  50deg; }
+.p2__shard:nth-child(20) { clip-path: polygon(100% 33.33%, 100% 66.67%, 80% 66.67%);--shard-dx: 55px; --shard-dy:  25px; --shard-rot: -50deg; }
+.p2__shard:nth-child(21) { clip-path: polygon(0% 66.67%, 20% 66.67%, 20% 100%);   --shard-dx: -55px; --shard-dy:  45px; --shard-rot:  45deg; }
+.p2__shard:nth-child(22) { clip-path: polygon(0% 66.67%, 20% 100%, 0% 100%);      --shard-dx:-125px; --shard-dy:  95px; --shard-rot: -65deg; }
+.p2__shard:nth-child(23) { clip-path: polygon(20% 66.67%, 40% 66.67%, 20% 100%);  --shard-dx: -10px; --shard-dy:  45px; --shard-rot:  60deg; }
+.p2__shard:nth-child(24) { clip-path: polygon(40% 66.67%, 40% 100%, 20% 100%);    --shard-dx: -80px; --shard-dy:  95px; --shard-rot: -40deg; }
+.p2__shard:nth-child(25) { clip-path: polygon(40% 66.67%, 60% 66.67%, 60% 100%);  --shard-dx:  35px; --shard-dy:  45px; --shard-rot: -70deg; }
+.p2__shard:nth-child(26) { clip-path: polygon(40% 66.67%, 60% 100%, 40% 100%);    --shard-dx: -35px; --shard-dy:  95px; --shard-rot:  40deg; }
+.p2__shard:nth-child(27) { clip-path: polygon(60% 66.67%, 80% 66.67%, 60% 100%);  --shard-dx:  80px; --shard-dy:  45px; --shard-rot: -55deg; }
+.p2__shard:nth-child(28) { clip-path: polygon(80% 66.67%, 80% 100%, 60% 100%);    --shard-dx:  10px; --shard-dy:  95px; --shard-rot:  55deg; }
+.p2__shard:nth-child(29) { clip-path: polygon(80% 66.67%, 100% 66.67%, 100% 100%);--shard-dx: 125px; --shard-dy:  45px; --shard-rot:  50deg; }
+.p2__shard:nth-child(30) { clip-path: polygon(80% 66.67%, 100% 100%, 80% 100%);   --shard-dx:  55px; --shard-dy:  95px; --shard-rot: -45deg; }
 
 .p2__task-title,
 .p2__task-subtitle {
-  position: relative; /* sit above the .p2__burst-layer (z-index: 1) */
+  position: relative; /* stacking context anchor — z-index: 2 sits below the .p2__shatter-overlay's z-index: 3 on purpose, so the overlay can fully cover them while active */
   z-index: 2;
 }
 
@@ -830,8 +849,14 @@ html, body {
   color: var(--color-light);
   text-align: right;
   direction: rtl;
-  transition: color 0.06s linear;
-  transition-delay: calc(var(--p2-explode-duration) * 0.45);
+  transition: opacity var(--p2-ideal-clear-duration) ease; /* Step 1: quick fade-out */
+}
+/* Step 1: the ideal title fades out the instant the trigger fires. Must come
+   BEFORE the .p2--active rule below in source order so that once Step 4 adds
+   .p2--active (while .p2--exploding is still present), the fade-back-in rule
+   wins the cascade tie instead of this one keeping it at 0 forever. */
+.p2__task-card.p2--exploding .p2__task-title {
+  opacity: 0;
 }
 
 /* Inner wrapper shrinks to the actual rendered text width (the outer
@@ -882,18 +907,20 @@ html, body {
   direction: rtl;
   opacity: 0;
   transform: translateY(6px);
-  /* revealed just after the color snap lands */
-  transition: opacity 0.25s ease calc(var(--p2-explode-duration) * 0.7),
-              transform 0.25s ease calc(var(--p2-explode-duration) * 0.7);
+  /* Step 4: revealed the instant .p2--active is added */
+  transition: opacity var(--p2-reveal-duration) ease, transform var(--p2-reveal-duration) ease;
 }
 
-/* ── Active "Reality" state: solid cream card, dark text, subtitle revealed ── */
+/* ── Active "Reality" state: solid cream card, dark text, subtitle revealed ──
+   Added by JS at the exact instant the shards snap back together (Step 4). ── */
 .p2__task-card.p2--active {
   background: var(--color-light);
   border-color: var(--color-light);
 }
 .p2__task-card.p2--active .p2__task-title {
-  color: var(--color-dark);
+  color: var(--color-dark); /* instant — no transition on color */
+  opacity: 1;               /* fades back in, overriding .p2--exploding's opacity:0 above (this rule comes later in source, wins the cascade tie) */
+  transition: opacity var(--p2-reveal-duration) ease;
   /* strikethrough is drawn by .p2__task-title-text::after — see above */
 }
 .p2__task-card.p2--active .p2__task-subtitle {
@@ -901,34 +928,24 @@ html, body {
   transform: none;
 }
 
-/* ── Sharp vector "POW" burst — a single hard-edged polygon (no filter, no
-   blur) scales from nothing past the card's own bounds, holds briefly at a
-   readable jagged silhouette, then rapidly collapses away once the settled
-   white card is already showing underneath. A few small teardrops shoot off
-   independently alongside it. .p2--exploding is just a marker class here;
-   all motion lives on .p2__burst-shape / .p2__drop. Tune via
-   --p2-explode-duration (total length), --p2-burst-size (star size), and
-   --p2-burst-peak (how far outside the card it explodes), or edit the
-   polygon's own point coordinates in the <symbol id="p2-burst-shape"> markup
-   to reshape it. ── */
-.p2__task-card.p2--exploding .p2__burst-shape {
-  animation: p2-burst-pop var(--p2-explode-duration) cubic-bezier(0.16, 0.9, 0.2, 1) both;
+/* ── Shatter explode + snap-back (Steps 2 & 3) — the 30 shards violently fly
+   apart (top-left toward -X,-Y, bottom-right toward +X,+Y, each with its own
+   rotateZ), then immediately reverse and snap back to their assembled
+   positions. Fast ease-out for the explode, a sharper curve for the violent
+   snap-back — no fade, no off-screen hold, an immediate boomerang.
+   .p2--exploding is what triggers this (and the title fade-out + overlay
+   visibility above) — JS adds it once per card and never removes it
+   (one-way reveal). Tune via --p2-shatter-duration (total length) or any
+   shard's --shard-dx/--shard-dy/--shard-rot above. ── */
+.p2__task-card.p2--exploding .p2__shard {
+  animation: p2-shard-burst var(--p2-shatter-duration) both;
 }
-@keyframes p2-burst-pop {
-  0%   { transform: scale(0); opacity: 0; }
-  15%  { transform: scale(0.5); opacity: 1; }
-  45%  { transform: scale(var(--p2-burst-peak)); opacity: 1; }              /* violent overshoot — explodes past the card's own bounds */
-  70%  { transform: scale(calc(var(--p2-burst-peak) * 0.85)); opacity: 1; } /* brief hold — the readable jagged "POW" silhouette */
-  100% { transform: scale(0.001); opacity: 0; }                            /* rapid collapse, revealing the settled white card underneath */
-}
-
-.p2__task-card.p2--exploding .p2__drop {
-  animation: p2-drop-fall var(--p2-explode-duration) ease-out both;
-}
-@keyframes p2-drop-fall {
-  0%   { transform: translate(0, 0) scale(0); opacity: 0; }
-  30%  { transform: translate(calc(var(--p2-drop-dx) * 0.3), calc(var(--p2-drop-dy) * 0.3)) scale(1); opacity: 1; }
-  100% { transform: translate(var(--p2-drop-dx), var(--p2-drop-dy)) scale(0.4); opacity: 0; } /* shoots out and downward, fading as it goes */
+@keyframes p2-shard-burst {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  55%  { transform: translate(var(--shard-dx), var(--shard-dy)) rotate(var(--shard-rot));
+         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); } /* fast ease-out explode, ~0.3s */
+  100% { transform: translate(0, 0) rotate(0deg);
+         animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); } /* quick, violent snap back */
 }
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
@@ -2764,29 +2781,6 @@ html, body {
 
       <div class="panel__content p2">
 
-        <!-- Shared shapes used by the task-card explode animation (see CSS
-             .p2__burst-shape / .p2__drop). Zero-size + aria-hidden so this
-             block never renders on its own — the shapes are only drawn where
-             referenced via <use> inside each card. No filter: these are
-             plain hard-edged vector shapes so their points stay razor-sharp
-             at every frame of the scale animation. -->
-        <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
-          <defs>
-            <!-- Jagged 8-point "POW" burst star — alternating long/short
-                 points, each radius nudged slightly uneven so it reads as
-                 hand-drawn/comic rather than a perfect mathematical star.
-                 Edit any point pair to reshape it (odd-indexed points are
-                 the outer spike tips, even-indexed are the inner valleys). -->
-            <symbol id="p2-burst-shape" viewBox="0 0 100 100">
-              <polygon points="50,2 57.7,31.5 81.8,18.2 70.3,41.6 100,50 67.6,57.3 82.5,82.5 58.0,69.4 50,99 42.3,68.5 18.9,81.1 28.8,58.8 3,50 33.4,43.1 18.2,18.2 40.8,27.8" />
-            </symbol>
-            <!-- Simple teardrop, reused for the small detaching "drops." -->
-            <symbol id="p2-drop-shape" viewBox="0 0 24 24">
-              <path d="M12 2C12 2 4 12 4 17a8 8 0 0016 0c0-5-8-15-8-15z" />
-            </symbol>
-          </defs>
-        </svg>
-
         <!-- Sidebar: shape + description -->
         <aside class="p2__sidebar">
 
@@ -2828,11 +2822,13 @@ html, body {
 
                 <!-- 1. מקלחת -->
                 <article class="p2__task-card">
-                  <span class="p2__burst-layer" aria-hidden="true">
-                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                  <span class="p2__shatter-overlay" aria-hidden="true">
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
                   <span class="p2__task-subtitle">ההתפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליח ללבוש מכנסיים.</span>
@@ -2840,11 +2836,13 @@ html, body {
 
                 <!-- 2. פרזנטציה -->
                 <article class="p2__task-card">
-                  <span class="p2__burst-layer" aria-hidden="true">
-                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                  <span class="p2__shatter-overlay" aria-hidden="true">
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
                   <span class="p2__task-subtitle">
@@ -2854,11 +2852,13 @@ html, body {
 
                 <!-- 3. עבודה -->
                 <article class="p2__task-card">
-                  <span class="p2__burst-layer" aria-hidden="true">
-                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                  <span class="p2__shatter-overlay" aria-hidden="true">
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
                   <span class="p2__task-subtitle">
@@ -2868,11 +2868,13 @@ html, body {
 
                 <!-- 4. קניות -->
                 <article class="p2__task-card">
-                  <span class="p2__burst-layer" aria-hidden="true">
-                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                  <span class="p2__shatter-overlay" aria-hidden="true">
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
                   <span class="p2__task-subtitle">
@@ -2882,11 +2884,13 @@ html, body {
 
                 <!-- 5. ספורט -->
                 <article class="p2__task-card">
-                  <span class="p2__burst-layer" aria-hidden="true">
-                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                  <span class="p2__shatter-overlay" aria-hidden="true">
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חבר</span></span>
                   <span class="p2__task-subtitle">
@@ -2896,11 +2900,13 @@ html, body {
 
                 <!-- 6. דייט -->
                 <article class="p2__task-card">
-                  <span class="p2__burst-layer" aria-hidden="true">
-                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                  <span class="p2__shatter-overlay" aria-hidden="true">
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
                   <span class="p2__task-subtitle">
@@ -2910,11 +2916,13 @@ html, body {
 
                 <!-- 7. שינה -->
                 <article class="p2__task-card">
-                  <span class="p2__burst-layer" aria-hidden="true">
-                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
-                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                  <span class="p2__shatter-overlay" aria-hidden="true">
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
+                    <span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span><span class="p2__shard"></span>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
                   <span class="p2__task-subtitle">פורס מגבת מתחת לסדין ונאבק למצוא תנוחה שלא תכאיב</span>
@@ -3767,15 +3775,22 @@ html, body {
       }
 
       function runExplode(card, onDone) {
-        card.classList.add('p2--exploding'); // triggers the burst-pop / drop-fall keyframes
-        card.classList.add('p2--active');    // triggers the color-snap / subtitle / strikethrough transitions
-        card.classList.add('p2--bursting');  // temporarily lifts clipping + raises z-index so the burst can overlap neighboring cards
-        observer.unobserve(card);            // one-way reveal — doesn't revert on scroll-up
+        // .p2--exploding alone drives Steps 1–3 purely via CSS: the ideal
+        // title fades out (Step 1), the shatter overlay instantly becomes
+        // visible and its 30 shards explode outward then snap back together
+        // (Steps 2–3, see @keyframes p2-shard-burst).
+        card.classList.add('p2--exploding');
+        card.classList.add('p2--bursting'); // temporarily lifts clipping + raises z-index so shards can fly past the card's edges
+        observer.unobserve(card);           // one-way reveal — doesn't revert on scroll-up
 
-        const burst = card.querySelector('.p2__burst-shape');
-        burst.addEventListener('animationend', function handler() {
-          burst.removeEventListener('animationend', handler);
-          card.classList.remove('p2--bursting'); // restore clipping + normal stacking now that the burst has collapsed away
+        const shards = card.querySelectorAll('.p2__shard');
+        const lastShard = shards[shards.length - 1];
+        lastShard.addEventListener('animationend', function handler() {
+          lastShard.removeEventListener('animationend', handler);
+          // Step 4 — the exact instant the shards have snapped back together:
+          card.classList.add('p2--active');     // instant bg/title-color swap + triggers title/subtitle fade-in
+          card.classList.remove('p2--bursting'); // restore normal clipping/stacking
+          card.querySelector('.p2__shatter-overlay').remove(); // hide/remove the overlay now that the real white card is showing
           onDone();
         }, { once: true });
       }
