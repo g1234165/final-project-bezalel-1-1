@@ -3917,6 +3917,7 @@ html, body {
       }
 
       function resetAll() {
+        if (shakeTimer) { clearTimeout(shakeTimer); }
         nodes.forEach((n, i) => {
           n.classList.remove('p4--visible', 'p4--shaking', 'p4--falling');
           n.style.top  = POPUPS[i].top  + 'px';
@@ -3927,15 +3928,23 @@ html, body {
       }
 
       const p4ContentEl = document.querySelector('.panel__content.p4');
+      const p4Panel = scrollEl.closest('.panel');
       if (p4ContentEl) {
         p4ContentEl.addEventListener('wheel', (e) => {
           if (falling) return;
+          if (!p4Panel || !p4Panel.classList.contains('panel--active')) return;
           e.preventDefault();
           scrollEl.scrollTop += e.deltaY;
         }, { passive: false });
       }
 
-      const p4Panel = scrollEl.closest('.panel');
+      // Reset card state and scroll position each time Panel 4 is opened,
+      // so the scroll-reveal animation always starts from the beginning.
+      if (p4Panel) {
+        new MutationObserver(() => {
+          if (p4Panel.classList.contains('panel--active')) resetAll();
+        }).observe(p4Panel, { attributeFilter: ['class'] });
+      }
       scrollEl.addEventListener('scroll', () => {
         if (falling) return;
         if (!p4Panel || !p4Panel.classList.contains('panel--active') || scrollEl.clientHeight === 0) return;
@@ -4052,8 +4061,9 @@ html, body {
       // Scrolls the header into view within its scroll container
       // if it's outside the visible area; delays so the height
       // animation has had time to start.
-      function smartScroll(header, scrollEl) {
+      function smartScroll(header, scrollEl, panel) {
         setTimeout(() => {
+          if (panel && !panel.classList.contains('panel--active')) return;
           const hRect = header.getBoundingClientRect();
           const sRect = scrollEl.getBoundingClientRect();
           if (hRect.top < sRect.top + 8 || hRect.bottom > sRect.bottom - 8) {
@@ -4065,6 +4075,7 @@ html, body {
 
       // ── Panel 3 ─────────────────────────────────
       const p3Scroll = document.querySelector('#p3-scroll');
+      const p3Panel  = p3Scroll?.closest('.panel');
       document.querySelectorAll('[data-p3-item] .p3__item-header').forEach(header => {
         header.addEventListener('click', () => {
           const item   = header.closest('[data-p3-item]');
@@ -4078,13 +4089,14 @@ html, body {
           if (!isOpen) {
             item.classList.add('is-open');
             openBody(item.querySelector('.p3__item-body'));
-            if (p3Scroll) smartScroll(header, p3Scroll);
+            if (p3Scroll) smartScroll(header, p3Scroll, p3Panel);
           }
         });
       });
 
       // ── Panel 5 ─────────────────────────────────
       const p5Scroll = document.querySelector('.p5__main');
+      const p5Panel  = p5Scroll?.closest('.panel');
       document.querySelectorAll('[data-p5-dropdown] .p5__dropdown-header').forEach(header => {
         header.addEventListener('click', () => {
           const item   = header.closest('[data-p5-dropdown]');
@@ -4098,7 +4110,7 @@ html, body {
           if (!isOpen) {
             item.classList.add('is-open');
             openBody(item.querySelector('.p5__dropdown-body'));
-            if (p5Scroll) smartScroll(header, p5Scroll);
+            if (p5Scroll) smartScroll(header, p5Scroll, p5Panel);
           }
         });
       });
