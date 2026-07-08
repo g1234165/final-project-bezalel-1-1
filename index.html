@@ -1577,10 +1577,6 @@ html, body {
   flex: 1;
   overflow-y: auto;
   min-width: 0;
-  scrollbar-width: none;
-}
-.p3__scroll-body::-webkit-scrollbar {
-  display: none;
 }
 
 /* ── Accordion items ── */
@@ -1715,6 +1711,7 @@ html, body {
   align-items: stretch;
   width: 46.0cqw;
   gap: 12px;
+  margin-left: auto;
 }
 /* Each card: flex:1, 376px tall — flip on hover */
 .p3__card {
@@ -1820,7 +1817,7 @@ html, body {
   color: #101212;
   text-align: right;
   direction: rtl;
-  margin: 0;
+  margin: 0 0 0 auto;
   display: flex;
   align-items: center;
   height: 10.280cqh;
@@ -1859,6 +1856,7 @@ html, body {
   align-items: flex-start;
   gap: 46px;
   width: 46.0cqw;
+  margin-left: auto;
 }
 .p3__col-item {
   display: flex;
@@ -1945,8 +1943,7 @@ html, body {
   direction: rtl;
   display: flex;
   align-items: center;
-  align-self: flex-start;
-  margin: 0;
+  margin: 0 0 0 auto;
 }
 
 /* ── Item 05 illustration sizes ── */
@@ -2178,7 +2175,7 @@ html, body {
   width: 40.967cqw;
   display: flex;
   align-items: center;
-  margin: 0;
+  margin: 0 0 0 auto;
 }
 
 /* ═══════════════════════════════════════════
@@ -3656,7 +3653,9 @@ html, body {
 
     const doctorsMain = document.querySelector('.p1__doctors-main');
     if (doctorsMain) {
+      const p1Panel = doctorsMain.closest('.panel');
       doctorsMain.addEventListener('scroll', () => {
+        if (!p1Panel || !p1Panel.classList.contains('panel--active') || doctorsMain.clientHeight === 0) return;
         const { scrollTop, scrollHeight, clientHeight } = doctorsMain;
         const maxScroll = scrollHeight - clientHeight;
         if (maxScroll <= 0) return;
@@ -3779,8 +3778,10 @@ html, body {
       const scrollEl  = document.querySelector('.p2__scroll-body');
       const taskWraps = Array.from(document.querySelectorAll('.p2__task-wrap'));
       if (!scrollEl || !taskWraps.length) return;
+      const p2Panel = scrollEl.closest('.panel');
 
       scrollEl.addEventListener('scroll', () => {
+        if (!p2Panel || !p2Panel.classList.contains('panel--active') || scrollEl.clientHeight === 0) return;
         const viewBottom = scrollEl.scrollTop + scrollEl.clientHeight;
         taskWraps.forEach(wrap => {
           if (wrap.classList.contains('p2--crushed')) return;
@@ -3934,8 +3935,10 @@ html, body {
         }, { passive: false });
       }
 
+      const p4Panel = scrollEl.closest('.panel');
       scrollEl.addEventListener('scroll', () => {
         if (falling) return;
+        if (!p4Panel || !p4Panel.classList.contains('panel--active') || scrollEl.clientHeight === 0) return;
         const { scrollTop, scrollHeight, clientHeight } = scrollEl;
         const maxScroll = scrollHeight - clientHeight;
         if (maxScroll <= 0) return;
@@ -4122,15 +4125,18 @@ html, body {
       // aspect: SVG natural height/width ratio — bh is derived from bw, not from H
       // sx: horizontal flip flag
       const defs = [
-        { wF: 0.7256, aspect: 438 / 313, sx:  1 },  // p-1.svg  313×438
-        { wF: 0.7256, aspect: 368 / 254, sx:  1 },  // p2.svg   254×368
-        { wF: 0.7256, aspect: 363 / 288, sx: -1 },  // p-3.svg  288×363
-        { wF: 0.7256, aspect: 431 / 208, sx:  1 },  // p-4.svg  208×431
+        { wF: 0.55, aspect: 438 / 313, sx:  1 },  // p-1.svg  313×438
+        { wF: 0.55, aspect: 368 / 254, sx:  1 },  // p2.svg   254×368
+        { wF: 0.55, aspect: 363 / 288, sx: -1 },  // p-3.svg  288×363
+        { wF: 0.55, aspect: 431 / 208, sx:  1 },  // p-4.svg  208×431
       ];
 
       const { Engine, World, Bodies, Body, Mouse, MouseConstraint } = Matter;
 
       let engine, world, bodies, mouseConstraint, animId, lastT;
+      let startTimer   = null;
+      let resizeTimer  = null;
+      let resizeCleanup = null;
 
       function startPhysics() {
         const rect = frame.getBoundingClientRect();
@@ -4173,8 +4179,18 @@ html, body {
         World.add(world, bodies);
 
         // ── Mouse drag + throw ────────────────────────────
+        // Account for the CSS transform: scale() applied to .accordion by fitToScreen().
+        // Matter.Mouse works in raw pixel coordinates; dividing by the scale converts
+        // those back to the physics-world coordinate space.
+        function getAccordionScale() {
+          const acc = document.querySelector('.accordion');
+          if (!acc) return 1;
+          const m = acc.style.transform && acc.style.transform.match(/scale\(([^)]+)\)/);
+          return m ? parseFloat(m[1]) : 1;
+        }
         const mouse = Mouse.create(frame);
-        Matter.Mouse.setScale(mouse, { x: 1, y: 1 });
+        const s = getAccordionScale();
+        Matter.Mouse.setScale(mouse, { x: 1 / s, y: 1 / s });
         mouseConstraint = MouseConstraint.create(engine, {
           mouse,
           constraint: { stiffness: 0.35, damping: 0.1, render: { visible: false } },
@@ -4218,6 +4234,9 @@ html, body {
         if (animId) { cancelAnimationFrame(animId); animId = null; }
         if (engine) { Matter.World.clear(engine.world); Matter.Engine.clear(engine); engine = null; }
         bodies = null; mouseConstraint = null; lastT = 0;
+        // Clean up resize listener and any pending resize restart
+        if (resizeCleanup) { resizeCleanup(); resizeCleanup = null; }
+        if (resizeTimer)   { clearTimeout(resizeTimer);  resizeTimer  = null; }
         // Restore original CSS so the panel looks right if revisited before re-activating
         imgEls.forEach(img => {
           img.style.left = img.style.top = img.style.width = img.style.height = '';
@@ -4229,8 +4248,29 @@ html, body {
       let wasActive = false;
       new MutationObserver(() => {
         const isActive = panel5.classList.contains('panel--active');
-        if  (isActive && !wasActive) startPhysics();
-        else if (!isActive && wasActive) stopPhysics();
+        if (isActive && !wasActive) {
+          // Wait for the 0.75s flex-basis transition to finish before measuring boundaries
+          if (startTimer) { clearTimeout(startTimer); startTimer = null; }
+          startTimer = setTimeout(() => {
+            startTimer = null;
+            startPhysics();
+            // Debounced resize: tear down and restart so walls match the new frame size
+            const onResize = () => {
+              if (!panel5.classList.contains('panel--active')) return;
+              if (resizeTimer) clearTimeout(resizeTimer);
+              resizeTimer = setTimeout(() => {
+                resizeTimer = null;
+                stopPhysics();
+                startPhysics();
+              }, 250);
+            };
+            window.addEventListener('resize', onResize);
+            resizeCleanup = () => window.removeEventListener('resize', onResize);
+          }, 800);
+        } else if (!isActive && wasActive) {
+          if (startTimer) { clearTimeout(startTimer); startTimer = null; }
+          stopPhysics();
+        }
         wasActive = isActive;
       }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
     }());
