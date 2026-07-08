@@ -726,9 +726,10 @@ html, body {
 .p2__tasks {
   --p2-card-height: 80px;       /* fixed card height — change this one value only */
   --p2-card-gap: 10px;          /* vertical spacing between cards */
-  --p2-explode-duration: 0.6s;  /* how long the full splat-burst sequence runs */
-  --p2-spike-size: 26px;        /* base spike-blob size — the "size" knob for the splat */
-  --p2-strike-top: 60%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
+  --p2-explode-duration: 0.6s;  /* how long the full burst sequence runs */
+  --p2-burst-size: 90px;        /* base burst-star size before scaling — the "size" knob */
+  --p2-burst-peak: 2.6;         /* peak scale multiplier — how far outside the card it explodes */
+  --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
   --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
   --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
   display: flex;
@@ -740,7 +741,7 @@ html, body {
 
 /* ── Card: black/bordered by default, flips to solid cream when active ── */
 .p2__task-card {
-  position: relative; /* anchors the absolutely-positioned .p2__goo-layer below */
+  position: relative; /* anchors the absolutely-positioned .p2__burst-layer below */
   height: var(--p2-card-height);
   flex-shrink: 0;
   box-sizing: border-box;
@@ -748,82 +749,75 @@ html, body {
   background: var(--color-dark);
   border: 0.9px solid var(--color-light);
   padding: 14px 20px;
-  overflow: hidden; /* subtitle must stay inside the fixed-height box; the splat's spikes
-                       are let out temporarily via .p2--bursting below */
+  overflow: hidden; /* subtitle must stay inside the fixed-height box; the burst
+                       is let out temporarily via .p2--bursting below */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  /* the color flip is timed to land right as the splat reaches its held peak
-     (see @keyframes p2-spike-pop's 55% mark), then snaps (very short
+  /* the color flip is timed to land right as the burst reaches its held peak
+     (see @keyframes p2-burst-pop's 45–70% window), then snaps (very short
      duration) instead of fading — see .p2--exploding below */
   transition: background-color 0.06s linear, border-color 0.06s linear;
-  transition-delay: calc(var(--p2-explode-duration) * 0.5);
+  transition-delay: calc(var(--p2-explode-duration) * 0.45);
 }
-/* Temporarily lifts the card's own clipping so the splat's spikes and the
-   drips can extend past the card's rounded edge during the burst. Applied/
-   removed by JS around the animation window (see runExplode in the script),
-   not left on permanently, so the fixed-height card stays safely clipped
-   once settled. */
+/* Temporarily lifts the card's own clipping AND raises it above sibling
+   cards so the burst can visibly scale past the card's own rounded edge and
+   overlap the cards above/below. Applied/removed by JS around the animation
+   window (see runExplode in the script), not left on permanently, so the
+   fixed-height card stays safely clipped once settled.
+   Note: .p2__scroll-body (the actual scroll container) still clips with
+   overflow-y:auto/overflow-x:hidden — a card bursting right at the very
+   top/bottom edge of the visible scroll viewport can still get clipped
+   there; that's an accepted limit of keeping the list scrollable. */
 .p2__task-card.p2--bursting {
   overflow: visible;
+  z-index: 50;
 }
 
-/* ── Goo layer: a ring of "spike" blobs fused by the #p2-goo filter into one
-   jagged splat silhouette, plus a couple of "drip" blobs that separate from
-   its underside and fall away. Sits behind the text. ── */
-.p2__goo-layer {
+/* ── Burst layer: one sharp vector "POW" star (no filter — a plain hard-
+   edged polygon stays razor-sharp at every frame) plus a few small teardrop
+   "drops" that shoot off independently. Sits behind the text. ── */
+.p2__burst-layer {
   position: absolute;
   inset: 0;
-  filter: url(#p2-goo); /* shared static filter — see <svg><filter id="p2-goo"> in the markup */
   pointer-events: none;
   z-index: 1;
 }
-.p2__goo-spike {
+.p2__burst-shape {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: var(--p2-spike-size);
-  height: var(--p2-spike-size);
-  margin: calc(var(--p2-spike-size) / -2);
-  border-radius: 999px;
-  background: var(--color-light);
+  width: var(--p2-burst-size);
+  height: var(--p2-burst-size);
+  margin: calc(var(--p2-burst-size) / -2);
+  fill: var(--color-light);
   transform: scale(0);
+  transform-origin: center;
 }
-/* --p2-spike-x / --p2-spike-y nudge the direction each point pops toward;
-   --p2-spike-dist is how far that point reaches out at peak — the jaggedness
-   of the splat's silhouette comes entirely from these 9 distances being
-   uneven. This is the main "shape" tuning knob. */
-.p2__goo-spike:nth-child(1) { --p2-spike-x: 0px;   --p2-spike-y: -6px;  --p2-spike-dist: 1.9; animation-delay: 0ms;  }
-.p2__goo-spike:nth-child(2) { --p2-spike-x: 16px;  --p2-spike-y: -14px; --p2-spike-dist: 1.3; animation-delay: 20ms; }
-.p2__goo-spike:nth-child(3) { --p2-spike-x: 26px;  --p2-spike-y: 2px;   --p2-spike-dist: 1.7; animation-delay: 5ms;  }
-.p2__goo-spike:nth-child(4) { --p2-spike-x: 20px;  --p2-spike-y: 18px;  --p2-spike-dist: 1.1; animation-delay: 30ms; }
-.p2__goo-spike:nth-child(5) { --p2-spike-x: 0px;   --p2-spike-y: 22px;  --p2-spike-dist: 1.6; animation-delay: 10ms; }
-.p2__goo-spike:nth-child(6) { --p2-spike-x: -22px; --p2-spike-y: 16px;  --p2-spike-dist: 1.0; animation-delay: 40ms; }
-.p2__goo-spike:nth-child(7) { --p2-spike-x: -28px; --p2-spike-y: -2px;  --p2-spike-dist: 1.8; animation-delay: 15ms; }
-.p2__goo-spike:nth-child(8) { --p2-spike-x: -18px; --p2-spike-y: -16px; --p2-spike-dist: 1.2; animation-delay: 35ms; }
-.p2__goo-spike:nth-child(9) { --p2-spike-x: -4px;  --p2-spike-y: -22px; --p2-spike-dist: 1.5; animation-delay: 25ms; }
 
-.p2__goo-drip {
+.p2__drop {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: calc(var(--p2-spike-size) * 0.5);
-  height: calc(var(--p2-spike-size) * 0.5);
-  margin: calc(var(--p2-spike-size) * -0.25);
-  border-radius: 999px;
-  background: var(--color-light);
-  transform: scale(0);
+  width: 12px;
+  height: 12px;
+  margin: -6px;
+  fill: var(--color-light);
+  opacity: 0;
+  transform: translate(0, 0) scale(0);
 }
-/* nth-child counts across all .p2__goo-layer children (9 spikes then these 2
-   drips) — adjust the numbers if you change the spike count. */
-.p2__goo-drip:nth-child(10) { left: 38%; animation-delay: 60ms;  }
-.p2__goo-drip:nth-child(11) { left: 46%; animation-delay: 110ms; }
+/* Each drop gets its own outward+downward travel distance and stagger
+   delay — the "distance"/"spread" tuning knob: edit any
+   --p2-drop-dx/--p2-drop-dy pair, or add more .p2__drop elements. */
+.p2__drop:nth-of-type(1) { --p2-drop-dx: -22px; --p2-drop-dy: 34px; animation-delay: 60ms;  }
+.p2__drop:nth-of-type(2) { --p2-drop-dx:   4px; --p2-drop-dy: 42px; animation-delay: 110ms; }
+.p2__drop:nth-of-type(3) { --p2-drop-dx:  26px; --p2-drop-dy: 30px; animation-delay: 160ms; }
 
 .p2__task-title,
 .p2__task-subtitle {
-  position: relative; /* sit above the .p2__goo-layer (z-index: 1) */
+  position: relative; /* sit above the .p2__burst-layer (z-index: 1) */
   z-index: 2;
 }
 
@@ -837,7 +831,7 @@ html, body {
   text-align: right;
   direction: rtl;
   transition: color 0.06s linear;
-  transition-delay: calc(var(--p2-explode-duration) * 0.5);
+  transition-delay: calc(var(--p2-explode-duration) * 0.45);
 }
 
 /* Inner wrapper shrinks to the actual rendered text width (the outer
@@ -907,34 +901,34 @@ html, body {
   transform: none;
 }
 
-/* ── "Popping balloon" splat burst — 9 spike blobs pop outward by uneven
-   amounts (fused by the #p2-goo filter into one jagged silhouette, matching
-   the reference "pow" shape), hold briefly at peak, then retract back into a
-   plain fused disc that matches the settled card's own color. Two drip blobs
-   separate from underneath and fall away/fade independently. No shake/
-   rotate/clip-path on the card itself anymore; .p2--exploding is just a
-   marker class, all motion lives on the spikes/drips. Tune via
-   --p2-explode-duration (total length), --p2-spike-size (blob size), and the
-   per-spike --p2-spike-dist values above (how jagged/far the splat reaches). ── */
-.p2__task-card.p2--exploding .p2__goo-spike {
-  animation: p2-spike-pop var(--p2-explode-duration) cubic-bezier(0.22, 0.9, 0.3, 1) both;
+/* ── Sharp vector "POW" burst — a single hard-edged polygon (no filter, no
+   blur) scales from nothing past the card's own bounds, holds briefly at a
+   readable jagged silhouette, then rapidly collapses away once the settled
+   white card is already showing underneath. A few small teardrops shoot off
+   independently alongside it. .p2--exploding is just a marker class here;
+   all motion lives on .p2__burst-shape / .p2__drop. Tune via
+   --p2-explode-duration (total length), --p2-burst-size (star size), and
+   --p2-burst-peak (how far outside the card it explodes), or edit the
+   polygon's own point coordinates in the <symbol id="p2-burst-shape"> markup
+   to reshape it. ── */
+.p2__task-card.p2--exploding .p2__burst-shape {
+  animation: p2-burst-pop var(--p2-explode-duration) cubic-bezier(0.16, 0.9, 0.2, 1) both;
 }
-@keyframes p2-spike-pop {
-  0%   { transform: translate(0, 0) scale(0); }
-  25%  { transform: translate(calc(var(--p2-spike-x) * 0.4), calc(var(--p2-spike-y) * 0.4)) scale(calc(var(--p2-spike-dist) * 1.15)); } /* fast pop out — the "explosive" beat */
-  55%  { transform: translate(var(--p2-spike-x), var(--p2-spike-y)) scale(var(--p2-spike-dist)); }                                       /* holds near peak — the jagged splat silhouette */
-  100% { transform: translate(0, 0) scale(1); }                                                                                          /* retracts back to a plain fused disc matching the settled card */
+@keyframes p2-burst-pop {
+  0%   { transform: scale(0); opacity: 0; }
+  15%  { transform: scale(0.5); opacity: 1; }
+  45%  { transform: scale(var(--p2-burst-peak)); opacity: 1; }              /* violent overshoot — explodes past the card's own bounds */
+  70%  { transform: scale(calc(var(--p2-burst-peak) * 0.85)); opacity: 1; } /* brief hold — the readable jagged "POW" silhouette */
+  100% { transform: scale(0.001); opacity: 0; }                            /* rapid collapse, revealing the settled white card underneath */
 }
 
-.p2__task-card.p2--exploding .p2__goo-drip {
-  animation: p2-drip-fall var(--p2-explode-duration) cubic-bezier(0.4, 0, 0.7, 1) both;
+.p2__task-card.p2--exploding .p2__drop {
+  animation: p2-drop-fall var(--p2-explode-duration) ease-out both;
 }
-@keyframes p2-drip-fall {
-  0%   { transform: translateY(0) scale(0); opacity: 1; }
-  35%  { transform: translateY(10px) scale(1); opacity: 1; }     /* still fused to the splat's underside */
-  55%  { transform: translateY(26px) scale(0.9); opacity: 1; }   /* stretching away — the goo filter shows this as a thinning neck */
-  75%  { transform: translateY(40px) scale(0.6); opacity: 1; }   /* the "snap" — visually detached from the splat now */
-  100% { transform: translateY(56px) scale(0.2); opacity: 0; }   /* falls further and fades away */
+@keyframes p2-drop-fall {
+  0%   { transform: translate(0, 0) scale(0); opacity: 0; }
+  30%  { transform: translate(calc(var(--p2-drop-dx) * 0.3), calc(var(--p2-drop-dy) * 0.3)) scale(1); opacity: 1; }
+  100% { transform: translate(var(--p2-drop-dx), var(--p2-drop-dy)) scale(0.4); opacity: 0; } /* shoots out and downward, fading as it goes */
 }
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
@@ -2770,24 +2764,26 @@ html, body {
 
       <div class="panel__content p2">
 
-        <!-- "Gooey" filter used by the task-card explode animation (see CSS
-             .p2__goo-layer / .p2__goo-spike / .p2__goo-drip). Zero-size +
-             aria-hidden so it never renders on its own — only referenced via
-             filter: url(#p2-goo). Blurs the spikes/drips together then snaps
-             the blur back to hard edges via an extreme alpha contrast matrix,
-             so overlapping/near blobs fuse into one connected shape with
-             visible neck/thread connections (classic gooey-menu technique) —
-             this is what turns 9 separate circles into one jagged splat
-             silhouette. Tune the two numbers marked below to change how
-             "sticky"/far-reaching the merge is. -->
+        <!-- Shared shapes used by the task-card explode animation (see CSS
+             .p2__burst-shape / .p2__drop). Zero-size + aria-hidden so this
+             block never renders on its own — the shapes are only drawn where
+             referenced via <use> inside each card. No filter: these are
+             plain hard-edged vector shapes so their points stay razor-sharp
+             at every frame of the scale animation. -->
         <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false">
           <defs>
-            <filter id="p2-goo">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/> <!-- ↑ raise for blobs to bridge from further apart -->
-              <feColorMatrix in="blur" mode="matrix"
-                values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -12" result="goo"/> <!-- higher first number = crisper/more pointed edges -->
-              <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
-            </filter>
+            <!-- Jagged 8-point "POW" burst star — alternating long/short
+                 points, each radius nudged slightly uneven so it reads as
+                 hand-drawn/comic rather than a perfect mathematical star.
+                 Edit any point pair to reshape it (odd-indexed points are
+                 the outer spike tips, even-indexed are the inner valleys). -->
+            <symbol id="p2-burst-shape" viewBox="0 0 100 100">
+              <polygon points="50,2 57.7,31.5 81.8,18.2 70.3,41.6 100,50 67.6,57.3 82.5,82.5 58.0,69.4 50,99 42.3,68.5 18.9,81.1 28.8,58.8 3,50 33.4,43.1 18.2,18.2 40.8,27.8" />
+            </symbol>
+            <!-- Simple teardrop, reused for the small detaching "drops." -->
+            <symbol id="p2-drop-shape" viewBox="0 0 24 24">
+              <path d="M12 2C12 2 4 12 4 17a8 8 0 0016 0c0-5-8-15-8-15z" />
+            </symbol>
           </defs>
         </svg>
 
@@ -2832,18 +2828,11 @@ html, body {
 
                 <!-- 1. מקלחת -->
                 <article class="p2__task-card">
-                  <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-drip"></span>
-                    <span class="p2__goo-drip"></span>
+                  <span class="p2__burst-layer" aria-hidden="true">
+                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
                   <span class="p2__task-subtitle">התפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליחה ללבוש מכנסיים</span>
@@ -2851,18 +2840,11 @@ html, body {
 
                 <!-- 2. פרזנטציה -->
                 <article class="p2__task-card">
-                  <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-drip"></span>
-                    <span class="p2__goo-drip"></span>
+                  <span class="p2__burst-layer" aria-hidden="true">
+                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
                   <span class="p2__task-subtitle">מגיע באיחור, מתכווצת מכאב מול כולם ומשקרת שרק נתפס לי שריר</span>
@@ -2870,18 +2852,11 @@ html, body {
 
                 <!-- 3. עבודה -->
                 <article class="p2__task-card">
-                  <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-drip"></span>
-                    <span class="p2__goo-drip"></span>
+                  <span class="p2__burst-layer" aria-hidden="true">
+                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
                   <span class="p2__task-subtitle">מחליפה תחבושות בסתר בשירותים ולא מצליחה לשבת על הכיסא</span>
@@ -2889,18 +2864,11 @@ html, body {
 
                 <!-- 4. קניות -->
                 <article class="p2__task-card">
-                  <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-drip"></span>
-                    <span class="p2__goo-drip"></span>
+                  <span class="p2__burst-layer" aria-hidden="true">
+                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
                   <span class="p2__task-subtitle">חותכת הביתה, מותשת לגמרי מהמאמץ הנפשי להסתיר</span>
@@ -2908,18 +2876,11 @@ html, body {
 
                 <!-- 5. ספורט -->
                 <article class="p2__task-card">
-                  <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-drip"></span>
-                    <span class="p2__goo-drip"></span>
+                  <span class="p2__burst-layer" aria-hidden="true">
+                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חברה</span></span>
                   <span class="p2__task-subtitle">בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים</span>
@@ -2927,18 +2888,11 @@ html, body {
 
                 <!-- 6. דייט -->
                 <article class="p2__task-card">
-                  <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-drip"></span>
-                    <span class="p2__goo-drip"></span>
+                  <span class="p2__burst-layer" aria-hidden="true">
+                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
                   <span class="p2__task-subtitle">ביטלתי, משותקת מהחרדה שייגעל מהריח או מכתם פתאומי</span>
@@ -2946,18 +2900,11 @@ html, body {
 
                 <!-- 7. שינה -->
                 <article class="p2__task-card">
-                  <span class="p2__goo-layer" aria-hidden="true">
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-spike"></span>
-                    <span class="p2__goo-drip"></span>
-                    <span class="p2__goo-drip"></span>
+                  <span class="p2__burst-layer" aria-hidden="true">
+                    <svg class="p2__burst-shape" viewBox="0 0 100 100"><use href="#p2-burst-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
+                    <svg class="p2__drop" viewBox="0 0 24 24"><use href="#p2-drop-shape"></use></svg>
                   </span>
                   <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
                   <span class="p2__task-subtitle">פורסת מגבת מתחת לסדין ונאבקת למצוא תנוחה שלא תכאיב</span>
@@ -3786,7 +3733,7 @@ html, body {
       const p2Panel = scrollEl.closest('.panel');
 
       // ── Tweak pacing here ──
-      // STAGGER_GAP_MS: pause AFTER one card finishes its goo-tear transition
+      // STAGGER_GAP_MS: pause AFTER one card finishes its burst
       // before the next one starts — raise this for a slower, more deliberate reveal.
       const STAGGER_GAP_MS = 450;
 
@@ -3810,22 +3757,15 @@ html, body {
       }
 
       function runExplode(card, onDone) {
-        card.classList.add('p2--exploding'); // triggers the spike-pop / drip-fall keyframes on this card's blobs
+        card.classList.add('p2--exploding'); // triggers the burst-pop / drop-fall keyframes
         card.classList.add('p2--active');    // triggers the color-snap / subtitle / strikethrough transitions
-        card.classList.add('p2--bursting');  // temporarily lets the splat's spikes escape the card's own clipping box
+        card.classList.add('p2--bursting');  // temporarily lifts clipping + raises z-index so the burst can overlap neighboring cards
         observer.unobserve(card);            // one-way reveal — doesn't revert on scroll-up
 
-        // Wait for the last drip's animationend (every spike/drip shares the
-        // same --p2-explode-duration, just staggered by animation-delay, so
-        // whichever element is literally last in the DOM finishes last) to
-        // know the whole sequence has settled — restore clipping and let the
-        // queue advance. Uses :last-child (position-based), not :last-of-type
-        // (tag-based) — spikes and drips are both <span>s, so :last-of-type
-        // would not reliably resolve to a drip.
-        const lastEl = card.querySelector('.p2__goo-drip:last-child');
-        lastEl.addEventListener('animationend', function handler() {
-          lastEl.removeEventListener('animationend', handler);
-          card.classList.remove('p2--bursting');
+        const burst = card.querySelector('.p2__burst-shape');
+        burst.addEventListener('animationend', function handler() {
+          burst.removeEventListener('animationend', handler);
+          card.classList.remove('p2--bursting'); // restore clipping + normal stacking now that the burst has collapsed away
           onDone();
         }, { once: true });
       }
