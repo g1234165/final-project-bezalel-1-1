@@ -724,10 +724,11 @@ html, body {
    not the rules below, to adjust the card height, spacing, or the
    "explode" punch feel. */
 .p2__tasks {
-  --p2-card-height: 120px;      /* fixed card height — change this one value only */
-  --p2-card-gap: 12px;          /* vertical spacing between cards */
-  --p2-explode-duration: 0.45s; /* how long the punch animation runs */
-  --p2-explode-scale: 1.06;     /* how far the card overshoots when it "explodes" */
+  --p2-card-height: 80px;       /* fixed card height — change this one value only */
+  --p2-card-gap: 10px;          /* vertical spacing between cards */
+  --p2-explode-duration: 0.6s;  /* how long the full shake+distort+glitch sequence runs */
+  --p2-explode-scale: 1.08;     /* peak overshoot size during the burst frame */
+  --p2-explode-shake: 6px;      /* how far the card jitters side-to-side while shaking */
   display: flex;
   flex-direction: column;
   gap: var(--p2-card-gap);
@@ -743,14 +744,17 @@ html, body {
   border-radius: 15px;
   background: var(--color-dark);
   border: 0.9px solid var(--color-light);
-  padding: 24px 24px 36px 36px;
+  padding: 14px 20px;
   overflow: hidden; /* subtitle must stay inside the fixed-height box */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  gap: 8px;
-  transition: background-color 0.35s ease, border-color 0.35s ease;
+  gap: 4px;
+  /* the color flip is delayed until the shake/glitch has mostly settled, then
+     snaps (very short duration) instead of fading — see p2--exploding below */
+  transition: background-color 0.06s linear, border-color 0.06s linear;
+  transition-delay: calc(var(--p2-explode-duration) * 0.65);
 }
 
 .p2__task-title {
@@ -762,7 +766,8 @@ html, body {
   color: var(--color-light);
   text-align: right;
   direction: rtl;
-  transition: color 0.35s ease;
+  transition: color 0.06s linear;
+  transition-delay: calc(var(--p2-explode-duration) * 0.65);
 }
 
 .p2__task-subtitle {
@@ -776,8 +781,9 @@ html, body {
   direction: rtl;
   opacity: 0;
   transform: translateY(6px);
-  /* delayed slightly so the subtitle reveals just after the punch lands */
-  transition: opacity 0.3s ease 0.12s, transform 0.3s ease 0.12s;
+  /* revealed just after the color snap lands */
+  transition: opacity 0.25s ease calc(var(--p2-explode-duration) * 0.7),
+              transform 0.25s ease calc(var(--p2-explode-duration) * 0.7);
 }
 
 /* ── Active "Reality" state: solid cream card, dark text, subtitle revealed ── */
@@ -794,14 +800,29 @@ html, body {
   transform: none;
 }
 
-/* ── "Explode" punch: a quick scale overshoot, triggered once per card ── */
+/* ── "Explode" — violent shake + scale distortion + clip-path glitch, then a
+   hard snap into Reality mode (the snap itself is driven by the transition-
+   delay rules above, timed off the same --p2-explode-duration). Tune via
+   --p2-explode-duration (total length), --p2-explode-scale (peak burst
+   size), and --p2-explode-shake (side-to-side jitter distance). ── */
 .p2__task-card.p2--exploding {
-  animation: p2-explode var(--p2-explode-duration) cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: p2-explode var(--p2-explode-duration) cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  will-change: transform, clip-path;
 }
 @keyframes p2-explode {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(var(--p2-explode-scale)); }
-  100% { transform: scale(1); }
+  0%   { transform: translate(0, 0) scale(1) rotate(0deg); clip-path: inset(0 0 0 0); filter: brightness(1); }
+  8%   { transform: translate(calc(var(--p2-explode-shake) * -1), 2px) rotate(-1.5deg); }
+  16%  { transform: translate(var(--p2-explode-shake), -2px) rotate(1.5deg);
+         clip-path: polygon(0 0, 100% 0, 100% 60%, 92% 60%, 92% 100%, 0 100%); }
+  24%  { transform: translate(calc(var(--p2-explode-shake) * -1), 1px) rotate(-1deg);
+         clip-path: polygon(0 0, 8% 0, 8% 40%, 100% 40%, 100% 100%, 0 100%); }
+  32%  { transform: translate(var(--p2-explode-shake), -1px) rotate(1deg); clip-path: inset(0 0 0 0); }
+  40%  { transform: scale(0.94) rotate(-0.5deg); filter: brightness(1.6) contrast(1.2); }
+  50%  { transform: scale(var(--p2-explode-scale)) rotate(0.4deg);
+         clip-path: polygon(0 0, 100% 0, 100% 100%, 55% 100%, 55% 70%, 0 70%); filter: brightness(1.8); }
+  62%  { transform: scale(calc(var(--p2-explode-scale) * 0.9)) rotate(-0.3deg);
+         clip-path: inset(0 0 0 0); filter: brightness(1.1); }
+  100% { transform: translate(0, 0) scale(1) rotate(0deg); clip-path: inset(0 0 0 0); filter: brightness(1); }
 }
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
@@ -3538,25 +3559,27 @@ html, body {
       if (!scrollEl || !cards.length) return;
       const p2Panel = scrollEl.closest('.panel');
 
+      function explode(card) {
+        if (card.classList.contains('p2--active')) return; // never re-trigger
+        card.classList.add('p2--exploding'); // triggers the shake/distort/glitch keyframe (see --p2-explode-* vars)
+        card.classList.add('p2--active');    // triggers the color-snap/subtitle transition
+        observer.unobserve(card);            // one-way reveal — doesn't revert on scroll-up
+      }
+
       // ── Tweak these two to change WHEN a card triggers ──
       // threshold: 0 means "fire as soon as any pixel crosses the trigger line".
-      // rootMargin: shrinks the observed area of the scroll container to a thin
-      // horizontal band. '-45% 0px -45% 0px' means only count intersections in
-      // the middle 10% of the container's height (i.e. roughly its center).
-      // Move both percentages toward 50% to make the trigger line thinner/more
-      // precise, or lower them (e.g. -30%) to trigger earlier/later relative
-      // to the center.
+      // rootMargin: '0px 0px -20% 0px' shrinks the bottom of the observed area
+      // by 20%, so a card only counts as "intersecting" once it has scrolled
+      // up past that line — i.e. the trigger line sits 20% up from the bottom
+      // of the scroll container. Increase the 20% to move the trigger line
+      // higher/earlier; decrease it to trigger later/lower.
       const OBSERVER_THRESHOLD = 0;
-      const OBSERVER_ROOT_MARGIN = '-45% 0px -45% 0px';
+      const OBSERVER_ROOT_MARGIN = '0px 0px -20% 0px';
 
       const observer = new IntersectionObserver((entries) => {
         if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const card = entry.target;
-          card.classList.add('p2--exploding'); // triggers the punch keyframe (see --p2-explode-* vars)
-          card.classList.add('p2--active');     // triggers the color/subtitle transition
-          observer.unobserve(card);             // one-way reveal — doesn't revert on scroll-up
+          if (entry.isIntersecting) explode(entry.target);
         });
       }, {
         root: scrollEl,               // observe against the scroll container, not the window
@@ -3564,7 +3587,29 @@ html, body {
         rootMargin: OBSERVER_ROOT_MARGIN,
       });
 
-      cards.forEach((card) => observer.observe(card));
+      // ── Bug fix: don't start observing until the user actually scrolls ──
+      // Attaching the observer before any scroll means its very first
+      // callback reports whatever already intersects at scrollTop 0, which
+      // used to explode the first few cards on page load. So cards are only
+      // handed to the observer once a real scroll has happened.
+      let started = false;
+      function startObserving() {
+        if (started) return;
+        started = true;
+        cards.forEach((card) => observer.observe(card));
+      }
+
+      scrollEl.addEventListener('scroll', () => {
+        if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
+        startObserving();
+
+        // ── Bug fix: the last card's trigger line can sit past the bottom of
+        // the scrollable area, so it may never scroll up to meet it. Once the
+        // user has scrolled to (essentially) the bottom, force-explode any
+        // card(s) still in "ideal" mode so the sequence always finishes. ──
+        const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 2;
+        if (atBottom) cards.forEach(explode);
+      }, { passive: true });
     }());
 
 
