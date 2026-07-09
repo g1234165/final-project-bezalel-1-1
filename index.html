@@ -1706,20 +1706,24 @@ html, body {
 .p3__cards-container {
   padding: 36px 80px 48px;
   box-sizing: border-box;
+  width: 100%;
+  direction: rtl;
 }
 /* 942px row, gap 12px */
 .p3__cards-row {
   display: flex;
   flex-direction: row;
+  direction: rtl;
   align-items: stretch;
-  width: 46.0cqw;
   gap: 12px;
-  margin-left: auto;
+  width: 100%;
+  flex-wrap: wrap;
 }
 /* Each card: flex:1, 376px tall — flip on hover */
 .p3__card {
-  flex: 1;
-  height: 35.14cqh;
+  flex: 1 1 200px;
+  min-width: 0;
+  min-height: 320px;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -1761,34 +1765,37 @@ html, body {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.074cqw, 22px);
+  font-size: 22px;
   line-height: 100%;
   color: #101212;
   text-align: right;
   direction: rtl;
-  flex: 1;
-  display: flex;
-  align-items: center;
+  display: block;
+  width: 100%;
+  margin: 0;
 }
 .p3__card-label {
   font-family: 'Simona Pro';
-  font-size: clamp(13px, 1.074cqw, 22px);
+  font-size: 22px;
   font-weight: 400;
   line-height: 100%;
   color: #F8F4EE;
   text-align: right;
   direction: rtl;
-  align-self: stretch;
+  display: block;
+  width: 100%;
+  margin: 0;
 }
 .p3__card-desc {
   font-family: 'Simona Pro';
-  font-size: var(--fs-body);
+  font-size: 18px;
   font-weight: 400;
   line-height: 110%;
   color: #F8F4EE;
   text-align: right;
   direction: rtl;
-  align-self: stretch;
+  display: block;
+  width: 100%;
   margin: 0;
 }
 
@@ -2112,8 +2119,7 @@ html, body {
   justify-content: flex-end;
   align-items: flex-start;
   gap: 8px;
-  width: 46.0cqw;
-  height: 8.411cqh;
+  width: 100%;
 }
 /* left sign: closing " — bottom aligned */
 .p3__quote-sign-left {
@@ -2122,8 +2128,8 @@ html, body {
   justify-content: flex-end;
   align-items: flex-end;
   width: 21px;
-  height: 8.411cqh;
   flex-shrink: 0;
+  align-self: flex-end;
 }
 /* right sign: opening " — top aligned */
 .p3__quote-sign-right {
@@ -2131,8 +2137,8 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   width: 21px;
-  height: 8.411cqh;
   flex-shrink: 0;
+  align-self: flex-start;
 }
 .p3__quote-char {
   font-family: 'Narkiss Asaf TRIAL';
@@ -2151,18 +2157,20 @@ html, body {
   align-items: flex-end;
   padding: 32px 0 36px;
   flex: 1;
-  height: 8.411cqh;
+  min-width: 0;
 }
 .p3__quote-text {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.074cqw, 22px);
-  line-height: 100%;
+  font-size: 18px;
+  line-height: 110%;
   color: var(--color-dark);
   text-align: right;
   direction: rtl;
-  align-self: stretch;
+  width: 100%;
+  display: block;
+  white-space: normal;
   margin: 0;
 }
 
@@ -2172,24 +2180,27 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   gap: 12px;
-  width: 46.0cqw;
+  width: 100%;
+  direction: rtl;
 }
 
-/* card row: 2 cards, 942×260px, gap 12px */
+/* card row: 2 cards, gap 12px */
 .p3__card-row-07 {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   gap: 12px;
-  width: 46.0cqw;
-  height: 24.299cqh;
+  width: 100%;
+  direction: rtl;
+  flex-wrap: wrap;
   flex-shrink: 0;
 }
 
 /* item 07 flip card */
 .p3__card-07 {
-  flex: 1;
-  height: 24.299cqh;
+  flex: 1 1 380px;
+  min-width: 0;
+  min-height: 220px;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -2230,14 +2241,13 @@ html, body {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: clamp(13px, 1.074cqw, 22px);
+  font-size: 22px;
   line-height: 100%;
   text-align: right;
   direction: rtl;
-  align-self: stretch;
+  width: 100%;
   margin: 0;
-  display: flex;
-  align-items: center;
+  display: block;
 }
 .p3__card-07-front .p3__card-07-title { color: #101212; }
 .p3__card-07-back  .p3__card-07-title { color: #F8F4EE; }
@@ -2245,21 +2255,22 @@ html, body {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: var(--fs-body);
+  font-size: 18px;
   line-height: 110%;
   text-align: right;
   direction: rtl;
-  align-self: stretch;
+  width: 100%;
   margin: 0;
-  display: flex;
-  align-items: center;
+  display: block;
 }
 .p3__card-07-front .p3__card-07-body { color: #101212; }
 .p3__card-07-back  .p3__card-07-body { color: #F8F4EE; }
 
 /* item 07 inner content: gap 12px (Frame 975) */
 .p3__col-content--07 {
-  gap: 12px;
+  width: 100%;
+  direction: rtl;
+  gap: 32px;
 }
 
 /* ── Panel 3 item 04: simple text only ── */
@@ -2504,13 +2515,8 @@ html, body {
 
 .p5__dropdown-body {
   display: none;
-  width: 100%;
   flex-direction: column;
-  align-items: flex-end;
-  padding: 0 80px 48px;
-  box-sizing: border-box;
 }
-
 .p5__dropdown.is-open .p5__dropdown-body {
   display: flex;
 }
@@ -2540,14 +2546,18 @@ html, body {
 .p5__cards-row {
   display: flex;
   flex-direction: row;
+  direction: rtl;
   align-items: stretch;
-  width: 49.707cqw;
   gap: 12px;
-  margin-left: auto;
+  width: 100%;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  padding: 0 80px 48px;
 }
 .p5__card {
-  flex: 1;
-  height: 35.14cqh;
+  flex: 1 1 200px;
+  min-width: 200px;
+  min-height: 380px;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -2566,7 +2576,7 @@ html, body {
   backface-visibility: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: flex-start;
   padding: 24px;
   box-sizing: border-box;
@@ -2584,35 +2594,38 @@ html, body {
 }
 .p5__card-text {
   font-family: 'Simona Pro';
-  font-size: clamp(13px, 1.074cqw, 22px);
+  font-size: 22px;
   font-weight: 400;
   line-height: 100%;
   color: #101212;
   text-align: right;
   direction: rtl;
-  flex: 1;
-  display: flex;
-  align-items: center;
+  display: block;
+  width: 100%;
+  margin: 0;
 }
 .p5__card-label {
   font-family: 'Simona Pro';
-  font-size: clamp(13px, 1.074cqw, 22px);
+  font-size: 22px;
   font-weight: 400;
   line-height: 100%;
   color: #F8F4EE;
   text-align: right;
   direction: rtl;
-  align-self: stretch;
+  display: block;
+  width: 100%;
+  margin: 0;
 }
 .p5__card-desc {
   font-family: 'Simona Pro';
-  font-size: var(--fs-body);
+  font-size: 16px;
   font-weight: 400;
-  line-height: 110%;
+  line-height: 120%;
   color: #F8F4EE;
   text-align: right;
   direction: rtl;
-  align-self: stretch;
+  display: block;
+  width: 100%;
   margin: 0;
 }
 
@@ -2623,10 +2636,13 @@ html, body {
   align-items: flex-end;
   gap: 16px;
   width: 100%;
+  padding: 0 80px 48px;
+  box-sizing: border-box;
+  direction: rtl;
 }
 .p5__links-subtitle {
   font-family: 'Simona Pro', serif;
-  font-size: clamp(13px, 1.074cqw, 22px);
+  font-size: 22px;
   font-weight: 400;
   line-height: 100%;
   color: var(--color-dark);
@@ -2645,7 +2661,9 @@ html, body {
 .p5__list-item {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  direction: rtl;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 12px;
   width: 100%;
 }
@@ -2658,7 +2676,7 @@ html, body {
   text-align: right;
   direction: rtl;
   text-decoration: underline;
-  flex: 1;
+  flex: 0 1 auto;
 }
 .p5__link:hover { opacity: 0.65; }
 .p5__bullet {
@@ -3269,7 +3287,7 @@ html, body {
                   <div class="p3__col-content">
 
                     <!-- footer text line (900px) -->
-                    <p class="p3__col-footer" style="width:900px">אבחנה של HS מבוססת על בדיקה קלינית בלבד. כרגע אין בדיקת דם, תרבית, או בדיקה מעבדתית שמאשרת את המחלה.</p>
+                    <p class="p3__col-footer" style="width:900px">אבחנה של HS מבוססת על בדיקה קלינית בלבד. כרגע אין בדיקת דם, תרבית, או בדיקת מעבדה שמאשרת את המחלה.</p>
 
                     <!-- two columns row (148px height, same as item 03) -->
                     <div class="p3__col-row">
@@ -3278,7 +3296,7 @@ html, body {
                       <div class="p3__col-item">
                         <div class="p3__col-text">
                           <p class="p3__col-subtitle">מה הרופא בודק?</p>
-                          <p class="p3__col-body">האבחנה מתבצעת לפי היסטוריה של פצעים חוזרים באזורים ספציפיים, משך זמן של לפחות שישה חודשים.</p>
+                          <p class="p3__col-body">האבחנה מתבצעת לפי היסטוריה של פצעים חוזרים באזורים ספציפיים, בפרק זמן של לפחות שישה חודשים.</p>
                         </div>
                         <div class="p3__col-illus p3__col-illus--06-1">
                           <img src="Property 1=06.1.svg" alt="" aria-hidden="true">
@@ -3309,13 +3327,15 @@ html, body {
                 <div class="p3__cards-container">
                   <div class="p3__col-content p3__col-content--07">
 
-                    <!-- Frame 986: footer text + quote -->
+                    <!-- Frame 986: footer text + attribution + quote -->
                     <div class="p3__07-top">
 
-                      <!-- drop down long line (839px) -->
-                      <p class="p3__col-footer" style="width:839px">אנחנו עדיין בשלבים מוקדמים של ההבנה של HS. לא קיים עדיין פתרון שנפטר מהמחלה, אבל ישנם טיפולים שיכולים לשפר את איכות החיים.</p>
+                      <p class="p3__col-footer">אנחנו עדיין בשלבים מוקדמים של ההבנה של HS. לא קיים עדיין פתרון שנפטר מהמחלה, אבל ישנם טיפולים שיכולים לשפר את איכות החיים.</p>
 
-                      <!-- quote (942×90px): " text " -->
+                      <!-- attribution: speaker of the quote -->
+                      <p class="p3__col-body">רופא מומחה ל-HS:</p>
+
+                      <!-- quote: " text " -->
                       <div class="p3__quote">
                         <div class="p3__quote-sign-left">
                           <span class="p3__quote-char">"</span>
@@ -3341,7 +3361,7 @@ html, body {
                           </div>
                           <div class="p3__card-07-back">
                             <p class="p3__card-07-title">איך נראה הטיפול ב-HS?</p>
-                            <p class="p3__card-07-body">הטיפול: שילוב של שינויי אורח חיים, תרופות וניתוחים. החוויה: עבור חולים רבים זהו מעגל שוחק ואינסופי של ניסוי וטעייה.</p>
+                            <p class="p3__card-07-body">שילוב של שינויים באורח החיים, עם תרופות וניתוחים.</p>
                           </div>
                         </div>
                       </div>
@@ -3451,47 +3471,17 @@ html, body {
           </div>
           <div class="p5__hdivider" role="separator"></div>
 
-          <!-- About section -->
-          <div class="p5__about">
-            <div class="p5__about-inner">
-              <h3 class="p5__subtitle">אודות ותודות</h3>
-              <!-- Two columns: right (first in DOM), left (second in DOM) -->
-              <div class="p5__cols">
-                <!-- Right column -->
-                <div class="p5__col">
-                  <p class="p5__col-text">אתר זה הוא פרויקט הגמר של אגניו טגניה ונגה קפון, סטודנטים לתקש"ח בבצלאל.<br><br>הפרויקט צמח מתוך היכרות אישית וקרובה עם חולה HS, ועם המחיר הפיזי והנפשי שהמחלה גובה. היה לנו חשוב ליצור אתר שלא מציג רק מידע רפואי, אלא מעביר את החוויה עצמה. לכן, הפרויקט כולו נשען על מעורבות ישירה של חולות וחולי HS, שליווו את תהליך היצירה ושיתפו בחוויותיהם האישיות.</p>
-                </div>
-                <!-- Left column -->
-                <div class="p5__col">
-                  <p class="p5__col-text">תודה לחולים שלקחו חלק בפרויקט: ל-6 המרואיינות (במיוחד לש') ול-111 המשיבים לשאלון בישראל ו-195 בחו"ל - הפרויקט קיים בזכותכם.<br><br>תודה למומחי ה-HS פרופ' יובל רמות וד"ר יוסי טייב על ההסברים הרפואיים. תודה למנחים נעמה טוביאס ורונאל מור, לפרופ' עידו ברונו על הייעוץ, לאסף קליין על האיור, ולמשפחה והחברים על התמיכה האינסופית.</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Footer note -->
-            <div class="p5__footnote-wrap">
-              <p class="p5__footnote">*המידע באתר מבוסס על עדויות חולים, מומחים ומידע מאתר איגוד רופאי העור הבריטי, ואינו מהווה תחליף לייעוץ או טיפול רופאי.</p>
-              <p class="p5__footnote">© 2026 כל הזכויות שמורות לאגניו טגניה ונגה קפון.</p>
-            </div>
-          </div>
-
           <!-- Dropdown 1 -->
-          <div class="p5__divider" role="separator"></div>
           <div class="p5__dropdown" data-p5-dropdown>
             <div class="p5__dropdown-header">
               <p class="p5__dropdown-label">איך לתמוך באדם קרוב עם HS?</p>
               <svg class="p5__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg>
             </div>
             <div class="p5__dropdown-body">
-              <!-- 5 cards RTL: first=rightmost visual -->
               <div class="p5__cards-row">
                 <div class="p5__card"><div class="p5__card-inner">
                   <div class="p5__card-front"><span class="p5__card-text">הבנה של גבולות</span></div>
                   <div class="p5__card-back"><span class="p5__card-label">הבנה של גבולות</span><p class="p5__card-desc">לפעמים כאב דורש זמן התאוששות ומוביל לביטול תוכניות. כשהחולה רואה שאתם מקבלים את זה בהבנה ויודעים שזה לא אישי, זה מוריד ממנו הרבה לחץ.</p></div>
-                </div></div>
-                <div class="p5__card"><div class="p5__card-inner">
-                  <div class="p5__card-front"><span class="p5__card-text">עזרה מעשית</span></div>
-                  <div class="p5__card-back"><span class="p5__card-label">עזרה מעשית</span><p class="p5__card-desc">הרבה מהפצעים ממוקמים באזורים שקשה להגיע אליהם. עזרה בחבישות יכולה להיות משמעותית ומועילה עבור חולים רבים.</p></div>
                 </div></div>
                 <div class="p5__card"><div class="p5__card-inner">
                   <div class="p5__card-front"><span class="p5__card-text">העלאת מודעות</span></div>
@@ -3505,12 +3495,18 @@ html, body {
                   <div class="p5__card-front"><span class="p5__card-text">לשאול ולהתעניין</span></div>
                   <div class="p5__card-back"><span class="p5__card-label">לשאול ולהתעניין</span><p class="p5__card-desc">אם שיתפו אתכם, נסו ללמוד על המחלה יחד. עצם ההקשבה והשיח הפתוח איתכם מורידים הרבה מהחרדה.</p></div>
                 </div></div>
+                <div class="p5__card"><div class="p5__card-inner">
+                  <div class="p5__card-front"><span class="p5__card-text">עזרה מעשית</span></div>
+                  <div class="p5__card-back"><span class="p5__card-label">עזרה מעשית</span><p class="p5__card-desc">הרבה מהפצעים ממוקמים באזורים שקשה להגיע אליהם. עזרה בחבישות יכולה להיות משמעותית ומועילה עבור חולים רבים.</p></div>
+                </div></div>
               </div>
             </div>
           </div>
 
-          <!-- Dropdown 2 -->
+          <!-- Divider between dropdowns -->
           <div class="p5__divider" role="separator"></div>
+
+          <!-- Dropdown 2 -->
           <div class="p5__dropdown" data-p5-dropdown>
             <div class="p5__dropdown-header">
               <p class="p5__dropdown-label">רוצים לדעת עוד?</p>
@@ -3520,7 +3516,6 @@ html, body {
               <div class="p5__links-content">
                 <p class="p5__links-subtitle">לינקים שימושיים:</p>
                 <div class="p5__links-list">
-                  <!-- RTL: text first (rightmost), bullet second (leftmost) -->
                   <div class="p5__list-item">
                     <img src="list poin 05.svg" class="p5__bullet" alt="">
                     <a href="https://www.bad.org.uk/pils/hidradenitis-suppurativa" target="_blank" rel="noopener" class="p5__link">HS באתר איגוד רופאי העור הבריטי (BAD) – מידע רפואי באנגלית.</a>
@@ -3535,6 +3530,29 @@ html, body {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Divider between dropdowns and about -->
+          <div class="p5__divider" role="separator"></div>
+
+          <!-- About section -->
+          <div class="p5__about">
+            <div class="p5__about-inner">
+              <h3 class="p5__subtitle">אודות ותודות</h3>
+              <div class="p5__cols">
+                <div class="p5__col">
+                  <p class="p5__col-text">אתר זה הוא פרויקט הגמר של אגניו טגניה ונגה קפון, סטודנטים לתקש"ח בבצלאל.<br><br>הפרויקט צמח מתוך היכרות אישית וקרובה עם חולה HS, ועם המחיר הפיזי והנפשי שהמחלה גובה. היה לנו חשוב ליצור אתר שלא מציג רק מידע רפואי, אלא מעביר את החוויה עצמה. לכן, הפרויקט כולו נשען על מעורבות ישירה של חולות וחולי HS, שליווו את תהליך היצירה ושיתפו בחוויותיהם האישיות.</p>
+                </div>
+                <div class="p5__col">
+                  <p class="p5__col-text">תודה לחולים שלקחו חלק בפרויקט: ל-6 המרואיינות (במיוחד לש') ול-111 המשיבים לשאלון בישראל ו-195 בחו"ל - הפרויקט קיים בזכותכם.<br><br>תודה למומחי ה-HS פרופ' יובל רמות וד"ר יוסי טייב על ההסברים הרפואיים. תודה למנחים נעמה טוביאס ורונאל מור, לפרופ' עידו ברונו על הייעוץ, לאסף קליין על האיור, ולמשפחה והחברים על התמיכה האינסופית.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="p5__footnote-wrap">
+              <p class="p5__footnote">*המידע באתר מבוסס על עדויות חולים, מומחים ומידע מאתר איגוד רופאי העור הבריטי, ואינו מהווה תחליף לייעוץ או טיפול רופאי.</p>
+              <p class="p5__footnote">© 2026 כל הזכויות שמורות לאגניו טגניה ונגה קפון.</p>
             </div>
           </div>
 
@@ -4215,12 +4233,10 @@ html, body {
 
           document.querySelectorAll('[data-p5-dropdown].is-open').forEach(openItem => {
             openItem.classList.remove('is-open');
-            closeBody(openItem.querySelector('.p5__dropdown-body'));
           });
 
           if (!isOpen) {
             item.classList.add('is-open');
-            openBody(item.querySelector('.p5__dropdown-body'));
             if (p5Scroll) smartScroll(header, p5Scroll, p5Panel);
           }
         });
@@ -4234,7 +4250,7 @@ html, body {
       const panel5 = document.querySelector('.panel[data-panel="5"]');
       if (!panel5 || typeof Matter === 'undefined') return;
 
-      const frame  = panel5.querySelector('.p5__sidebar');
+      const frame  = panel5.querySelector('.p5__illus-frame');
       const imgEls = [
         panel5.querySelector('.p5__shape1'),
         panel5.querySelector('.p5__shape2'),
@@ -4262,9 +4278,10 @@ html, body {
       let resizeCleanup = null;
 
       function startPhysics() {
-        const rect = frame.getBoundingClientRect();
-        const W = rect.width;
-        const H = rect.height;
+        const scale = getAccordionScale();
+        const rect  = frame.getBoundingClientRect();
+        const W = rect.width  / scale;
+        const H = rect.height / scale;
 
         engine = Engine.create({ gravity: { x: 0, y: 1.2 } });
         world  = engine.world;
@@ -4275,11 +4292,14 @@ html, body {
           // floor
           Bodies.rectangle(W / 2, H + thick / 2, W + thick * 2, thick,
             { isStatic: true, friction: 0.55, restitution: 0.05 }),
+          // ceiling — keeps thrown shapes from escaping upward
+          Bodies.rectangle(W / 2, -thick / 2, W + thick * 2, thick,
+            { isStatic: true, friction: 0.3, restitution: 0.1 }),
           // left wall
-          Bodies.rectangle(-thick / 2, H / 2, thick, H * 4,
+          Bodies.rectangle(-thick / 2, H / 2, thick, H + thick * 2,
             { isStatic: true, friction: 0.3, restitution: 0.1 }),
           // right wall
-          Bodies.rectangle(W + thick / 2, H / 2, thick, H * 4,
+          Bodies.rectangle(W + thick / 2, H / 2, thick, H + thick * 2,
             { isStatic: true, friction: 0.3, restitution: 0.1 }),
         ]);
 
@@ -4287,9 +4307,9 @@ html, body {
         bodies = defs.map((d, i) => {
           const bw = W * d.wF;
           const bh = bw * d.aspect;           // height from true SVG aspect ratio
-          // All shapes fall from above centre; small horizontal jitter
+          // Spawn within frame near the top so bodies clear the ceiling at y=-thick/2
           const startX = W / 2 + (Math.random() - 0.5) * W * 0.08;
-          const startY = -(bh / 2 + i * bh * 0.6);
+          const startY = bh / 2 + i * bh * 0.2;
           const b = Bodies.rectangle(startX, startY, bw, bh, {
             restitution: 0.04,   // minimal bounce → shapes settle and stack
             friction:    0.85,   // high friction → shapes don't slide off each other
