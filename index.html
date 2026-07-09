@@ -2842,7 +2842,7 @@ html, body {
 
               <header class="p1__doctors-header">
                 <h1 class="p1__doctors-title">
-                  לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון
+                  "לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון"
                 </h1>
               </header>
 
@@ -3683,10 +3683,14 @@ html, body {
 
           cell.addEventListener('mouseenter', () => {
             cell.classList.remove('p1__star--hint');
-            quoteEl.textContent = doctor.quote;
+            const q = doctor.quote;
+            quoteEl.textContent = (q[0] === '“' && q[q.length - 1] === '”') ? q : `“${q}”`;
           });
           cell.addEventListener('mouseleave', () => { quoteEl.textContent = ''; });
-          cell.addEventListener('focus',      () => { quoteEl.textContent = doctor.quote; });
+          cell.addEventListener('focus',      () => {
+            const q = doctor.quote;
+            quoteEl.textContent = (q[0] === '“' && q[q.length - 1] === '”') ? q : `“${q}”`;
+          });
           cell.addEventListener('blur',       () => { quoteEl.textContent = ''; });
 
           rowEl.appendChild(cell);
@@ -3699,10 +3703,10 @@ html, body {
        5. Scroll sections + typewriter
        ══════════════════════════════════════════ */
     const SECTIONS = [
-      { title: 'לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון', filter: null },
-      { title: '34 רופאים חשבו שהמחלה היא באשמתי',                 filter: 'blamed'    },
-      { title: 'רק 19 באמת האמינו שאני סובלת',                     filter: 'believed'  },
-      { title: 'רק רופא אחד ידע לתת לזה שם',                      filter: 'diagnosed' },
+      { title: '"לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון"', filter: null },
+      { title: '"34 רופאים חשבו שהמחלה היא באשמתי"',                 filter: 'blamed'    },
+      { title: '"רק 19 באמת האמינו שאני סובלת"',                     filter: 'believed'  },
+      { title: '"רק רופא אחד ידע לתת לזה שם"',                      filter: 'diagnosed' },
     ];
 
     let typewriterGen   = 0;
