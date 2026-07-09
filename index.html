@@ -1230,16 +1230,8 @@ html, body {
   60% { transform: translateY(-4px) rotate(calc(var(--rot, 0deg) + 1.5deg)); }
   80% { transform: translateY(4px)  rotate(calc(var(--rot, 0deg) - 2deg)); }
 }
-/* Fall animation */
-@keyframes p4-fall {
-  from { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)); }
-  to   { opacity: 0; transform: translateY(160%) rotate(calc(var(--rot, 0deg) + 35deg)); }
-}
 .p4__popup.p4--shaking {
   animation: p4-shake 0.16s ease infinite;
-}
-.p4__popup.p4--falling {
-  animation: p4-fall 0.65s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 /* =========================================
@@ -3996,6 +3988,7 @@ html, body {
           if (!el.classList.contains('p4--visible')) return;
           e.preventDefault();
           el.style.zIndex = ++globalZ;
+          el.style.transition = '';
           el.classList.add('p4--dragging');
           const scale = getScale();
           const mx0   = e.clientX, my0 = e.clientY;
@@ -4038,24 +4031,34 @@ html, body {
         nodes.forEach(n => { if (n.classList.contains('p4--visible')) n.classList.add('p4--shaking'); });
       }
 
-      function startFall(cb) {
+      function startFall() {
+        const stageH = stageEl.offsetHeight;
+        const stageW = stageEl.offsetWidth;
         nodes.forEach((n, i) => {
           if (!n.classList.contains('p4--visible')) return;
           n.classList.remove('p4--shaking');
-          setTimeout(() => n.classList.add('p4--falling'), i * 35);
+          const pileTop  = stageH - 260 + (Math.random() - 0.5) * 60;
+          const pileLeft = stageW * 0.25 + Math.random() * stageW * 0.5;
+          setTimeout(() => {
+            n.style.transition = 'top 0.6s cubic-bezier(0.4,0,1,1), left 0.5s cubic-bezier(0.4,0,0.6,1)';
+            n.style.top  = pileTop  + 'px';
+            n.style.left = pileLeft + 'px';
+          }, i * 50);
         });
-        setTimeout(cb, 800);
       }
 
       function resetAll() {
         if (shakeTimer) { clearTimeout(shakeTimer); }
         nodes.forEach((n, i) => {
-          n.classList.remove('p4--visible', 'p4--shaking', 'p4--falling');
+          n.style.transition = '';
+          n.classList.remove('p4--visible', 'p4--shaking');
           n.style.top  = POPUPS[i].top  + 'px';
           n.style.left = POPUPS[i].left + 'px';
         });
         shown = 0; falling = false; shakeTimer = null;
         scrollEl.scrollTop = 0;
+        shown = 1;
+        revealCard(0);
       }
 
       const p4ContentEl = document.querySelector('.panel__content.p4');
@@ -4102,7 +4105,7 @@ html, body {
               startShake();
               setTimeout(() => {
                 falling = true;
-                startFall(() => setTimeout(resetAll, 500));
+                startFall();
               }, 1000);
             }, 300);
           }
