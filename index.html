@@ -719,19 +719,28 @@ html, body {
 }
 .p2__schedule-frame {
   width: 100%;
-  min-height: 194.207cqh; /* fixed intrinsic height — keeps the frame's scrollable
-                            range constant regardless of how the absolutely-
-                            positioned cards/shards below transform, since
-                            absolutely positioned descendants never contribute
-                            to an ancestor's size once that ancestor has an
-                            explicit height. Matches the current card layout's
-                            total extent (last card's bottom, 171.59cqh, +
-                            .p2__tasks's own top offset, 14.206cqh, + this
-                            frame's own bottom padding, 8.411cqh) —
-                            recompute this if card heights/positions change. */
+  min-height: 0; /* real height is set on load (and kept in sync on resize) by
+                    JS measuring .p2__tasks's actual rendered extent — see the
+                    "Panel 2 — keep frame height in sync" script. Needed because
+                    .p2__tasks is position:absolute (it overlays the hour grid),
+                    so it never contributes to this frame's size on its own;
+                    but its content is now a flex column of cards (real 16px
+                    gaps, no hand-computed cqh offsets — see .p2__tasks below),
+                    so its rendered height isn't a single static number anymore
+                    and has to be measured instead of hardcoded. */
   position: relative; /* anchors .p2__tasks (and each .p2__task-card's inline
-                          top/height) below */
-  overflow-x: hidden;  /* exploding shards must never cause horizontal scroll */
+                          height) below */
+  overflow: clip; /* NOT just overflow-x:hidden — exploding shards translate()
+                      far outside their card during the burst, and translate
+                      counts toward an ancestor's *scrollable* overflow region
+                      even when clipped visually by overflow:hidden. clip (unlike
+                      hidden) excludes that "ink overflow" from the scrollable
+                      region entirely, so it can never inflate .p2__scroll-body's
+                      scrollHeight mid-animation (the cause of the double-
+                      scrollbar/frame-shift bug). */
+  contain: paint; /* belt-and-suspenders: guarantees shards can only ever
+                      paint within this box's own bounds, never leak into any
+                      ancestor's scrollable region. */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -827,9 +836,9 @@ html, body {
   color: var(--color-light);
 }
 
-/* ── Task cards: absolutely positioned along the hour grid, variable height
-   per card (each card's exact top/height comes from its inline style,
-   restored from the pre-refactor layout) — explode-on-scroll, unchanged. ──
+/* ── Task cards: flow in a flex column (.p2__tasks above) overlaid on the
+   hour grid, variable height per card (each card's own duration-based
+   height comes from its inline style) — explode-on-scroll, unchanged. ──
    All sizing/timing knobs live here as custom properties — tweak these,
    not the rules below, to adjust spacing or the "explode" punch feel. */
 .p2__tasks {
@@ -837,18 +846,40 @@ html, body {
   --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
   --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
   --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
-  position: absolute;
-  top: 14.206cqh;
+  position: absolute; /* overlays the hour grid (.p2__hours-and-grid), which
+                          stays in-flow and paints first, behind this */
+  top: 10.655cqh; /* was 14.206cqh — trimmed ~25% so the first card starts a
+                     little higher in the grid */
   left: 0;
   width: 100%;
   font-family: 'Narkiss Asaf TRIAL';
+  /* Cards flow in a normal flex column instead of each being individually
+     absolutely-positioned against a hand-computed cqh `top`. That old
+     approach assumed every card renders at exactly its inline `height`, but
+     .p2__task-card also has a min-height:120px floor — at plenty of
+     realistic viewport heights a short card's cqh height resolves below
+     120px, the floor kicks in, and every card after it (still positioned
+     against the *nominal* height) drifts out of sync, producing uneven
+     gaps. A flex column with a real, fixed 16px gap can never drift: each
+     card's position is always exactly "previous card's real rendered
+     bottom + 16px", regardless of what the cqh/min-height floor produces. */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* cards are narrower than .p2__tasks (44.922cqw of
+                               it) and pinned to its physical left edge via
+                               each card's own margin-left below */
+  gap: 16px;
 }
 
 /* ── Card: black/bordered by default, flips to solid cream when active ── */
 .p2__task-card {
-  position: absolute; /* positioned via each card's own inline top/height —
-                          restored from the pre-refactor layout */
-  left: 1.465cqw;
+  position: relative; /* no longer absolutely positioned (see .p2__tasks
+                          above) — still `relative` (not static) so it stays
+                          the positioning context for its own absolutely-
+                          positioned children (.p2__shatter-overlay/.p2__shard) */
+  margin-left: 1.465cqw; /* physical offset from .p2__tasks's left edge —
+                             replaces the old `left` now that the card is a
+                             flex item, not absolutely positioned */
   width: 44.922cqw;
   min-height: 120px; /* safety floor so very short cards never shrink below a usable size */
   box-sizing: border-box;
@@ -2990,18 +3021,18 @@ html, body {
 
               </div>
 
-              <!-- Task cards: absolutely positioned along the hour grid; flip to "reality" (active) on scroll -->
+              <!-- Task cards: flex column overlaid on the hour grid; flip to "reality" (active) on scroll -->
               <div class="p2__tasks">
 
                 <!-- 1. מקלחת -->
-                <article class="p2__task-card" style="top:0;height:11.215cqh">
+                <article class="p2__task-card" style="height:11.215cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
                   <span class="p2__task-subtitle">ההתפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליח ללבוש מכנסיים.</span>
                 </article>
 
                 <!-- 2. פרזנטציה: ~2h, 2× the 1h unit (11.215cqh) -->
-                <article class="p2__task-card" style="top:13.645cqh;height:22.43cqh">
+                <article class="p2__task-card" style="height:22.43cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
                   <span class="p2__task-subtitle">
@@ -3010,7 +3041,7 @@ html, body {
                 </article>
 
                 <!-- 3. עבודה: ~5h, 5× the 1h unit (11.215cqh) -->
-                <article class="p2__task-card" style="top:38.505cqh;height:56.075cqh">
+                <article class="p2__task-card" style="height:56.075cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
                   <span class="p2__task-subtitle">
@@ -3019,7 +3050,7 @@ html, body {
                 </article>
 
                 <!-- 4. קניות -->
-                <article class="p2__task-card" style="top:97.01cqh;height:11.215cqh">
+                <article class="p2__task-card" style="height:11.215cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
                   <span class="p2__task-subtitle">
@@ -3028,7 +3059,7 @@ html, body {
                 </article>
 
                 <!-- 5. ספורט: ~2h, 2× the 1h unit (11.215cqh) -->
-                <article class="p2__task-card" style="top:110.655cqh;height:22.43cqh">
+                <article class="p2__task-card" style="height:22.43cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חבר</span></span>
                   <span class="p2__task-subtitle">
@@ -3037,7 +3068,7 @@ html, body {
                 </article>
 
                 <!-- 6. דייט: ~2h, 2× the 1h unit (11.215cqh) -->
-                <article class="p2__task-card" style="top:135.515cqh;height:22.43cqh">
+                <article class="p2__task-card" style="height:22.43cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
                   <span class="p2__task-subtitle">
@@ -3046,7 +3077,7 @@ html, body {
                 </article>
 
                 <!-- 7. שינה -->
-                <article class="p2__task-card" style="top:160.375cqh;height:11.215cqh">
+                <article class="p2__task-card" style="height:11.215cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
                   <span class="p2__task-subtitle">פורס מגבת מתחת לסדין ונאבק למצוא תנוחה שלא תכאיב</span>
@@ -3862,6 +3893,31 @@ html, body {
 
 
     /* ══════════════════════════════════════════
+       Panel 2 — keep frame height in sync
+       .p2__tasks is position:absolute (it overlays the hour grid behind it),
+       so its flex-column content — however tall the cards actually render —
+       never contributes to .p2__schedule-frame's own size. The frame needs
+       an explicit height anyway so .p2__scroll-body has something to scroll
+       (absolutely positioned descendants don't grow an ancestor otherwise).
+       Measure .p2__tasks's real rendered extent instead of hand-computing a
+       static cqh number (which is exactly what went stale in the old
+       per-card top-offset layout) — and re-measure via ResizeObserver so it
+       stays correct as cqh-based card heights change on viewport resize.
+       ══════════════════════════════════════════ */
+    (function () {
+      const frame = document.querySelector('.p2__schedule-frame');
+      const tasksEl = document.querySelector('.p2__tasks');
+      if (!frame || !tasksEl) return;
+      function syncFrameHeight() {
+        const framePaddingBottom = parseFloat(getComputedStyle(frame).paddingBottom) || 0;
+        frame.style.minHeight = (tasksEl.offsetTop + tasksEl.offsetHeight + framePaddingBottom) + 'px';
+      }
+      new ResizeObserver(syncFrameHeight).observe(tasksEl);
+      syncFrameHeight();
+    }());
+
+
+    /* ══════════════════════════════════════════
        Panel 2 — Shatter grid generation (per-card, dynamic density)
        Cards now have very different heights (restored variable-height
        layout, ~11cqh to ~78cqh — roughly a 7× range), so a single shared
@@ -4036,6 +4092,12 @@ html, body {
       // STAGGER_GAP_MS: pause AFTER one card finishes its burst
       // before the next one starts — raise this for a slower, more deliberate reveal.
       const STAGGER_GAP_MS = 450;
+      // SUBTITLE_OVERLAP_FRACTION: how far into the strikethrough's draw
+      // animation (0–1) the subtitle typewriter starts, instead of waiting
+      // for the line to be 100% drawn — the title should still be visibly
+      // mid-strikethrough when the subtitle starts typing. Keep within
+      // ~0.55–0.7 so the line is still clearly drawing, not already done.
+      const SUBTITLE_OVERLAP_FRACTION = 0.6;
 
       let queue = [];
       let isProcessing = false;
@@ -4105,12 +4167,15 @@ html, body {
             // .p2--struck .p2__task-title-text::after in the CSS).
             card.classList.add('p2--struck');
 
-            // Typewriter: anchored to this same explosion-end instant so it
-            // starts exactly when the strikethrough line finishes drawing
-            // (strikeDelayMs + strikeDrawMs later), never before.
+            // Typewriter: anchored to this same explosion-end instant, but
+            // starts partway through the strikethrough's draw (at
+            // SUBTITLE_OVERLAP_FRACTION of strikeDrawMs) rather than waiting
+            // for it to finish — the title is still visibly mid-strikethrough
+            // when the subtitle starts typing, instead of the two feeling
+            // like two fully sequential beats.
             setTimeout(() => {
               if (subtitle) typewriteForward(subtitle, subtitle.dataset.fullText || '', 35);
-            }, strikeDelayMs + strikeDrawMs);
+            }, strikeDelayMs + strikeDrawMs * SUBTITLE_OVERLAP_FRACTION);
 
             onDone();
           }, { once: true });
