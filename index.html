@@ -1949,6 +1949,106 @@ html, body {
 /* ── Item 05 illustration sizes ── */
 .p3__col-illus--05-1 img { width: 7.520cqw; height: 15.888cqh; transform: rotate(90deg); }
 .p3__col-illus--05-2 img { width: 7.957cqw; height: 14.089cqh; }
+
+/* ── Item 05 — pure HTML/CSS rebuild ── */
+.p3__05-container {
+  padding: 36px 80px 48px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.p3__05-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 46px;
+  width: 100%;
+  box-sizing: border-box;
+  direction: rtl;
+}
+.p3__05-col {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 28px;
+  flex: 1 1 380px;
+  min-width: 0;
+  direction: rtl;
+}
+.p3__05-text-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.p3__05-subtitle {
+  font-family: 'Simona Pro', serif;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 100%;
+  color: var(--color-dark);
+  margin: 0;
+  text-align: right;
+}
+.p3__05-body {
+  font-family: 'Simona Pro', serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 110%;
+  color: var(--color-dark);
+  margin: 0;
+  text-align: right;
+}
+.p3__05-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+.p3__05-list li {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+.p3__05-list-text {
+  font-family: 'Simona Pro', serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 110%;
+  color: var(--color-dark);
+  text-align: right;
+  flex: 1;
+}
+.p3__05-bullet-img {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.p3__05-illus {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 auto;
+  max-width: 180px;
+}
+.p3__05-illus img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
 .p3__col-illus--06-1 img { width: 7.324cqw; height: 6.355cqh; }
 .p3__col-illus--06-2 img { width: 6.543cqw; height: 6.262cqh; }
 .p3__col-row--tall    { height: 20.374cqh; }
@@ -3110,45 +3210,43 @@ html, body {
             <div class="p3__accordion-item" data-p3-item>
               <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-num">(05)</span><span class="p3__item-label">למי זה קורה?</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
               <div class="p3__item-body">
-                <div class="p3__cards-container">
-                  <div class="p3__col-content">
-                    <div class="p3__col-row p3__col-row--tall">
+                <div class="p3__05-container">
+                  <div class="p3__05-row">
 
-                      <!-- RIGHT col: למי זה קורה — text first (right), illus last (left) -->
-                      <div class="p3__col-item p3__col-item--tall">
-                        <div class="p3__col-text">
-                          <p class="p3__col-subtitle">למי זה קורה?</p>
-                          <p class="p3__col-body p3__col-body--short">HS פוגעת בכ-1% מהאוכלוסייה, לרוב אחרי גיל ההתבגרות. היא שכיחה במיוחד אצל:</p>
-                          <ul class="p3__list">
-                            <li class="p3__list-item"><span class="p3__list-text">גיל צעיר (שנות 20-30)</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                            <li class="p3__list-item"><span class="p3__list-text">עור כהה</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                            <li class="p3__list-item"><span class="p3__list-text">נשים</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                          </ul>
-                        </div>
-                        <div class="p3__col-illus p3__col-illus--tall p3__col-illus--05-2">
-                          <img src="Property 1=05.2.svg" alt="" aria-hidden="true">
-                        </div>
+                    <!-- RIGHT COLUMN: למי זה קורה? -->
+                    <div class="p3__05-col">
+                      <div class="p3__05-text-block">
+                        <h4 class="p3__05-subtitle">למי זה קורה?</h4>
+                        <p class="p3__05-body">HS פוגעת בכ-1% מהאוכלוסייה, לרוב אחרי גיל ההתבגרות. היא שכיחה במיוחד אצל:</p>
+                        <ul class="p3__05-list">
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">פלח הגיל הצעיר באוכלוסייה (שנות ה-20-30)</span></li>
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">בעלי עור כהה</span></li>
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">נשים</span></li>
+                        </ul>
                       </div>
-
-                      <!-- LEFT col: גורמי סיכון — text first (right), illus last (left) -->
-                      <div class="p3__col-item p3__col-item--tall">
-                        <div class="p3__col-text">
-                          <p class="p3__col-subtitle">מה גורמי הסיכון?</p>
-                          <p class="p3__col-body p3__col-body--short">מומחים מצאו מספר גורמי סיכון אפשריים למחלה:</p>
-                          <ul class="p3__list">
-                            <li class="p3__list-item"><span class="p3__list-text">הורמונים</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                            <li class="p3__list-item"><span class="p3__list-text">נטייה גנטית</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                            <li class="p3__list-item"><span class="p3__list-text">עודף משקל</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                            <li class="p3__list-item"><span class="p3__list-text">מחלות רקע</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                            <li class="p3__list-item"><span class="p3__list-text">עישון</span><img src="list poin 05.svg" alt="" class="p3__list-bullet" aria-hidden="true"></li>
-                          </ul>
-                        </div>
-                        <div class="p3__col-illus p3__col-illus--tall p3__col-illus--05-1">
-                          <img src="Property 1=05.1.svg" alt="" aria-hidden="true">
-                        </div>
+                      <div class="p3__05-illus">
+                        <img src="Property 1=05.1.svg" alt="" style="transform: rotate(90deg);">
                       </div>
-
                     </div>
+
+                    <!-- LEFT COLUMN: מה גורמי הסיכון? -->
+                    <div class="p3__05-col">
+                      <div class="p3__05-text-block">
+                        <h4 class="p3__05-subtitle">מה גורמי הסיכון?</h4>
+                        <p class="p3__05-body">מומחים מצאו מספר גורמי סיכון אפשריים למחלה:</p>
+                        <ul class="p3__05-list">
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">הורמונים</span></li>
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">נטייה גנטית</span></li>
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">עודף משקל</span></li>
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מחלות רקע</span></li>
+                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">עישון</span></li>
+                        </ul>
+                      </div>
+                      <div class="p3__05-illus">
+                        <img src="Property 1=05.2.svg" alt="">
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>
