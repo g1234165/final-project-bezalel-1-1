@@ -733,9 +733,9 @@ html, body {
 .p2__tasks {
   --p2-card-height: 80px;       /* fixed card height — change this one value only */
   --p2-card-gap: 10px;          /* vertical spacing between cards */
-  --p2-ideal-clear-duration: 0.2s; /* Step 1: how fast the ideal title fades out */
-  --p2-shatter-duration: 1.3s;     /* PER-SHARD base duration (explode+pause+return) — each shard's own --stagger-delay (JS-injected) adds on top of this */
-  --p2-reveal-duration: 0.25s;     /* Step 5: how fast the reality title/subtitle fade in */
+  --p2-ideal-clear-duration: 0.2s; /* Step 3: how fast the ideal title fades out as the shards start exploding */
+  --p2-shatter-duration: 0.6s;     /* PER-SHARD explode duration (one-way, no hold/return) — each shard's own --stagger-delay (JS-injected) adds on top of this */
+  --p2-reveal-duration: 0.25s;     /* Step 4: how fast the (now dark) title/subtitle fade in once the shards are gone */
   --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
   --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
   --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
@@ -763,9 +763,10 @@ html, body {
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  /* no transition here on purpose — JS adds .p2--active at the exact instant
-     the shatter overlay has snapped back together (Step 5), so the flip is
-     just a plain instant state change, no color interpolation at all */
+  /* no transition here on purpose — JS adds .p2--active ~0.1s after the
+     trigger (Step 2), hidden behind the still-mostly-opaque cracked overlay,
+     so the flip is just a plain instant state change, no color
+     interpolation at all */
 }
 /* Temporarily lifts the card's own clipping AND raises it above sibling
    cards so the shards can visibly fly past the card's own rounded edge and
@@ -781,42 +782,51 @@ html, body {
   z-index: 50;
 }
 
-/* ── Shatter overlay: solid-white clip-path "shards," JS-generated into a
-   jittered 6×3 grid of triangle pairs (see the "Panel 2 — Shatter grid
-   generation" script) — NOT a single-point fan, so every piece is roughly
-   equal in length/width, not a sliver. Invisible at rest (opacity:0) — the
-   dark Ideal card is what's actually visible before the trigger fires.
-   Sits above the title/subtitle (z-index: 2) so it fully covers them while
-   active. ── */
+/* ── Shatter overlay: solid dark clip-path "shards" over a solid WHITE
+   overlay background, JS-generated into a heavily-jittered 9×3 grid of
+   triangle pairs (see the "Panel 2 — Shatter grid generation" script) — NOT
+   a single-point fan, so every piece is chunky, not a sliver. Invisible at
+   rest (opacity:0) — the dark Ideal card is what's actually visible before
+   the trigger fires. Sits ABOVE the subtitle but BELOW the title (see the
+   z-index split below) — this is what lets the ideal title stay visible
+   while the card is "cracked," per Step 1. ── */
 .p2__shatter-overlay {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 2;
   opacity: 0;
   pointer-events: none;
+  background: var(--color-light); /* shows through the gaps once shards are scaled down — the "white fracture line" trick */
 }
-.p2__task-card.p2--exploding .p2__shatter-overlay {
-  opacity: 1; /* Step 2: instant */
+.p2__task-card.p2--cracking .p2__shatter-overlay {
+  opacity: 1; /* Step 1: instant */
 }
 
 /* Shape (clip-path), flight direction (--shard-dx/--shard-dy/--shard-rot),
-   and stagger (--stagger-delay) are all set inline per-shard by JS at load
-   time — nothing to tune here directly; see JITTER_MIN/MAX and the stagger
-   formula in the generation script instead. */
+   transform-origin, and stagger (--stagger-delay) are all set inline
+   per-shard by JS at load time — nothing to tune here directly; see
+   JITTER_MIN/MAX and the stagger formula in the generation script instead. */
 .p2__shard {
   position: absolute;
   inset: 0;
-  background: var(--color-light); /* solid white, no border */
-  transform: translate(0, 0) rotate(0deg);
-  opacity: 1;
+  background: var(--color-dark); /* dark, matching the Ideal card — these read as pieces of it cracking apart */
+  transform: translate(0, 0) rotate(0deg) scale(1);
   animation-delay: var(--stagger-delay); /* rightmost column = 0s, +0.05s per column moving left */
 }
-
-.p2__task-title,
-.p2__task-subtitle {
-  position: relative; /* stacking context anchor — z-index: 2 sits below the .p2__shatter-overlay's z-index: 3 on purpose, so the overlay can fully cover them while active */
-  z-index: 2;
+/* Step 1: once cracking starts, shards sit slightly scaled down at rest —
+   this is what reveals the white overlay background as thin gaps between
+   every piece (the "fracture line" effect), before anything even moves. */
+.p2__task-card.p2--cracking .p2__shard {
+  transform: scale(0.95);
 }
+
+/* Title sits ABOVE the shatter overlay (z-index: 3 > 2) so it stays fully
+   readable during the Step-1 "crack" hold — only .p2--shattering below ever
+   fades it out. Subtitle stays BELOW the overlay (z-index: 1 < 2), same as
+   every previous round, so it only becomes visible once the shards are
+   gone. */
+.p2__task-title    { position: relative; z-index: 3; }
+.p2__task-subtitle { position: relative; z-index: 1; }
 
 .p2__task-title {
   align-self: stretch;
@@ -827,14 +837,22 @@ html, body {
   color: var(--color-light);
   text-align: right;
   direction: rtl;
-  transition: opacity var(--p2-ideal-clear-duration) ease; /* Step 1: quick fade-out */
+  transition: opacity var(--p2-ideal-clear-duration) ease; /* Step 3: quick fade-out, the instant the shards begin to explode */
 }
-/* Step 1: the ideal title fades out the instant the trigger fires. Must come
-   BEFORE the .p2--active rule below in source order so that once Step 5 adds
-   .p2--active (while .p2--exploding is still present), the fade-back-in rule
-   wins the cascade tie instead of this one keeping it at 0 forever. */
-.p2__task-card.p2--exploding .p2__task-title {
+/* Step 3: the ideal title fades out at the exact moment the shards start
+   exploding (NOT at Step 1 — it must stay visible through the "crack" hold,
+   see the z-index split above). .p2--revealed (Step 4, added later by JS
+   once the shards are fully gone) is the only other rule that ever touches
+   this element's opacity, and the two are never active at the same instant
+   (JS adds them a full animation apart), so there's no cascade race. */
+.p2__task-card.p2--shattering .p2__task-title {
   opacity: 0;
+}
+/* Step 4: fades the (now dark, via .p2--active below) title back in once
+   the shards have fully shrunk away and been cleaned up. */
+.p2__task-card.p2--revealed .p2__task-title {
+  opacity: 1;
+  transition: opacity var(--p2-reveal-duration) ease;
 }
 
 /* Inner wrapper shrinks to the actual rendered text width (the outer
@@ -885,20 +903,26 @@ html, body {
   direction: rtl;
   opacity: 0;
   transform: translateY(6px);
-  /* Step 5: revealed the instant .p2--active is added */
+  /* Step 2: subtitle is prepped to reveal the instant .p2--active is added —
+     but it's z-index: 1 (below the overlay), so it stays invisible in
+     practice until the shards clear away in Step 4 regardless. */
   transition: opacity var(--p2-reveal-duration) ease, transform var(--p2-reveal-duration) ease;
 }
 
 /* ── Active "Reality" state: solid cream card, dark text, subtitle revealed ──
-   Added by JS at the exact instant the shards snap back together (Step 5). ── */
+   Added by JS ~0.1s after the trigger (Step 2) — hidden behind the still-
+   mostly-opaque cracked overlay until the shards clear in Step 4, so no
+   fade is needed for the swap itself. ── */
 .p2__task-card.p2--active {
   background: var(--color-light);
   border-color: var(--color-light);
 }
 .p2__task-card.p2--active .p2__task-title {
   color: var(--color-dark); /* instant — no transition on color */
-  opacity: 1;               /* fades back in, overriding .p2--exploding's opacity:0 above (this rule comes later in source, wins the cascade tie) */
-  transition: opacity var(--p2-reveal-duration) ease;
+  /* opacity is NOT touched here on purpose — it's fully owned by
+     .p2--shattering (fade out, Step 3) and .p2--revealed (fade back in,
+     Step 4) above, so there's no cascade conflict between this rule and
+     those (this class is added at the same instant as .p2--shattering). */
   /* strikethrough is drawn by .p2__task-title-text::after — see above */
 }
 .p2__task-card.p2--active .p2__task-subtitle {
@@ -906,33 +930,28 @@ html, body {
   transform: none;
 }
 
-/* ── Shatter explode → hold → elastic snap-back (Steps 2, 3 & 4) — each
-   shard (in its own right-to-left staggered turn, via --stagger-delay)
-   violently explodes outward and SHRINKS to nothing via scale(0) — not a
-   fade, opacity stays 1 the whole time — then the WHOLE overlay holds
-   completely invisible (zero-scale) for a deliberate beat, then every shard
-   reappears and elastically snaps back into its assembled position (slight
-   overshoot on the return). Longhand animation-* properties are used here
-   (not the `animation` shorthand) specifically so this rule does NOT reset
-   the animation-delay set on the base .p2__shard rule above — the shorthand
-   would silently zero out the per-shard stagger.
-   .p2--exploding is what triggers this (and the title fade-out + overlay
-   visibility above) — JS adds it once per card and never removes it
-   (one-way reveal). Tune via --p2-shatter-duration (per-shard base length,
-   before stagger), the 25%/55% split (explode-vs-pause balance), or any
-   shard's --shard-dx/--shard-dy/--shard-rot (set by the JS generator). ── */
-.p2__task-card.p2--exploding .p2__shard {
-  animation-name: p2-shard-burst;
+/* ── Shatter explode — ONE-WAY (Step 3). Each shard (in its own
+   right-to-left staggered turn, via --stagger-delay) violently explodes
+   outward and SHRINKS to nothing via scale(0) — starting from the
+   .p2--cracking resting state (scale(0.95)) so there's no visual jump when
+   the animation begins. No hold, no return — once gone, gone for good.
+   Longhand animation-* properties are used here (not the `animation`
+   shorthand) specifically so this rule does NOT reset the animation-delay
+   set on the base .p2__shard rule above — the shorthand would silently
+   zero out the per-shard stagger.
+   .p2--shattering is added by JS ~0.1s after .p2--cracking (Step 1's hold)
+   and never removed (one-way reveal). Tune via --p2-shatter-duration
+   (per-shard base length, before stagger) or any shard's
+   --shard-dx/--shard-dy/--shard-rot (set by the JS generator). ── */
+.p2__task-card.p2--shattering .p2__shard {
+  animation-name: p2-shard-shatter;
   animation-duration: var(--p2-shatter-duration);
   animation-fill-mode: both;
 }
-@keyframes p2-shard-burst {
-  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-  25%  { transform: translate(var(--shard-dx), var(--shard-dy)) rotate(var(--shard-rot)) scale(0);
-         animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); } /* snappy explosive burst, shrinking to nothing — governs 0%→25% (~0.325s) */
-  55%  { transform: translate(var(--shard-dx), var(--shard-dy)) rotate(var(--shard-rot)) scale(0); }                                              /* held — nothing visible (zero scale), ~0.39s dramatic pause (25%→55%) */
-  100% { transform: translate(0, 0) rotate(0deg) scale(1);
-         animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); } /* elastic snap-back — governs 55%→100% (~0.585s) */
+@keyframes p2-shard-shatter {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(0.95); } /* matches the .p2--cracking resting state exactly — no jump */
+  100% { transform: translate(var(--shard-dx), var(--shard-dy)) rotate(var(--shard-rot)) scale(0);
+         animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); } /* single snappy explosive burst, shrinking to nothing */
 }
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
@@ -3750,7 +3769,7 @@ html, body {
             const dx = Math.round((cx - 50) * 1.7 + nudge);
             const dy = Math.round((cy - 50) * 1.7 - nudge * 0.6);
             const rot = Math.round((Math.random() * 90 - 45) + (i === 0 ? 20 : -20));
-            shardDefs.push({ points: points_, dx, dy, rot, staggerDelay });
+            shardDefs.push({ points: points_, dx, dy, rot, staggerDelay, cx, cy });
           });
         }
       }
@@ -3760,6 +3779,12 @@ html, body {
           const shard = document.createElement('span');
           shard.className = 'p2__shard';
           shard.style.clipPath = `polygon(${def.points})`;
+          // Shrinking a clip-path shard via scale() uses the element's own
+          // (full-card-sized) box center by default — that would pull every
+          // triangle toward the CARD's center instead of its own local area
+          // as it shrinks, breaking the even-fracture-line look. Setting the
+          // transform-origin to this shard's own cell centroid fixes it.
+          shard.style.transformOrigin = `${def.cx.toFixed(2)}% ${def.cy.toFixed(2)}%`;
           shard.style.setProperty('--shard-dx', def.dx + 'px');
           shard.style.setProperty('--shard-dy', def.dy + 'px');
           shard.style.setProperty('--shard-rot', def.rot + 'deg');
@@ -3808,26 +3833,38 @@ html, body {
       }
 
       function runExplode(card, onDone) {
-        // .p2--exploding alone drives Steps 1–4 purely via CSS: the ideal
-        // title fades out (Step 1), the shatter overlay instantly becomes
-        // visible and its 36 shards explode right-to-left (via each
-        // shard's own --stagger-delay) and fade out, hold invisible for a
-        // beat, then elastically snap back together (Steps 2–4, see
-        // @keyframes p2-shard-burst).
-        card.classList.add('p2--exploding');
-        card.classList.add('p2--bursting'); // temporarily lifts clipping + raises z-index so shards can fly past the card's edges
+        // Step 1 (The Crack): overlay + cracked (scale(0.95)) dark shards
+        // appear instantly. The ideal title stays fully visible on top of
+        // this (see the z-index split in CSS) — nothing hides it yet.
+        card.classList.add('p2--cracking');
+        card.classList.add('p2--bursting'); // lifts clipping + raises z-index so shards can fly past the card's edges once they start moving
         observer.unobserve(card);           // one-way reveal — doesn't revert on scroll-up
 
-        const shards = card.querySelectorAll('.p2__shard');
-        const lastShard = shards[shards.length - 1]; // leftmost column — has the largest --stagger-delay, so it finishes last
-        lastShard.addEventListener('animationend', function handler() {
-          lastShard.removeEventListener('animationend', handler);
-          // Step 5 — the exact instant the shards have snapped back together:
-          card.classList.add('p2--active');     // instant bg/title-color swap + triggers title/subtitle fade-in
-          card.classList.remove('p2--bursting'); // restore normal clipping/stacking
-          card.querySelector('.p2__shatter-overlay').remove(); // hide/remove the overlay now that the real white card is showing
-          onDone();
-        }, { once: true });
+        setTimeout(() => {
+          // Step 2 (The Swap): instant — the card flips to the white
+          // Reality state. Still hidden behind the mostly-opaque cracked
+          // overlay at this point, so no fade is needed for the swap itself.
+          card.classList.add('p2--active');
+
+          // Step 3 (The Explosion): shards fly apart (their own
+          // --stagger-delay sweeps the burst right-to-left) and shrink to
+          // nothing; the ideal title fades out at this exact same moment
+          // (see the .p2--shattering CSS rules).
+          card.classList.add('p2--shattering');
+
+          const shards = card.querySelectorAll('.p2__shard');
+          const lastShard = shards[shards.length - 1]; // leftmost column — largest --stagger-delay, finishes last
+          lastShard.addEventListener('animationend', function handler() {
+            lastShard.removeEventListener('animationend', handler);
+            // Step 4 (Cleanup): shards are fully gone — bring the (now
+            // dark) title back, restore normal clipping, and tear down the
+            // overlay. One-way: nothing here ever reverts.
+            card.classList.add('p2--revealed');
+            card.classList.remove('p2--bursting');
+            card.querySelector('.p2__shatter-overlay').remove();
+            onDone();
+          }, { once: true });
+        }, 100); // Step 1's "split second" hold
       }
 
       // ── Tweak these two to change WHEN a card triggers ──
