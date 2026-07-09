@@ -1745,7 +1745,7 @@ html, body {
   backface-visibility: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: flex-start;
   padding: 24px;
   box-sizing: border-box;
@@ -1810,7 +1810,7 @@ html, body {
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 0 76px 44px 0;
+  padding: 0 80px 44px 0;
   box-sizing: border-box;
   gap: 10px;
   position: relative;
@@ -1818,7 +1818,8 @@ html, body {
 }
 /* right: description text */
 .p3__body-text-02 {
-  width: 15.430cqw;
+  width: 320px;
+  max-width: 40%;
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
@@ -1828,9 +1829,8 @@ html, body {
   text-align: right;
   direction: rtl;
   margin: 0 0 0 auto;
-  display: flex;
-  align-items: center;
-  height: 10.280cqh;
+  display: block;
+  height: auto;
 }
 /* left: illustration, sized to match the body's own reserved height
    (same scale as the rest of the figure), then shifted up by exactly the
@@ -1898,8 +1898,10 @@ html, body {
   display: block;
   object-fit: contain;
 }
-.p3__col-illus--03-1 img { width: 124px; height: auto; }
-.p3__col-illus--03-2 img { width: 21px; height: auto; transform: rotate(32.67deg); }
+.p3__col-illus--03-1,
+.p3__col-illus--03-2 { height: 148px; }
+.p3__col-illus--03-1 img { width: 124px; height: 148px; }
+.p3__col-illus--03-2 img { width: 21px; height: 69px; transform: rotate(32.67deg); }
 .p3__col-text {
   display: flex;
   flex-direction: column;
@@ -2065,8 +2067,8 @@ html, body {
   display: block;
 }
 
-.p3__col-illus--06-1 img { width: 150px; height: 68px; }
-.p3__col-illus--06-2 img { width: 134px; height: 67px; }
+.p3__col-illus--06-1,
+.p3__col-illus--06-2 { height: auto; }
 .p3__col-row--tall    { height: 20.374cqh; }
 .p3__col-item--tall   { height: 20.374cqh; }
 .p3__col-illus--tall  { height: 20.374cqh; }
@@ -2154,7 +2156,7 @@ html, body {
 .p3__quote-text-wrap {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   padding: 32px 0 36px;
   flex: 1;
   min-width: 0;
@@ -2166,7 +2168,7 @@ html, body {
   font-size: 18px;
   line-height: 110%;
   color: var(--color-dark);
-  text-align: right;
+  text-align: center;
   direction: rtl;
   width: 100%;
   display: block;
@@ -2278,7 +2280,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding: 0 76px 0 0;
+  padding: 0;
   gap: 12px;
   width: 100%;
   box-sizing: border-box;
@@ -2287,15 +2289,13 @@ html, body {
   font-family: 'Simona Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: var(--fs-body);
+  font-size: 18px;
   line-height: 110%;
   color: var(--color-dark);
   text-align: right;
   direction: rtl;
-  width: 40.967cqw;
-  display: flex;
-  align-items: center;
-  margin: 0 0 0 auto;
+  width: 100%;
+  display: block;
 }
 
 /* ═══════════════════════════════════════════
@@ -2482,6 +2482,7 @@ html, body {
   width: 100%;
   display: flex;
   flex-direction: row;
+  direction: rtl;
   justify-content: space-between;
   align-items: center;
   padding: 36px 80px;
@@ -2516,6 +2517,7 @@ html, body {
 .p5__dropdown-body {
   display: none;
   flex-direction: column;
+  width: 100%;
 }
 .p5__dropdown.is-open .p5__dropdown-body {
   display: flex;
@@ -2556,7 +2558,7 @@ html, body {
 }
 .p5__card {
   flex: 1 1 200px;
-  min-width: 200px;
+  min-width: 120px;
   min-height: 380px;
   perspective: 1200px;
   cursor: pointer;
@@ -2654,7 +2656,7 @@ html, body {
 .p5__links-list {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 8px;
   width: 100%;
 }
@@ -2662,7 +2664,7 @@ html, body {
   display: flex;
   flex-direction: row;
   direction: rtl;
-  align-items: flex-start;
+  align-items: baseline;
   justify-content: flex-start;
   gap: 12px;
   width: 100%;
@@ -3121,7 +3123,7 @@ html, body {
           <div class="p3__hdivider" role="separator"></div>
           <div class="p3__desc-section">
             <div class="p3__desc-inner">
-              <p class="p3__desc-text">*התוכן מבוסס על מידע מאיגוד רופאי העור הבריטי וראיונות עם חולים ורופאים מומחים, ואינו תחליף לייעוץ רופאי.</p>
+              <p class="p3__desc-text">*התוכן המוצג כאן מבוסס על מידע מאיגוד רופאי העור הבריטי וראיונות עם חולים ורופאים מומחים, ואינו מהווה תחליף לייעוץ רפואי.</p>
             </div>
           </div>
         </aside>
@@ -3227,7 +3229,7 @@ html, body {
               <div class="p3__item-body">
                 <div class="p3__cards-container">
                   <div class="p3__simple-content">
-                    <p class="p3__simple-text">המחלה מתפתחת כאשר זקיקי השיער נחסמים, אך הסיבה המדוקיקת לחסימה זו אינה ידועה.</p>
+                    <p class="p3__simple-text">המחלה מתפתחת כאשר זקיקי השיער נחסמים, אך הסיבה המדויקת לחסימה זו אינה ידועה.</p>
                   </div>
                 </div>
               </div>
@@ -3287,7 +3289,7 @@ html, body {
                   <div class="p3__col-content">
 
                     <!-- footer text line (900px) -->
-                    <p class="p3__col-footer" style="width:900px">אבחנה של HS מבוססת על בדיקה קלינית בלבד. כרגע אין בדיקת דם, תרבית, או בדיקת מעבדה שמאשרת את המחלה.</p>
+                    <p class="p3__col-footer">אבחנה של HS מבוססת על בדיקה קלינית בלבד. כרגע אין בדיקת דם, תרבית, או בדיקת מעבדה שמאשרת את המחלה.</p>
 
                     <!-- two columns row (148px height, same as item 03) -->
                     <div class="p3__col-row">
@@ -3333,7 +3335,7 @@ html, body {
                       <p class="p3__col-footer">אנחנו עדיין בשלבים מוקדמים של ההבנה של HS. לא קיים עדיין פתרון שנפטר מהמחלה, אבל ישנם טיפולים שיכולים לשפר את איכות החיים.</p>
 
                       <!-- attribution: speaker of the quote -->
-                      <p class="p3__col-body">רופא מומחה ל-HS:</p>
+                      <p class="p3__col-body">ד"ר יוסי טייב, רופא מומחה ל-HS:</p>
 
                       <!-- quote: " text " -->
                       <div class="p3__quote">
@@ -3465,12 +3467,6 @@ html, body {
         <!-- LEFT: main scrollable content -->
         <div class="p5__main">
 
-          <!-- Header -->
-          <div class="p5__header">
-            <h2 class="p5__title">תודה על ההקשבה.</h2>
-          </div>
-          <div class="p5__hdivider" role="separator"></div>
-
           <!-- Dropdown 1 -->
           <div class="p5__dropdown" data-p5-dropdown>
             <div class="p5__dropdown-header">
@@ -3542,10 +3538,10 @@ html, body {
               <h3 class="p5__subtitle">אודות ותודות</h3>
               <div class="p5__cols">
                 <div class="p5__col">
-                  <p class="p5__col-text">אתר זה הוא פרויקט הגמר של אגניו טגניה ונגה קפון, סטודנטים לתקש"ח בבצלאל.<br><br>הפרויקט צמח מתוך היכרות אישית וקרובה עם חולה HS, ועם המחיר הפיזי והנפשי שהמחלה גובה. היה לנו חשוב ליצור אתר שלא מציג רק מידע רפואי, אלא מעביר את החוויה עצמה. לכן, הפרויקט כולו נשען על מעורבות ישירה של חולות וחולי HS, שליווו את תהליך היצירה ושיתפו בחוויותיהם האישיות.</p>
+                  <p class="p5__col-text">אתר זה הוא פרויקט הגמר של אגניו טגניה ונגה קפון, סטודנטים לתקש"ח בבצלאל.<br><br>הפרויקט צמח מתוך היכרות אישית וקרובה עם חולה HS, ועם המחיר הפיזי והנפשי שהמחלה גובה. היה לנו חשוב ליצור אתר שלא מציג רק מידע רפואי, אלא משתף בהתמודדות הרגשית והחברתית של החולים במחלה. לפיכך בנינו את הפרויקט דרך שיח מתמשך עם חולות וחולי HS, שליווו את תהליך היצירה ושיתפו אותנו בחוויותיהם האישיות לאורך כל הפרויקט, ודרך ראיונות עם רופאים מומחים שמטפלים במחלה.</p>
                 </div>
                 <div class="p5__col">
-                  <p class="p5__col-text">תודה לחולים שלקחו חלק בפרויקט: ל-6 המרואיינות (במיוחד לש') ול-111 המשיבים לשאלון בישראל ו-195 בחו"ל - הפרויקט קיים בזכותכם.<br><br>תודה למומחי ה-HS פרופ' יובל רמות וד"ר יוסי טייב על ההסברים הרפואיים. תודה למנחים נעמה טוביאס ורונאל מור, לפרופ' עידו ברונו על הייעוץ, לאסף קליין על האיור, ולמשפחה והחברים על התמיכה האינסופית.</p>
+                  <p class="p5__col-text">תודה לחולים שלקחו חלק בפרויקט: ל-6 המרואיינות (במיוחד לש') ול-111 המשיבים לשאלון בישראל ו-195 המשיבים מחו"ל - הפרויקט קיים בזכותכם.<br><br>תודה למומחי ה-HS פרופ' יובל רמות וד"ר יוסי טייב על ההסברים הרפואיים. תודה למנחים נעמה טוביאס ורונאל מור, לפרופ' עידו ברונו על הייעוץ, לאסף קליין על האיור, ולמשפחה והחברים על התמיכה האינסופית.</p>
                 </div>
               </div>
             </div>
@@ -3554,6 +3550,13 @@ html, body {
               <p class="p5__footnote">*המידע באתר מבוסס על עדויות חולים, מומחים ומידע מאתר איגוד רופאי העור הבריטי, ואינו מהווה תחליף לייעוץ או טיפול רופאי.</p>
               <p class="p5__footnote">© 2026 כל הזכויות שמורות לאגניו טגניה ונגה קפון.</p>
             </div>
+          </div>
+
+          <div class="p5__hdivider" role="separator"></div>
+
+          <!-- Closing header -->
+          <div class="p5__header">
+            <h2 class="p5__title">תודה על ההקשבה.</h2>
           </div>
 
         </div><!-- /.p5__main -->
@@ -3958,7 +3961,6 @@ html, body {
   { size:'small', type:'dark',  top:530, left: 800, rot:11,  text:'בעיקר הבושה סביב המחלה... שהפצעים לא נראים טוב.' }, /* הוקטן מ-1050 */
   
   // אינטימיות
-  { size:'big',   type:'dark',  top:195, left: 130, rot:-9,  text:'אי אפשר לקיים יחסי מין הבן זוג נגעל.' },
   { size:'small', type:'dark',  top:390, left: 700, rot: 6,  text:'השפעה על הדימוי העצמי וזוגיות.' }, /* הוקטן מ-900 */
   
   // עומס נפשי
