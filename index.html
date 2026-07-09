@@ -844,11 +844,11 @@ html, body {
 .p2__tasks {
   --p2-shatter-duration: 0.6s;     /* PER-SHARD explode duration (one-way, no hold/return) — each shard's own --stagger-delay (JS-injected) adds on top of this */
   --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
-  --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
-  --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
+  --p2-strike-delay: 0.30s;     /* real seconds after the card settles before the strikethrough starts appearing */
+  --p2-strike-draw-duration: 0.8s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
   position: absolute; /* overlays the hour grid (.p2__hours-and-grid), which
                           stays in-flow and paints first, behind this */
-  top: 10.655cqh; /* was 14.206cqh — trimmed ~25% so the first card starts a
+  top: 9.655cqh; /* was 14.206cqh — trimmed ~25% so the first card starts a
                      little higher in the grid */
   left: 0;
   width: 100%;
@@ -869,6 +869,8 @@ html, body {
                                it) and pinned to its physical left edge via
                                each card's own margin-left below */
   gap: 16px;
+  padding-right: 120px;
+  padding-left: 48px;
 }
 
 /* ── Card: black/bordered by default, flips to solid cream when active ── */
@@ -899,7 +901,7 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-start; /* top-right aligned content, not vertically centered */
-  gap: 4px;
+  gap: 8px;
   /* no transition here on purpose — JS adds .p2--active in the same
      instant as the trigger (Step 1), so the flip is just a plain instant
      state change, no color interpolation at all */
