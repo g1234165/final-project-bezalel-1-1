@@ -84,13 +84,12 @@ html, body {
   background: var(--color-dark);
   container-type: size;
   container-name: accordion;
-  /* Extra defensive clip (html/body and .p2__schedule-area already have
-     overflow:hidden) — the p2 shatter shards can translate() far outside
-     their card during the explode/scale(0) animation, and this guarantees
-     nothing from that can ever force a horizontal scrollbar on the page,
-     regardless of which intermediate container it would otherwise leak
-     through. */
-  overflow-x: hidden;
+  /* Do NOT put any overflow property here.
+     overflow on a container-type:size element triggers circular layout:
+     the browser measures scroll-size (needs children) → children need cqh/cqw
+     → cqh/cqw need container height → height transiently collapses to 0 →
+     every clamp()/cq* value snaps to minimum → text breaks letter-by-letter.
+     Horizontal clipping is already guaranteed by html, body { overflow: hidden }. */
 }
 
 /* ═══════════════════════════════════════════
@@ -3606,6 +3605,13 @@ html, body {
           <!-- Divider between dropdowns and about -->
           <div class="p5__divider" role="separator"></div>
 
+          <!-- Closing header -->
+          <div class="p5__header">
+            <h2 class="p5__title">תודה על ההקשבה.</h2>
+          </div>
+
+          <div class="p5__hdivider" role="separator"></div>
+
           <!-- About section -->
           <div class="p5__about">
             <div class="p5__about-inner">
@@ -3624,13 +3630,6 @@ html, body {
               <p class="p5__footnote">*המידע באתר מבוסס על עדויות חולים, מומחים ומידע מאתר איגוד רופאי העור הבריטי, ואינו מהווה תחליף לייעוץ או טיפול רופאי.</p>
               <p class="p5__footnote">© 2026 כל הזכויות שמורות לאגניו טגניה ונגה קפון.</p>
             </div>
-          </div>
-
-          <div class="p5__hdivider" role="separator"></div>
-
-          <!-- Closing header -->
-          <div class="p5__header">
-            <h2 class="p5__title">תודה על ההקשבה.</h2>
           </div>
 
         </div><!-- /.p5__main -->
@@ -4629,6 +4628,7 @@ html, body {
         const rect  = frame.getBoundingClientRect();
         const W = rect.width  / scale;
         const H = rect.height / scale;
+        if (!W || !H) return;
 
         engine = Engine.create({ gravity: { x: 0, y: 1.2 } });
         world  = engine.world;
