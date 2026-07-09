@@ -400,7 +400,7 @@ html, body {
   width: 100%;
 }
 .p1__doctors-title {
-  min-height: 17.196cqh;
+  height: 17.196cqh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -528,8 +528,6 @@ html, body {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 .p1__scroll-track {
   height: 40cqh;
@@ -3806,7 +3804,8 @@ html, body {
 
     let typewriterGen   = 0;
     let typewriterTimer = null;
-    let currentSection  = 0;
+    let currentSection  = -1;
+    let p1Transitioning = false;
 
     function typewrite(el, newText) {
       const gen = ++typewriterGen;
@@ -3859,12 +3858,39 @@ html, body {
     const doctorsMain = document.querySelector('.p1__doctors-main');
     if (doctorsMain) {
       const p1Panel = doctorsMain.closest('.panel');
+
+      // Gate scroll events while the 0.75s flex-basis open transition runs.
+      // scroll-snap-type: y mandatory fires real scroll events on every reflow,
+      // so without this gate the typewriter loop can ignite mid-animation.
+      if (p1Panel) {
+        p1Panel.addEventListener('transitionstart',  e => { if (e.propertyName === 'flex-basis') p1Transitioning = true;  });
+        p1Panel.addEventListener('transitionend',    e => { if (e.propertyName === 'flex-basis') p1Transitioning = false; });
+        p1Panel.addEventListener('transitioncancel', e => { if (e.propertyName === 'flex-basis') p1Transitioning = false; });
+
+        // Trigger section 0 typewriter each time Panel 1 becomes active.
+        // currentSection starts at -1 so the applySection(0) guard (idx === currentSection)
+        // never short-circuits the very first call.
+        new MutationObserver(() => {
+          if (p1Panel.classList.contains('panel--active')) {
+            currentSection = -1;
+            applySection(0);
+          }
+        }).observe(p1Panel, { attributeFilter: ['class'] });
+      }
+
       doctorsMain.addEventListener('scroll', () => {
+        if (p1Transitioning) return;
         if (!p1Panel || !p1Panel.classList.contains('panel--active') || doctorsMain.clientHeight === 0) return;
         const { scrollTop, scrollHeight, clientHeight } = doctorsMain;
         const maxScroll = scrollHeight - clientHeight;
         if (maxScroll <= 0) return;
         const idx = Math.min(3, Math.floor((scrollTop / maxScroll) * 4));
+        // Hysteresis: ignore snap-induced sub-pixel shifts that land within
+        // 4% of maxScroll of a section boundary — prevents the snap ↔ scroll loop.
+        if (idx !== currentSection) {
+          const crossAt = (Math.min(idx, currentSection) + 1) / 4 * maxScroll;
+          if (Math.abs(scrollTop - crossAt) < maxScroll * 0.04) return;
+        }
         applySection(idx);
       }, { passive: true });
     }
@@ -4692,6 +4718,21 @@ html, body {
         Matter.Events.on(mouseConstraint, 'enddrag',   () => { frame.style.cursor = 'grab'; });
 
         // ── rAF loop: sync DOM images to physics bodies ───
+        // Static per-body props (size, origin) are set once here — not every frame —
+        // so the loop only writes transform, eliminating 5 forced style/layout passes/frame.
+        const bodyConsts = bodies.map((b, i) => {
+          const d  = defs[i];
+          const bw = W * d.wF;
+          const bh = bw * d.aspect;
+          const img = imgEls[i];
+          img.style.left            = '0';
+          img.style.top             = '0';
+          img.style.width           = bw + 'px';
+          img.style.height          = bh + 'px';
+          img.style.transformOrigin = '0 0';
+          return { bw, bh, flip: d.sx === -1 ? ' scaleX(-1)' : '' };
+        });
+
         lastT = 0;
         function loop(t) {
           animId = requestAnimationFrame(loop);
@@ -4701,19 +4742,10 @@ html, body {
           Engine.update(engine, dt);
 
           bodies.forEach((b, i) => {
-            const img = imgEls[i];
-            const d   = defs[i];
-            const bw  = W * d.wF;
-            const bh  = bw * d.aspect;
+            const { bw, bh, flip } = bodyConsts[i];
             const { x, y } = b.position;
             const a = b.angle;
-            const flip = d.sx === -1 ? ' scaleX(-1)' : '';
-            img.style.left            = '0';
-            img.style.top             = '0';
-            img.style.width           = bw + 'px';
-            img.style.height          = bh + 'px';
-            img.style.transformOrigin = '0 0';
-            img.style.transform =
+            imgEls[i].style.transform =
               `translate(${x}px,${y}px) rotate(${a}rad) translate(${-bw / 2}px,${-bh / 2}px)${flip}`;
           });
         }
@@ -4752,6 +4784,9 @@ html, body {
                 resizeTimer = null;
                 stopPhysics();
                 startPhysics();
+                // stopPhysics() removes resizeCleanup, so re-register after restart
+                window.addEventListener('resize', onResize);
+                resizeCleanup = () => window.removeEventListener('resize', onResize);
               }, 250);
             };
             window.addEventListener('resize', onResize);
