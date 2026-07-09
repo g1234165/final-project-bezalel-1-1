@@ -719,32 +719,27 @@ html, body {
 }
 .p2__schedule-frame {
   width: 100%;
-  min-height: 163.3cqh; /* fixed intrinsic height — keeps the frame's scrollable
-                            range constant regardless of how the absolutely-
-                            positioned cards/shards below transform, since
-                            absolutely positioned descendants never contribute
-                            to an ancestor's size once that ancestor has an
-                            explicit height. Matches the current card layout's
-                            total extent (last card's bottom + .p2__tasks's own
-                            top offset + this frame's own bottom padding) —
-                            recompute this if card heights/positions change. */
-  position: relative; /* anchors .p2__tasks (and each .p2__task-card's inline
-                          top/height) below */
+  min-height: 199.0cqh; /* how tall one scrollable "day" feels — .p2__hours-and-grid
+                            and .p2__tasks both stretch to fill this single grid
+                            row/cell, so this is the one place that controls the
+                            overall scroll length now (see the grid-overlay note
+                            below) */
+  position: relative;
   overflow-x: hidden;  /* exploding shards must never cause horizontal scroll */
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: grid;
+  grid-template-rows: 1fr; /* single row — .p2__hours-and-grid and .p2__tasks are both placed in it (grid-row:1/grid-column:1), so they occupy the IDENTICAL rectangle instead of relying on hand-picked offsets to line up */
   padding: 7.477cqh 1.758cqw 8.411cqh 0;
   box-sizing: border-box;
 }
 
-/* ── Hour grid: 06–22 labels + horizontal grid lines, sits behind the task
-   cards (in-flow, painted first — .p2__tasks below is absolutely positioned
-   and simply paints on top, no z-index needed). Restored layout from the
-   pre-refactor version of this file. ── */
+/* ── Hour grid: 06–22 labels + horizontal grid lines. Shares the exact same
+   grid cell as .p2__tasks below (both grid-row:1/grid-column:1 in the frame's
+   single-row grid) — painted first in DOM order, so .p2__tasks simply paints
+   on top, no z-index needed. Restored layout from the pre-refactor version of
+   this file. ── */
 .p2__hours-and-grid {
-  align-self: stretch;
-  flex: 1;
+  grid-row: 1;
+  grid-column: 1;
   width: 100%;
   height: 100%;
   position: relative;
@@ -826,30 +821,32 @@ html, body {
   color: var(--color-light);
 }
 
-/* ── Task cards: absolutely positioned along the hour grid, variable height
-   per card (each card's exact top/height comes from its inline style,
-   restored from the pre-refactor layout) — explode-on-scroll, unchanged. ──
-   All sizing/timing knobs live here as custom properties — tweak these,
-   not the rules below, to adjust spacing or the "explode" punch feel. */
+/* ── Task cards: a CSS Grid overlaying the hour grid above (see
+   .p2__schedule-frame), 16 rows = the 16 one-hour gaps between the 06–22
+   marks. Each card's grid-row:span N (below, per-card via :nth-child)
+   controls both its height and its vertical placement directly "in hours"
+   — explode-on-scroll, unchanged. ── All sizing/timing knobs live here as
+   custom properties — tweak these, not the rules below, to adjust the
+   "explode" punch feel. */
 .p2__tasks {
   --p2-shatter-duration: 0.6s;     /* PER-SHARD explode duration (one-way, no hold/return) — each shard's own --stagger-delay (JS-injected) adds on top of this */
   --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
-  --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
+  --p2-strike-delay: 1.05s;     /* only starts counting down once every shard has actually finished exploding — worst case is STAGGER_WINDOW (0.4s, JS constant) + --p2-shatter-duration (0.6s) = 1.0s, plus a small buffer */
   --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
-  position: absolute;
-  top: 14.206cqh;
-  left: 0;
-  width: 100%;
+  grid-row: 1;
+  grid-column: 1; /* same single cell as .p2__hours-and-grid — the two occupy the identical rectangle, guaranteeing the row grid below lines up with the hour-lines behind it */
+  display: grid;
+  grid-template-columns: 1.465cqw 44.922cqw 1fr; /* left margin | card column | remaining space for the hour-labels */
+  grid-template-rows: repeat(16, 1fr); /* 16 one-hour rows, 06–22 — each card's grid-row:span N below is literally "N hours" */
   font-family: 'Narkiss Asaf TRIAL';
 }
 
-/* ── Card: black/bordered by default, flips to solid cream when active ── */
+/* ── Card: black/bordered by default, flips to solid cream when active.
+   Height/vertical position both come from grid-row:span N (below,
+   per-card via :nth-child) against .p2__tasks's 16-row grid — no more
+   inline top/height, no absolute positioning. ── */
 .p2__task-card {
-  position: absolute; /* positioned via each card's own inline top/height —
-                          restored from the pre-refactor layout */
-  left: 1.465cqw;
-  width: 44.922cqw;
-  min-height: 120px; /* safety floor so very short cards never shrink below a usable size */
+  grid-column: 2; /* the middle track defined above */
   box-sizing: border-box;
   border-radius: 15px;
   background: var(--color-dark);
@@ -872,6 +869,20 @@ html, body {
      instant as the trigger (Step 1), so the flip is just a plain instant
      state change, no color interpolation at all */
 }
+/* Row-span per card — height AND vertical placement, both "in hours" against
+   the 16-row grid above. Task 7 wasn't given a span in the request; it
+   defaults to span 1, matching the "shortest" cohort (tasks 1/4). Spans sum
+   to 15 of 16 rows, so task 7 ends at row 15 — row 16 (hour ~22) shows an
+   hour line/label with no card next to it, which is expected (this day's
+   tracked events don't quite reach the end of the grid), not a bug. */
+.p2__task-card:nth-child(1) { grid-row: span 1; } /* מקלחת */
+.p2__task-card:nth-child(2) { grid-row: span 2; } /* פרזנטציה */
+.p2__task-card:nth-child(3) { grid-row: span 6; } /* עבודה */
+.p2__task-card:nth-child(4) { grid-row: span 1; } /* קניות */
+.p2__task-card:nth-child(5) { grid-row: span 2; } /* ספורט */
+.p2__task-card:nth-child(6) { grid-row: span 2; } /* דייט */
+.p2__task-card:nth-child(7) { grid-row: span 1; } /* שינה — inferred, not specified in the request */
+
 /* Temporarily lifts the card's own clipping AND raises it above sibling
    cards so the shards can visibly fly past the card's own rounded edge and
    overlap the cards above/below while exploding. Applied/removed by JS
@@ -890,12 +901,12 @@ html, body {
    overlay, JS-generated per-card into a heavily-jittered grid of triangle
    pairs sized to that card's own dimensions (see the "Panel 2 — Shatter
    grid generation" script) — NOT a single-point fan, so every piece is
-   chunky, not a sliver. Invisible at rest (opacity:0). Once cracking
-   starts, the card underneath has ALREADY flipped to the white "Reality"
-   state (see .p2--active below, added in the same instant as
-   .p2--cracking) — the transparent gaps that open up as shards crack apart
-   reveal that real white card and its already-dark title directly, instead
-   of a separate opaque white "fracture line" layer. ── */
+   chunky, not a sliver. Invisible at rest (opacity:0). Once triggered, the
+   card underneath has ALREADY flipped to the white "Reality" state (see
+   .p2--active below, added in the same instant as .p2--shattering) — the
+   transparent gaps that open up as shards crack apart reveal that real
+   white card and its already-dark title directly, instead of a separate
+   opaque white "fracture line" layer. ── */
 .p2__shatter-overlay {
   position: absolute;
   inset: 0;
@@ -904,8 +915,8 @@ html, body {
   pointer-events: none;
   background: transparent;
 }
-.p2__task-card.p2--cracking .p2__shatter-overlay {
-  opacity: 1; /* Step 1: instant */
+.p2__task-card.p2--shattering .p2__shatter-overlay {
+  opacity: 1; /* instant */
 }
 
 /* Shape (clip-path), flight direction (--shard-dx/--shard-dy/--shard-rot),
@@ -923,33 +934,19 @@ html, body {
   background: var(--color-dark); /* dark, matching the Ideal card — these read as pieces of it cracking apart */
   border-radius: 15px;
   transform: translate(0, 0) rotate(0deg) scale(1);
-  /* Crack ripple: the SAME --stagger-delay used for the explosion below
-     also drives this transform transition, so the crack itself sweeps
-     right-to-left across the card instead of every shard snapping to
-     scale(0.95) simultaneously. transition-duration (0.15s) is read by JS
-     as CRACK_TRANSITION_S when computing --crack-hold — keep them in sync
-     if this value changes. */
-  transition: transform 0.15s ease;
-  transition-delay: var(--stagger-delay);
-  /* Explosion reuses the identical --stagger-delay/sweep — safe because
-     .p2--shattering is never added until the whole crack wave (plus
-     --crack-hold's extra pause, see runExplode) has already finished, so
-     there's no overlap between the two phases for any shard. */
+  /* Drives the WHOLE animation below (crack AND explosion — see the
+     keyframe) per shard, right-to-left. Crack and explosion overlap by
+     design: since every shard's animation is delayed only by its own
+     column position, right-most (low-delay) shards are already exploding
+     while left-most (high-delay) shards are only just starting to crack. */
   animation-delay: var(--stagger-delay);
-}
-/* Step 1: once cracking starts, shards ripple down to a slightly scaled
-   resting look (scale(0.95), right-to-left via the transition above) —
-   this is what reveals the transparent gaps between every piece (the
-   "fracture line" effect) as the crack wave sweeps across. */
-.p2__task-card.p2--cracking .p2__shard {
-  transform: scale(0.95);
 }
 
 /* Title sits ABOVE the shatter overlay (z-index: 3 > 2), and — since
-   .p2--active now lands in the exact same instant as .p2--cracking — is
+   .p2--active now lands in the exact same instant as .p2--shattering — is
    already in its final dark, readable color from the moment a card starts
    cracking. It never hides or fades: it's continuously visible above the
-   shard layer through the whole crack→explode→clear sequence. Subtitle
+   shard layer through the whole overlapping crack/explode sequence. Subtitle
    stays BELOW the overlay (z-index: 1 < 2); its content starts empty
    (typewriter fills it in later) so its stacking position has no visible
    effect until then. */
@@ -996,8 +993,9 @@ html, body {
      across the text instead of snapping fully on. */
   transition: opacity 0.2s ease, transform var(--p2-strike-draw-duration) ease;
 }
-/* Starts appearing shortly after the card has settled into Reality mode —
-   tune via --p2-strike-delay above. */
+/* Only starts drawing once every shard has completely finished exploding —
+   tune via --p2-strike-delay above (deliberately long enough to outlast the
+   worst-case explosion). */
 .p2__task-card.p2--active .p2__task-title-text::after {
   opacity: 1;
   transform: translateY(-50%) scaleX(1);
@@ -1022,7 +1020,7 @@ html, body {
 }
 
 /* ── Active "Reality" state: solid cream card, dark text, subtitle revealed ──
-   Added by JS in the exact same instant as .p2--cracking — the card flips
+   Added by JS in the exact same instant as .p2--shattering — the card flips
    to white and the title to dark immediately, visible through the crack
    wave's gaps from the very start rather than being swapped in later. ── */
 .p2__task-card.p2--active {
@@ -1037,27 +1035,30 @@ html, body {
   opacity: 1; /* instant — no transition; the typewriter JS is the reveal */
 }
 
-/* ── Shatter explode — ONE-WAY (Step 3). Each shard (in its own
-   right-to-left staggered turn, via --stagger-delay) violently explodes
-   outward and SHRINKS to nothing via scale(0) — starting from the
-   .p2--cracking resting state (scale(0.95)) so there's no visual jump when
-   the animation begins. No hold, no return — once gone, gone for good.
+/* ── Crack + Explosion — ONE-WAY, ONE keyframe covering both phases. Each
+   shard's animation is delayed only by --stagger-delay (its own column
+   position), so the crack (0%→15%: scale down to 0.95, the "fracture"
+   look) and the explosion (15%→100%: fly outward + shrink to nothing) are
+   both part of the SAME timeline per shard — deliberately overlapping
+   across the card: right-most (low-delay) shards are already exploding
+   while left-most (high-delay) shards are only just starting to crack. No
+   hold, no return — once gone, gone for good.
    Longhand animation-* properties are used here (not the `animation`
    shorthand) specifically so this rule does NOT reset the animation-delay
    set on the base .p2__shard rule above — the shorthand would silently
    zero out the per-shard stagger.
-   .p2--shattering is added by JS once the whole crack wave has finished
-   sweeping across plus --crack-hold's extra pause (see runExplode), and
-   never removed (one-way reveal). Tune via --p2-shatter-duration
-   (per-shard base length, before stagger) or any shard's
-   --shard-dx/--shard-dy/--shard-rot (set by the JS generator). ── */
+   .p2--shattering is added by JS the instant a card triggers, and never
+   removed (one-way reveal). Tune via --p2-shatter-duration (per-shard base
+   length, before stagger) or any shard's --shard-dx/--shard-dy/--shard-rot
+   (set by the JS generator). ── */
 .p2__task-card.p2--shattering .p2__shard {
   animation-name: p2-shard-shatter;
   animation-duration: var(--p2-shatter-duration);
   animation-fill-mode: both;
 }
 @keyframes p2-shard-shatter {
-  0%   { transform: translate(0, 0) rotate(0deg) scale(0.95); } /* matches the .p2--cracking resting state exactly — no jump */
+  0%   { transform: translate(0, 0) rotate(0deg) scale(1); }
+  15%  { transform: translate(0, 0) rotate(0deg) scale(0.95); } /* the crack — same resting look as before, now inline in the timeline */
   100% { transform: translate(var(--shard-dx), var(--shard-dy)) rotate(var(--shard-rot)) scale(0);
          animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); } /* single snappy explosive burst, shrinking to nothing */
 }
@@ -2986,14 +2987,14 @@ html, body {
               <div class="p2__tasks">
 
                 <!-- 1. מקלחת -->
-                <article class="p2__task-card" style="top:0;height:11.215cqh">
+                <article class="p2__task-card">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
                   <span class="p2__task-subtitle">ההתפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליח ללבוש מכנסיים.</span>
                 </article>
 
                 <!-- 2. פרזנטציה -->
-                <article class="p2__task-card" style="top:13.645cqh;height:45cqh">
+                <article class="p2__task-card">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
                   <span class="p2__task-subtitle">
@@ -3002,7 +3003,7 @@ html, body {
                 </article>
 
                 <!-- 3. עבודה -->
-                <article class="p2__task-card" style="top:61.075cqh;height:11.215cqh">
+                <article class="p2__task-card">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
                   <span class="p2__task-subtitle">
@@ -3011,7 +3012,7 @@ html, body {
                 </article>
 
                 <!-- 4. קניות -->
-                <article class="p2__task-card" style="top:74.72cqh;height:11.215cqh">
+                <article class="p2__task-card">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
                   <span class="p2__task-subtitle">
@@ -3020,7 +3021,7 @@ html, body {
                 </article>
 
                 <!-- 5. ספורט -->
-                <article class="p2__task-card" style="top:88.365cqh;height:11.215cqh">
+                <article class="p2__task-card">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חבר</span></span>
                   <span class="p2__task-subtitle">
@@ -3029,7 +3030,7 @@ html, body {
                 </article>
 
                 <!-- 6. דייט -->
-                <article class="p2__task-card" style="top:102.01cqh;height:25cqh">
+                <article class="p2__task-card">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
                   <span class="p2__task-subtitle">
@@ -3038,7 +3039,7 @@ html, body {
                 </article>
 
                 <!-- 7. שינה -->
-                <article class="p2__task-card" style="top:129.44cqh;height:11.215cqh">
+                <article class="p2__task-card">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
                   <span class="p2__task-subtitle">פורס מגבת מתחת לסדין ונאבק למצוא תנוחה שלא תכאיב</span>
@@ -3855,23 +3856,20 @@ html, body {
 
     /* ══════════════════════════════════════════
        Panel 2 — Shatter grid generation (per-card, dynamic density)
-       Cards now have very different heights (restored variable-height
-       layout, ~11cqh to ~78cqh — roughly a 7× range), so a single shared
-       grid would make the tall card's shards huge/stretched and the short
-       cards' shards tiny. Instead, each card measures its own rendered
-       pixel size and gets its own row/column count, targeting a roughly
-       constant shard edge length (TARGET_SHARD_PX) so every card's pieces
-       stay similarly small and chunky. Runs synchronously before the
-       IntersectionObserver IIFE below, so shards already exist by the time
-       any card can trigger.
+       Cards now have very different heights (CSS Grid row-spans of 1 to 6
+       "hours" — roughly a 6× range), so a single shared grid would make the
+       tall card's shards huge/stretched and the short cards' shards tiny.
+       Instead, each card measures its own rendered pixel size and gets its
+       own row/column count, targeting a roughly constant shard edge length
+       (TARGET_SHARD_PX) so every card's pieces stay similarly small and
+       chunky. Runs synchronously before the IntersectionObserver IIFE
+       below, so shards already exist by the time any card can trigger.
        ══════════════════════════════════════════ */
     (function () {
       const TARGET_SHARD_PX = 30;      // desired shard edge length — the "chunky, uniform size" knob
       const MIN_COLS = 4, MAX_COLS = 16;
       const MIN_ROWS = 3, MAX_ROWS = 12; // clamps very tall cards from generating hundreds of rows
       const STAGGER_WINDOW = 0.4;      // total right-to-left sweep time (s) — same regardless of column count
-      const CRACK_TRANSITION_S = 0.15; // must match .p2__shard's transition-duration in CSS
-      const CRACK_LEAD_PX = 35;        // "30-40px of the card length" — extra pause before the explosion wave starts chasing the crack wave
       // ── Tweak the organic irregularity here ──
       // JITTER_MIN/MAX: how far (as a fraction of one grid cell's own size)
       // each INTERIOR grid POINT is nudged, independently in both X and Y.
@@ -3948,17 +3946,6 @@ html, body {
         const w = card.clientWidth, h = card.clientHeight;
         const cols = Math.min(MAX_COLS, Math.max(MIN_COLS, Math.round(w / TARGET_SHARD_PX)));
         const rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, Math.round(h / TARGET_SHARD_PX)));
-
-        // How long runExplode should wait after the crack starts before
-        // adding .p2--shattering: the full crack-wave sweep time
-        // (STAGGER_WINDOW) + the time each shard's own crack transition
-        // takes to settle (CRACK_TRANSITION_S) + a deliberate extra pause
-        // (the requested ~30-40px lead, converted to seconds using this
-        // card's own width) so the explosion visibly starts a beat after
-        // the whole card has finished cracking, not the instant it does.
-        // Clamped so the pause stays perceptible regardless of card width.
-        const crackLeadS = Math.min(0.15, Math.max(0.03, (CRACK_LEAD_PX / w) * STAGGER_WINDOW));
-        card.style.setProperty('--crack-hold', (STAGGER_WINDOW + CRACK_TRANSITION_S + crackLeadS).toFixed(3) + 's');
 
         buildShardDefs(cols, rows).forEach((def) => {
           const shard = document.createElement('span');
@@ -4038,15 +4025,14 @@ html, body {
       }
 
       function runExplode(card, onDone) {
-        // Step 1 (The Crack + instant Reality swap): fires synchronously —
-        // the card flips to white and the title to its final dark color in
-        // the exact same instant cracking starts, so it's already legible
-        // through the crack wave's gaps from frame one. Each shard's own
-        // --stagger-delay (set by the generation script) drives a
-        // right-to-left crack ripple via a CSS transition — NOT an instant
-        // snap — so the cracks visibly sweep across the card.
-        card.classList.add('p2--cracking');
+        // Everything fires synchronously: the card flips to white and the
+        // title to its final dark color, and .p2--shattering triggers the
+        // single crack-then-explode keyframe on every shard (see CSS) —
+        // each shard's own --stagger-delay makes the crack and explosion
+        // sweep right-to-left in an overlapping wave, by construction, with
+        // no JS-timed stages needed.
         card.classList.add('p2--active');
+        card.classList.add('p2--shattering');
         card.classList.add('p2--bursting'); // lifts clipping + raises z-index so shards can fly past the card's edges once they start moving
         observer.unobserve(card);           // one-way reveal — doesn't revert on scroll-up
 
@@ -4063,30 +4049,16 @@ html, body {
           if (subtitle) typewriteForward(subtitle, subtitle.dataset.fullText || '', 35);
         }, strikeDelayMs + strikeDrawMs);
 
-        // Step 2 (The Explosion) only starts once the ENTIRE crack wave has
-        // finished sweeping across (--crack-hold, JS-computed per card in
-        // the generation script: STAGGER_WINDOW + crack-transition duration
-        // + the requested ~30-40px lead). Adding .p2--shattering any
-        // earlier would break the crack wave for later columns —
-        // animation-fill-mode:both means the moment that class lands, every
-        // shard immediately snaps to the explosion keyframe's 0% state
-        // (scale(0.95)), regardless of whether that shard's own crack
-        // transition has even started yet.
-        const crackHoldMs = parseFloat(cs.getPropertyValue('--crack-hold')) * 1000 || 550;
-        setTimeout(() => {
-          card.classList.add('p2--shattering');
-
-          const shards = card.querySelectorAll('.p2__shard');
-          const lastShard = shards[shards.length - 1]; // leftmost column — largest --stagger-delay, finishes last
-          lastShard.addEventListener('animationend', function handler() {
-            lastShard.removeEventListener('animationend', handler);
-            // Cleanup: shards are fully gone — restore normal clipping and
-            // tear down the overlay. One-way: nothing here ever reverts.
-            card.classList.remove('p2--bursting');
-            card.querySelector('.p2__shatter-overlay').remove();
-            onDone();
-          }, { once: true });
-        }, crackHoldMs);
+        const shards = card.querySelectorAll('.p2__shard');
+        const lastShard = shards[shards.length - 1]; // leftmost column — largest --stagger-delay, finishes last
+        lastShard.addEventListener('animationend', function handler() {
+          lastShard.removeEventListener('animationend', handler);
+          // Cleanup: shards are fully gone — restore normal clipping and
+          // tear down the overlay. One-way: nothing here ever reverts.
+          card.classList.remove('p2--bursting');
+          card.querySelector('.p2__shatter-overlay').remove();
+          onDone();
+        }, { once: true });
       }
 
       // ── Tweak these two to change WHEN a card triggers ──
