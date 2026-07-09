@@ -84,6 +84,13 @@ html, body {
   background: var(--color-dark);
   container-type: size;
   container-name: accordion;
+  /* Extra defensive clip (html/body and .p2__schedule-area already have
+     overflow:hidden) — the p2 shatter shards can translate() far outside
+     their card during the explode/scale(0) animation, and this guarantees
+     nothing from that can ever force a horizontal scrollbar on the page,
+     regardless of which intermediate container it would otherwise leak
+     through. */
+  overflow-x: hidden;
 }
 
 /* ═══════════════════════════════════════════
@@ -713,16 +720,29 @@ html, body {
 }
 .p2__schedule-frame {
   width: 100%;
-  min-height: 199.0cqh;
-  position: relative;
+  min-height: 163.3cqh; /* fixed intrinsic height — keeps the frame's scrollable
+                            range constant regardless of how the absolutely-
+                            positioned cards/shards below transform, since
+                            absolutely positioned descendants never contribute
+                            to an ancestor's size once that ancestor has an
+                            explicit height. Matches the current card layout's
+                            total extent (last card's bottom + .p2__tasks's own
+                            top offset + this frame's own bottom padding) —
+                            recompute this if card heights/positions change. */
+  position: relative; /* anchors .p2__tasks (and each .p2__task-card's inline
+                          top/height) below */
+  overflow-x: hidden;  /* exploding shards must never cause horizontal scroll */
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: stretch;
   padding: 7.477cqh 1.758cqw 8.411cqh 0;
   box-sizing: border-box;
 }
 
-/* Hours + grid (Figma-exact) */
+/* ── Hour grid: 06–22 labels + horizontal grid lines, sits behind the task
+   cards (in-flow, painted first — .p2__tasks below is absolutely positioned
+   and simply paints on top, no z-index needed). Restored layout from the
+   pre-refactor version of this file. ── */
 .p2__hours-and-grid {
   align-self: stretch;
   flex: 1;
@@ -746,7 +766,7 @@ html, body {
   align-items: flex-start;
   justify-content: flex-end;
 }
-/* horizontal lines inside grid */
+/* horizontal lines */
 .p2__grid-lines {
   align-self: stretch;
   flex: 1;
@@ -755,6 +775,15 @@ html, body {
   align-items: flex-end;
   justify-content: space-between;
   gap: 20px;
+}
+.p2__line {
+  align-self: stretch;
+  height: 0.9px;
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  background: var(--color-light);
+  flex-shrink: 0;
 }
 /* vertical separator inside grid */
 .p2__vert-line {
@@ -797,159 +826,242 @@ html, body {
   font-weight: 400;
   color: var(--color-light);
 }
-.p2__line {
-  align-self: stretch;
-  height: 0.9px;
-  position: relative;
-  max-width: 100%;
-  overflow: hidden;
-  background: var(--color-light);
-  flex-shrink: 0;
-}
 
-/* ── Task cards + Crushing Scroll (crossfade in-place) ── */
+/* ── Task cards: absolutely positioned along the hour grid, variable height
+   per card (each card's exact top/height comes from its inline style,
+   restored from the pre-refactor layout) — explode-on-scroll, unchanged. ──
+   All sizing/timing knobs live here as custom properties — tweak these,
+   not the rules below, to adjust spacing or the "explode" punch feel. */
 .p2__tasks {
+  --p2-shatter-duration: 0.6s;     /* PER-SHARD explode duration (one-way, no hold/return) — each shard's own --stagger-delay (JS-injected) adds on top of this */
+  --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
+  --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
+  --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
   position: absolute;
-  left: 0;
   top: 14.206cqh;
+  left: 0;
   width: 100%;
   font-family: 'Narkiss Asaf TRIAL';
 }
 
-/* wrapper: has the task's exact height — both states sit inside */
-.p2__task-wrap {
-  position: absolute;
+/* ── Card: black/bordered by default, flips to solid cream when active ── */
+.p2__task-card {
+  position: absolute; /* positioned via each card's own inline top/height —
+                          restored from the pre-refactor layout */
   left: 1.465cqw;
   width: 44.922cqw;
-  overflow: visible;
-}
-
-/* Both states fill the wrapper completely */
-.p2__task-ideal,
-.p2__task-reality {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  min-height: 120px; /* safety floor so very short cards never shrink below a usable size */
   box-sizing: border-box;
   border-radius: 15px;
-}
-
-/* ── Ideal: dark card, visible by default ── */
-.p2__task-ideal {
-  background: #101212;
-  border: 0.9px solid #F8F4EE;
-  padding: 24px 24px 36px 36px;
+  background: var(--color-dark);
+  border: 0.9px solid var(--color-light);
+  padding-top: 24px;
+  padding-right: 24px;
+  padding-bottom: 36px;
+  padding-left: 36px; /* asymmetric padding matches the original pre-refactor
+                          design — physical (not logical) properties, so
+                          these stay pinned to the physical right/left
+                          regardless of dir="rtl" */
+  overflow: hidden; /* subtitle must stay inside the card box; the shards
+                       are let out temporarily via .p2--bursting below */
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  z-index: 2;
-  opacity: 1;
-  transition: opacity 0.4s ease;
+  justify-content: flex-start; /* top-right aligned content, not vertically centered */
+  gap: 4px;
+  /* no transition here on purpose — JS adds .p2--active in the same
+     instant as the trigger (Step 1), so the flip is just a plain instant
+     state change, no color interpolation at all */
 }
-.p2__task-wrap.p2--crushed .p2__task-ideal {
-  animation: p2-shake 0.1s ease 5;
-  opacity: 0;
-}
-@keyframes p2-shake {
-  0%, 100% { transform: none; }
-  30% { transform: translateX(-3px) rotate(-0.3deg); }
-  70% { transform: translateX(3px)  rotate(0.3deg); }
-}
-
-/* ── Reality: hidden, overlaid on top, fades in on crush ── */
-.p2__task-reality {
-  z-index: 3;
-  opacity: 0;
+/* Temporarily lifts the card's own clipping AND raises it above sibling
+   cards so the shards can visibly fly past the card's own rounded edge and
+   overlap the cards above/below while exploding. Applied/removed by JS
+   around the animation window (see runExplode in the script), not left on
+   permanently, so the fixed-height card stays safely clipped once settled.
+   Note: .p2__scroll-body (the actual scroll container) still clips with
+   overflow-y:auto/overflow-x:hidden — a card bursting right at the very
+   top/bottom edge of the visible scroll viewport can still get clipped
+   there; that's an accepted limit of keeping the list scrollable. */
+.p2__task-card.p2--bursting {
   overflow: visible;
-  transition: opacity 0.45s ease 0.08s;
-  /* default dark card */
-  background: #101212;
-  border: 0.9px solid #F8F4EE;
-  padding: 24px 24px 36px 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-.p2__task-wrap.p2--crushed .p2__task-reality {
-  opacity: 1;
-}
-/* light-thorn variant: thorn is the background */
-.p2__task-reality--light {
-  background: transparent;
-  border: none;
-  padding: 0;
+  z-index: 50;
 }
 
-/* ── Thorn SVG shapes ── */
-.p2__task-thorn {
+/* ── Shatter overlay: solid dark clip-path "shards" over a TRANSPARENT
+   overlay, JS-generated per-card into a heavily-jittered grid of triangle
+   pairs sized to that card's own dimensions (see the "Panel 2 — Shatter
+   grid generation" script) — NOT a single-point fan, so every piece is
+   chunky, not a sliver. Invisible at rest (opacity:0). Once cracking
+   starts, the card underneath has ALREADY flipped to the white "Reality"
+   state (see .p2--active below, added in the same instant as
+   .p2--cracking) — the transparent gaps that open up as shards crack apart
+   reveal that real white card and its already-dark title directly, instead
+   of a separate opaque white "fracture line" layer. ── */
+.p2__shatter-overlay {
   position: absolute;
-  pointer-events: none;
-  z-index: 1;
-}
-/* thorn.svg — 972×188, horizontal flip */
-.p2__task-thorn--thorn {
-  width: calc(100% + 62px);
-  left: -31px;
-  top: -39px;
-  transform: scaleX(-1);
-}
-/* thorn3.svg — 1020×246, vertical flip */
-.p2__task-thorn--thorn3 {
-  width: calc(100% + 107px);
-  left: -53.5px;
-  top: -39px;
-  transform: scaleY(-1);
-}
-/* Vector.svg — 1042×981, vertical flip */
-.p2__task-thorn--vector {
-  width: 115%;
-  left: -7.05%;
-  top: -8.55%;
-  transform: scaleY(-1);
-}
-
-/* Text container for light-thorn (sits above thorn at z-index 2) */
-.p2__task-reality-text {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  padding: 24px 24px 36px 36px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  inset: 0;
   z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+}
+.p2__task-card.p2--cracking .p2__shatter-overlay {
+  opacity: 1; /* Step 1: instant */
 }
 
-/* ── Typography ── */
-.p2__task-label,
-.p2__task-del {
+/* Shape (clip-path), flight direction (--shard-dx/--shard-dy/--shard-rot),
+   transform-origin, and stagger (--stagger-delay) are all set inline
+   per-shard by JS at load time — nothing to tune here directly; see
+   JITTER_MIN/MAX and the stagger formula in the generation script instead.
+   border-radius matches the card's own 15px corner radius — since each
+   shard spans the full card box before clip-path slices it, this rounds
+   off the outer corners of the geometric grid, so the 4 corner shards
+   carry a soft rounded edge (not a sharp 90°) when they fly free during
+   the explosion. */
+.p2__shard {
+  position: absolute;
+  inset: 0;
+  background: var(--color-dark); /* dark, matching the Ideal card — these read as pieces of it cracking apart */
+  border-radius: 15px;
+  transform: translate(0, 0) rotate(0deg) scale(1);
+  /* Crack ripple: the SAME --stagger-delay used for the explosion below
+     also drives this transform transition, so the crack itself sweeps
+     right-to-left across the card instead of every shard snapping to
+     scale(0.95) simultaneously. transition-duration (0.15s) is read by JS
+     as CRACK_TRANSITION_S when computing --crack-hold — keep them in sync
+     if this value changes. */
+  transition: transform 0.15s ease;
+  transition-delay: var(--stagger-delay);
+  /* Explosion reuses the identical --stagger-delay/sweep — safe because
+     .p2--shattering is never added until the whole crack wave (plus
+     --crack-hold's extra pause, see runExplode) has already finished, so
+     there's no overlap between the two phases for any shard. */
+  animation-delay: var(--stagger-delay);
+}
+/* Step 1: once cracking starts, shards ripple down to a slightly scaled
+   resting look (scale(0.95), right-to-left via the transition above) —
+   this is what reveals the transparent gaps between every piece (the
+   "fracture line" effect) as the crack wave sweeps across. */
+.p2__task-card.p2--cracking .p2__shard {
+  transform: scale(0.95);
+}
+
+/* Title sits ABOVE the shatter overlay (z-index: 3 > 2), and — since
+   .p2--active now lands in the exact same instant as .p2--cracking — is
+   already in its final dark, readable color from the moment a card starts
+   cracking. It never hides or fades: it's continuously visible above the
+   shard layer through the whole crack→explode→clear sequence. Subtitle
+   stays BELOW the overlay (z-index: 1 < 2); its content starts empty
+   (typewriter fills it in later) so its stacking position has no visible
+   effect until then. */
+.p2__task-title    { position: relative; z-index: 3; }
+.p2__task-subtitle { position: relative; z-index: 1; }
+
+.p2__task-title {
   align-self: stretch;
-  position: relative;
   line-height: 100%;
   font-family: 'Narkiss Asaf TRIAL';
   font-size: var(--fs-h3);
   font-weight: 400;
-  color: #F8F4EE;
+  color: var(--color-light);
   text-align: right;
   direction: rtl;
 }
-.p2__task-del { text-decoration: line-through; }
-.p2__task-reality--light .p2__task-del { color: #101212; }
 
-.p2__task-reason {
+/* Inner wrapper shrinks to the actual rendered text width (the outer
+   .p2__task-title is stretched to the full card width for RTL alignment),
+   so the strikethrough below only spans the real text, not the empty space
+   beside it. */
+.p2__task-title-text {
+  position: relative;
+  display: inline-block;
+}
+/* Ultra-thin, dead-straight strikethrough — a strict 1px line, not
+   text-decoration (which is too thick and sits too high on Hebrew glyphs).
+   top/delay/draw-duration are all tunable via the --p2-strike-* vars above. */
+.p2__task-title-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--p2-strike-top);
+  height: 1px;
+  max-height: 1px;
+  background: var(--color-dark);
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: right center; /* draws on from the right — natural reading start in RTL */
+  opacity: 0;
+  pointer-events: none;
+  /* opacity fades in quickly so the line becomes visible right away, while
+     the scaleX draw takes much longer — the line visibly draws itself
+     across the text instead of snapping fully on. */
+  transition: opacity 0.2s ease, transform var(--p2-strike-draw-duration) ease;
+}
+/* Starts appearing shortly after the card has settled into Reality mode —
+   tune via --p2-strike-delay above. */
+.p2__task-card.p2--active .p2__task-title-text::after {
+  opacity: 1;
+  transform: translateY(-50%) scaleX(1);
+  transition-delay: var(--p2-strike-delay);
+}
+
+.p2__task-subtitle {
   align-self: stretch;
   font-family: 'Simona Pro';
   font-size: clamp(13px, 1.074cqw, 22px);
   font-weight: 400;
-  color: #F8F4EE;
+  color: var(--color-dark);
   text-align: right;
   line-height: 100%;
   direction: rtl;
+  opacity: 0;
+  /* No fade/transform transition — the typewriter (JS, after the
+     strikethrough finishes drawing) IS the reveal. Text itself starts
+     empty (cleared by JS at init, original text kept in a data attribute)
+     so there's nothing to see until .p2--active flips opacity on and
+     characters start appearing. */
 }
-.p2__task-reality--light .p2__task-reason { color: #101212; }
 
+/* ── Active "Reality" state: solid cream card, dark text, subtitle revealed ──
+   Added by JS in the exact same instant as .p2--cracking — the card flips
+   to white and the title to dark immediately, visible through the crack
+   wave's gaps from the very start rather than being swapped in later. ── */
+.p2__task-card.p2--active {
+  background: var(--color-light);
+  border-color: var(--color-light);
+}
+.p2__task-card.p2--active .p2__task-title {
+  color: var(--color-dark); /* instant — no transition on color */
+  /* strikethrough is drawn by .p2__task-title-text::after — see above */
+}
+.p2__task-card.p2--active .p2__task-subtitle {
+  opacity: 1; /* instant — no transition; the typewriter JS is the reveal */
+}
+
+/* ── Shatter explode — ONE-WAY (Step 3). Each shard (in its own
+   right-to-left staggered turn, via --stagger-delay) violently explodes
+   outward and SHRINKS to nothing via scale(0) — starting from the
+   .p2--cracking resting state (scale(0.95)) so there's no visual jump when
+   the animation begins. No hold, no return — once gone, gone for good.
+   Longhand animation-* properties are used here (not the `animation`
+   shorthand) specifically so this rule does NOT reset the animation-delay
+   set on the base .p2__shard rule above — the shorthand would silently
+   zero out the per-shard stagger.
+   .p2--shattering is added by JS once the whole crack wave has finished
+   sweeping across plus --crack-hold's extra pause (see runExplode), and
+   never removed (one-way reveal). Tune via --p2-shatter-duration
+   (per-shard base length, before stagger) or any shard's
+   --shard-dx/--shard-dy/--shard-rot (set by the JS generator). ── */
+.p2__task-card.p2--shattering .p2__shard {
+  animation-name: p2-shard-shatter;
+  animation-duration: var(--p2-shatter-duration);
+  animation-fill-mode: both;
+}
+@keyframes p2-shard-shatter {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(0.95); } /* matches the .p2--cracking resting state exactly — no jump */
+  100% { transform: translate(var(--shard-dx), var(--shard-dy)) rotate(var(--shard-rot)) scale(0);
+         animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1); } /* single snappy explosive burst, shrinking to nothing */
+}
 /* ═══════════════════════════════════════════
    Panel 4 — Testimonials
    ═══════════════════════════════════════════ */
@@ -2905,7 +3017,7 @@ html, body {
     <div class="panel" data-panel="2">
       <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 2 — כשהל״ן שייך למחלה">
         <div class="panel__tab-title-wrap">
-          <span class="panel__tab-title">הלו״ז שייך למחלה</span>
+          <span class="panel__tab-title">המחלה שולטת בלו"ז</span>
         </div>
         <span class="panel__tab-num">2</span>
       </div>
@@ -2928,7 +3040,7 @@ html, body {
           <div class="p2__desc-section">
             <div class="p2__desc-inner">
               <p class="p2__desc-text">
-                איך מתכננים את מחר כשהגוף יכול לבטל הכל בנגיעה? החיים עם HS דורשים ניהול יומיומי של כאב וחוסר ודאות.
+               החיים עם HS דורשים ניהול יומיומי של כאב וחוסר וודאות. כיצד ניתן לתכנן משהו, כשהגוף יכול לבטל הכל ברגע? סיפורו של חולה אחד.
               </p>
             </div>
 
@@ -2939,7 +3051,7 @@ html, body {
 
           <header class="p2__schedule-header">
             <h1 class="p2__title">
-              ככה היום שלי היה אמור להיראות – אבל למחלה היו תוכניות אחרות
+             "אני מתכנן את היום שלי, אבל מי שקובע בסוף זה המחלה"
             </h1>
           </header>
 
@@ -2948,7 +3060,6 @@ html, body {
           <div class="p2__scroll-body">
             <div class="p2__schedule-frame">
 
-              <!-- Hours column + grid lines -->
               <div class="p2__hours-and-grid">
 
                 <!-- grid: horizontal-lines + lines (Figma order) -->
@@ -3000,96 +3111,67 @@ html, body {
 
               </div>
 
-              <!-- Task cards: ideal ↔ reality crossfade in-place -->
+              <!-- Task cards: absolutely positioned along the hour grid; flip to "reality" (active) on scroll -->
               <div class="p2__tasks">
 
-                <!-- 1. מקלחת — thorn.svg (אורגני לבן, טקסט כהה) -->
-                <div class="p2__task-wrap" style="top:0;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">מקלחת והתארגנות</span>
-                  </div>
-                  <div class="p2__task-reality p2__task-reality--light">
-                    <img src="thorn.svg" class="p2__task-thorn p2__task-thorn--thorn" aria-hidden="true">
-                    <div class="p2__task-reality-text">
-                      <span class="p2__task-del">מקלחת והתארגנות</span>
-                      <span class="p2__task-reason">התפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליחה ללבוש מכנסיים
-</span>
-                    </div>
-                  </div>
-                </div>
+                <!-- 1. מקלחת -->
+                <article class="p2__task-card" style="top:0;height:11.215cqh">
+                  <span class="p2__shatter-overlay" aria-hidden="true"></span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
+                  <span class="p2__task-subtitle">ההתפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליח ללבוש מכנסיים.</span>
+                </article>
 
-                <!-- 2. פרזנטציה — dark card -->
-                <div class="p2__task-wrap" style="top:13.645cqh;height:15.14cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">פרזנטציה חשובה בעבודה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">פרזנטציה חשובה בעבודה</span>
-                    <span class="p2__task-reason">מגיע באיחור, מתכווצת מכאב מול כולם ומשקרת שרק נתפס לי שריר</span>
-                  </div>
-                </div>
+                <!-- 2. פרזנטציה -->
+                <article class="p2__task-card" style="top:13.645cqh;height:45cqh">
+                  <span class="p2__shatter-overlay" aria-hidden="true"></span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
+                  <span class="p2__task-subtitle">
+                  מגיע באיחור, מתכווץ מכאב מול כולם ומשקר שרק נתפס לי שריר.
+                  </span>
+                </article>
 
-                <!-- 3. עבודה — Vector.svg (צורה כהה גדולה) -->
-                <div class="p2__task-wrap" style="top:31.215cqh;height:78.505cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">יום עבודה במשרד</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <img src="Vector.svg" class="p2__task-thorn p2__task-thorn--vector" aria-hidden="true">
-                    <span class="p2__task-del" style="position:relative;z-index:2">יום עבודה במשרד</span>
-                    <span class="p2__task-reason" style="position:relative;z-index:2">מחליפה תחבושות בסתר בשירותים ולא מצליחה לשבת על הכיסא</span>
-                  </div>
-                </div>
+                <!-- 3. עבודה -->
+                <article class="p2__task-card" style="top:61.075cqh;height:11.215cqh">
+                  <span class="p2__shatter-overlay" aria-hidden="true"></span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
+                  <span class="p2__task-subtitle">
+                  מחליף תחבושות בסתר בשירותים ולא מצליח לשבת על הכיסא.
+                  </span>
+                </article>
 
-                <!-- 4. קניות — dark card -->
-                <div class="p2__task-wrap" style="top:112.15cqh;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">קניות בסופר בדרך חזרה הביתה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">קניות בסופר בדרך חזרה הביתה</span>
-                    <span class="p2__task-reason">חותכת הביתה, מותשת לגמרי מהמאמץ הנפשי להסתיר</span>
-                  </div>
-                </div>
+                <!-- 4. קניות -->
+                <article class="p2__task-card" style="top:74.72cqh;height:11.215cqh">
+                  <span class="p2__shatter-overlay" aria-hidden="true"></span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
+                  <span class="p2__task-subtitle">
+                  חותך הביתה, מותש לגמרי מהמאמץ הנפשי להסתיר.
+                  </span>
+                </article>
 
-                <!-- 5. ספורט — dark card -->
-                <div class="p2__task-wrap" style="top:125.79cqh;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">אימון כושר עם חברה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">אימון כושר עם חברה</span>
-                    <span class="p2__task-reason">בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים
-</span>
-                  </div>
-                </div>
+                <!-- 5. ספורט -->
+                <article class="p2__task-card" style="top:88.365cqh;height:11.215cqh">
+                  <span class="p2__shatter-overlay" aria-hidden="true"></span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חבר</span></span>
+                  <span class="p2__task-subtitle">
+                    בוטל, כל תנועה כואבת והגוף דורש רק מנוחה וקומפרסים
+                  </span>
+                </article>
 
-                <!-- 6. דייט — thorn3.svg (אורגני לבן, טקסט כהה) -->
-                <div class="p2__task-wrap" style="top:139.44cqh;height:14.766cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">דייט ראשון</span>
-                  </div>
-                  <div class="p2__task-reality p2__task-reality--light">
-                    <img src="thorn3.svg" class="p2__task-thorn p2__task-thorn--thorn3" aria-hidden="true">
-                    <div class="p2__task-reality-text">
-                      <span class="p2__task-del">דייט ראשון</span>
-                      <span class="p2__task-reason">ביטלתי, משותקת מהחרדה שייגעל מהריח או מכתם פתאומי
-</span>
-                    </div>
-                  </div>
-                </div>
+                <!-- 6. דייט -->
+                <article class="p2__task-card" style="top:102.01cqh;height:25cqh">
+                  <span class="p2__shatter-overlay" aria-hidden="true"></span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
+                  <span class="p2__task-subtitle">
+                   ביטלתי, משותק מהחרדה שהיא תיגעל מהריח או מכתם פתאומי על הבגדים.
+                  </span>
+                </article>
 
-                <!-- 7. שינה — dark card -->
-                <div class="p2__task-wrap" style="top:156.64cqh;height:11.215cqh">
-                  <div class="p2__task-ideal">
-                    <span class="p2__task-label">התארגנות לשינה</span>
-                  </div>
-                  <div class="p2__task-reality">
-                    <span class="p2__task-del">התארגנות לשינה</span>
-                    <span class="p2__task-reason">פורסת מגבת מתחת לסדין ונאבקת למצוא תנוחה שלא תכאיב
-</span>
-                  </div>
-                </div>
+                <!-- 7. שינה -->
+                <article class="p2__task-card" style="top:129.44cqh;height:11.215cqh">
+                  <span class="p2__shatter-overlay" aria-hidden="true"></span>
+                  <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
+                  <span class="p2__task-subtitle">פורס מגבת מתחת לסדין ונאבק למצוא תנוחה שלא תכאיב</span>
+                </article>
 
               </div>
 
@@ -3904,25 +3986,285 @@ html, body {
 
 
     /* ══════════════════════════════════════════
-       Panel 2 — Crushing Scroll (crossfade in-place)
+       Panel 2 — Shatter grid generation (per-card, dynamic density)
+       Cards now have very different heights (restored variable-height
+       layout, ~11cqh to ~78cqh — roughly a 7× range), so a single shared
+       grid would make the tall card's shards huge/stretched and the short
+       cards' shards tiny. Instead, each card measures its own rendered
+       pixel size and gets its own row/column count, targeting a roughly
+       constant shard edge length (TARGET_SHARD_PX) so every card's pieces
+       stay similarly small and chunky. Runs synchronously before the
+       IntersectionObserver IIFE below, so shards already exist by the time
+       any card can trigger.
        ══════════════════════════════════════════ */
     (function () {
-      const scrollEl  = document.querySelector('.p2__scroll-body');
-      const taskWraps = Array.from(document.querySelectorAll('.p2__task-wrap'));
-      if (!scrollEl || !taskWraps.length) return;
+      const TARGET_SHARD_PX = 30;      // desired shard edge length — the "chunky, uniform size" knob
+      const MIN_COLS = 4, MAX_COLS = 16;
+      const MIN_ROWS = 3, MAX_ROWS = 12; // clamps very tall cards from generating hundreds of rows
+      const STAGGER_WINDOW = 0.4;      // total right-to-left sweep time (s) — same regardless of column count
+      const CRACK_TRANSITION_S = 0.15; // must match .p2__shard's transition-duration in CSS
+      const CRACK_LEAD_PX = 35;        // "30-40px of the card length" — extra pause before the explosion wave starts chasing the crack wave
+      // ── Tweak the organic irregularity here ──
+      // JITTER_MIN/MAX: how far (as a fraction of one grid cell's own size)
+      // each INTERIOR grid POINT is nudged, independently in both X and Y.
+      // Raise for more chaotic/warped shards, lower for a cleaner grid.
+      const JITTER_MIN = 0.15, JITTER_MAX = 0.25; // ±15–25% of a cell's own size
+
+      function jitterAmount(cellSize) {
+        return (JITTER_MIN + Math.random() * (JITTER_MAX - JITTER_MIN)) * cellSize * (Math.random() < 0.5 ? -1 : 1);
+      }
+
+      // Build a (rows+1) × (cols+1) grid of points for ONE card. Each
+      // INTERIOR point (not on any outer edge) gets its own independent
+      // random offset in X *and* Y — true 2D chaos, not just wavy grid
+      // lines — while every point on the outer boundary stays at its exact
+      // nominal position so the assembled shape is still a perfect
+      // gap-free rectangle. Every cell that touches a given point reads
+      // this same shared (already-jittered) coordinate, which is what keeps
+      // adjacent pieces interlocking with no gaps despite the heavy warp.
+      function buildShardDefs(cols, rows) {
+        const cellW = 100 / cols, cellH = 100 / rows;
+        const points = [];
+        for (let row = 0; row <= rows; row++) {
+          const rowPoints = [];
+          for (let col = 0; col <= cols; col++) {
+            const onBoundary = row === 0 || row === rows || col === 0 || col === cols;
+            const x = col * cellW + (onBoundary ? 0 : jitterAmount(cellW));
+            const y = row * cellH + (onBoundary ? 0 : jitterAmount(cellH));
+            rowPoints.push([x, y]);
+          }
+          points.push(rowPoints);
+        }
+
+        const shardDefs = [];
+        // Columns iterate RIGHT-TO-LEFT (high index → low) so the DOM order
+        // ends with the leftmost/most-delayed shard — lets runExplode() below
+        // keep using "the last shard in the DOM" to know the whole staggered
+        // sequence has actually finished. Stagger delay is normalized to
+        // STAGGER_WINDOW so a wide (many-column) card doesn't take
+        // dramatically longer to finish exploding than a narrow one.
+        for (let col = cols - 1; col >= 0; col--) {
+          const staggerDelay = cols > 1 ? (cols - 1 - col) / (cols - 1) * STAGGER_WINDOW : 0;
+          for (let row = 0; row < rows; row++) {
+            const tl = points[row][col], tr = points[row][col + 1];
+            const bl = points[row + 1][col], br = points[row + 1][col + 1];
+            const cx = (tl[0] + tr[0] + bl[0] + br[0]) / 4;
+            const cy = (tl[1] + tr[1] + bl[1] + br[1]) / 4;
+
+            // checkerboard diagonal alternation, purely for visual variety
+            const evenCell = (row + col) % 2 === 0;
+            const triangles = evenCell
+              ? [[tl, tr, br], [tl, br, bl]]
+              : [[tl, tr, bl], [tr, br, bl]];
+
+            triangles.forEach((tri, i) => {
+              const pointsStr = tri.map(([x, y]) => `${x.toFixed(2)}% ${y.toFixed(2)}%`).join(', ');
+              // Outward direction from card center (50,50); a small opposing
+              // nudge per triangle-within-a-cell so both halves of a cell fly
+              // slightly differently, and center-ish cells still get a real
+              // nonzero explosion vector.
+              const nudge = i === 0 ? 18 : -18;
+              const dx = Math.round((cx - 50) * 1.7 + nudge);
+              const dy = Math.round((cy - 50) * 1.7 - nudge * 0.6);
+              const rot = Math.round((Math.random() * 90 - 45) + (i === 0 ? 20 : -20));
+              shardDefs.push({ points: pointsStr, dx, dy, rot, staggerDelay, cx, cy });
+            });
+          }
+        }
+        return shardDefs;
+      }
+
+      document.querySelectorAll('.p2__task-card').forEach((card) => {
+        const overlay = card.querySelector('.p2__shatter-overlay');
+        if (!overlay) return;
+        const w = card.clientWidth, h = card.clientHeight;
+        const cols = Math.min(MAX_COLS, Math.max(MIN_COLS, Math.round(w / TARGET_SHARD_PX)));
+        const rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, Math.round(h / TARGET_SHARD_PX)));
+
+        // How long runExplode should wait after the crack starts before
+        // adding .p2--shattering: the full crack-wave sweep time
+        // (STAGGER_WINDOW) + the time each shard's own crack transition
+        // takes to settle (CRACK_TRANSITION_S) + a deliberate extra pause
+        // (the requested ~30-40px lead, converted to seconds using this
+        // card's own width) so the explosion visibly starts a beat after
+        // the whole card has finished cracking, not the instant it does.
+        // Clamped so the pause stays perceptible regardless of card width.
+        const crackLeadS = Math.min(0.15, Math.max(0.03, (CRACK_LEAD_PX / w) * STAGGER_WINDOW));
+        card.style.setProperty('--crack-hold', (STAGGER_WINDOW + CRACK_TRANSITION_S + crackLeadS).toFixed(3) + 's');
+
+        buildShardDefs(cols, rows).forEach((def) => {
+          const shard = document.createElement('span');
+          shard.className = 'p2__shard';
+          shard.style.clipPath = `polygon(${def.points})`;
+          // Shrinking a clip-path shard via scale() uses the element's own
+          // (full-card-sized) box center by default — that would pull every
+          // triangle toward the CARD's center instead of its own local area
+          // as it shrinks, breaking the even-fracture-line look. Setting the
+          // transform-origin to this shard's own cell centroid fixes it.
+          shard.style.transformOrigin = `${def.cx.toFixed(2)}% ${def.cy.toFixed(2)}%`;
+          shard.style.setProperty('--shard-dx', def.dx + 'px');
+          shard.style.setProperty('--shard-dy', def.dy + 'px');
+          shard.style.setProperty('--shard-rot', def.rot + 'deg');
+          shard.style.setProperty('--stagger-delay', def.staggerDelay.toFixed(2) + 's');
+          overlay.appendChild(shard);
+        });
+      });
+    }());
+
+
+    /* ══════════════════════════════════════════
+       Panel 2 — Explode-on-scroll (IntersectionObserver + sequential queue)
+       Each card flips from "ideal" (black) to "reality" (cream, active) as
+       the user scrolls past it, one at a time — a small queue makes sure
+       that even if several cards become eligible in the same scroll tick,
+       they still animate one after another instead of all at once.
+       ══════════════════════════════════════════ */
+    (function () {
+      const scrollEl = document.querySelector('.p2__scroll-body');
+      const cards = Array.from(document.querySelectorAll('.p2__task-card'));
+      if (!scrollEl || !cards.length) return;
       const p2Panel = scrollEl.closest('.panel');
 
-      scrollEl.addEventListener('scroll', () => {
-        if (!p2Panel || !p2Panel.classList.contains('panel--active') || scrollEl.clientHeight === 0) return;
-        const viewBottom = scrollEl.scrollTop + scrollEl.clientHeight;
-        taskWraps.forEach(wrap => {
-          if (wrap.classList.contains('p2--crushed')) return;
-          const wrapTop = parseFloat(wrap.style.top) || 0;
-          const wrapH   = parseFloat(wrap.style.height) || 120;
-          if (wrapTop + wrapH * 0.5 < viewBottom - 40) {
-            wrap.classList.add('p2--crushed');
-          }
+      // ── Typewriter: capture each card's real subtitle text once, then
+      // clear it — JS types it back in letter-by-letter once the
+      // strikethrough finishes drawing (see runExplode below). RTL Hebrew
+      // needs no special handling beyond direction:rtl already being set on
+      // .p2__task-subtitle — revealing a growing prefix of the string
+      // renders correctly right-to-left as-is. ──
+      cards.forEach((card) => {
+        const subtitle = card.querySelector('.p2__task-subtitle');
+        if (!subtitle) return;
+        subtitle.dataset.fullText = subtitle.textContent.trim();
+        subtitle.textContent = '';
+      });
+      function typewriteForward(el, text, speedMs) {
+        let i = 0;
+        (function step() {
+          el.textContent = text.slice(0, i);
+          if (i++ < text.length) setTimeout(step, speedMs);
+        })();
+      }
+
+      // ── Tweak pacing here ──
+      // STAGGER_GAP_MS: pause AFTER one card finishes its burst
+      // before the next one starts — raise this for a slower, more deliberate reveal.
+      const STAGGER_GAP_MS = 450;
+
+      let queue = [];
+      let isProcessing = false;
+
+      function enqueue(card) {
+        if (card.classList.contains('p2--queued') || card.classList.contains('p2--active')) return;
+        card.classList.add('p2--queued');
+        queue.push(card);
+        processQueue();
+      }
+
+      function processQueue() {
+        if (isProcessing || !queue.length) return;
+        isProcessing = true;
+        const card = queue.shift();
+        runExplode(card, () => {
+          setTimeout(() => { isProcessing = false; processQueue(); }, STAGGER_GAP_MS);
         });
+      }
+
+      function runExplode(card, onDone) {
+        // Step 1 (The Crack + instant Reality swap): fires synchronously —
+        // the card flips to white and the title to its final dark color in
+        // the exact same instant cracking starts, so it's already legible
+        // through the crack wave's gaps from frame one. Each shard's own
+        // --stagger-delay (set by the generation script) drives a
+        // right-to-left crack ripple via a CSS transition — NOT an instant
+        // snap — so the cracks visibly sweep across the card.
+        card.classList.add('p2--cracking');
+        card.classList.add('p2--active');
+        card.classList.add('p2--bursting'); // lifts clipping + raises z-index so shards can fly past the card's edges once they start moving
+        observer.unobserve(card);           // one-way reveal — doesn't revert on scroll-up
+
+        // Typewriter: scheduled from this same instant, because that's also
+        // when the CSS strikethrough's own transition-delay (--p2-strike-
+        // delay) starts counting down (see .p2--active .p2__task-title-
+        // text::after) — keeps the typewriter's start in sync with when the
+        // strikethrough actually finishes drawing on screen.
+        const cs = getComputedStyle(card);
+        const strikeDelayMs = parseFloat(cs.getPropertyValue('--p2-strike-delay')) * 1000 || 0;
+        const strikeDrawMs = parseFloat(cs.getPropertyValue('--p2-strike-draw-duration')) * 1000 || 0;
+        const subtitle = card.querySelector('.p2__task-subtitle');
+        setTimeout(() => {
+          if (subtitle) typewriteForward(subtitle, subtitle.dataset.fullText || '', 35);
+        }, strikeDelayMs + strikeDrawMs);
+
+        // Step 2 (The Explosion) only starts once the ENTIRE crack wave has
+        // finished sweeping across (--crack-hold, JS-computed per card in
+        // the generation script: STAGGER_WINDOW + crack-transition duration
+        // + the requested ~30-40px lead). Adding .p2--shattering any
+        // earlier would break the crack wave for later columns —
+        // animation-fill-mode:both means the moment that class lands, every
+        // shard immediately snaps to the explosion keyframe's 0% state
+        // (scale(0.95)), regardless of whether that shard's own crack
+        // transition has even started yet.
+        const crackHoldMs = parseFloat(cs.getPropertyValue('--crack-hold')) * 1000 || 550;
+        setTimeout(() => {
+          card.classList.add('p2--shattering');
+
+          const shards = card.querySelectorAll('.p2__shard');
+          const lastShard = shards[shards.length - 1]; // leftmost column — largest --stagger-delay, finishes last
+          lastShard.addEventListener('animationend', function handler() {
+            lastShard.removeEventListener('animationend', handler);
+            // Cleanup: shards are fully gone — restore normal clipping and
+            // tear down the overlay. One-way: nothing here ever reverts.
+            card.classList.remove('p2--bursting');
+            card.querySelector('.p2__shatter-overlay').remove();
+            onDone();
+          }, { once: true });
+        }, crackHoldMs);
+      }
+
+      // ── Tweak these two to change WHEN a card triggers ──
+      // threshold: 0 means "fire as soon as any pixel crosses the trigger line".
+      // rootMargin: '0px 0px -20% 0px' shrinks the bottom of the observed area
+      // by 20%, so a card only counts as "intersecting" once it has scrolled
+      // up past that line — i.e. the trigger line sits 20% up from the bottom
+      // of the scroll container. Increase the 20% to move the trigger line
+      // higher/earlier; decrease it to trigger later/lower.
+      const OBSERVER_THRESHOLD = 0;
+      const OBSERVER_ROOT_MARGIN = '0px 0px -20% 0px';
+
+      const observer = new IntersectionObserver((entries) => {
+        if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) enqueue(entry.target);
+        });
+      }, {
+        root: scrollEl,               // observe against the scroll container, not the window
+        threshold: OBSERVER_THRESHOLD,
+        rootMargin: OBSERVER_ROOT_MARGIN,
+      });
+
+      // ── Bug fix: don't start observing until the user actually scrolls ──
+      // Attaching the observer before any scroll means its very first
+      // callback reports whatever already intersects at scrollTop 0, which
+      // used to explode the first few cards on page load. So cards are only
+      // handed to the observer once a real scroll has happened.
+      let started = false;
+      function startObserving() {
+        if (started) return;
+        started = true;
+        cards.forEach((card) => observer.observe(card));
+      }
+
+      scrollEl.addEventListener('scroll', () => {
+        if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
+        startObserving();
+
+        // ── Bug fix: the last card's trigger line can sit past the bottom of
+        // the scrollable area, so it may never scroll up to meet it. Once the
+        // user has scrolled to (essentially) the bottom, queue up any card(s)
+        // still in "ideal" mode so the sequence always finishes — they still
+        // go through the same one-at-a-time queue, not an instant burst. ──
+        const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 2;
+        if (atBottom) cards.forEach(enqueue);
       }, { passive: true });
     }());
 
