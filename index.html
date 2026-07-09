@@ -717,18 +717,28 @@ html, body {
 }
 .p2__schedule-frame {
   width: 100%;
-  min-height: 163.3cqh; /* fixed intrinsic height — keeps the frame's scrollable
-                            range constant regardless of how the absolutely-
-                            positioned cards/shards below transform, since
-                            absolutely positioned descendants never contribute
-                            to an ancestor's size once that ancestor has an
-                            explicit height. Matches the current card layout's
-                            total extent (last card's bottom + .p2__tasks's own
-                            top offset + this frame's own bottom padding) —
-                            recompute this if card heights/positions change. */
+  min-height: 0; /* real height is set on load (and kept in sync on resize) by
+                    JS measuring .p2__tasks's actual rendered extent — see the
+                    "Panel 2 — keep frame height in sync" script. Needed because
+                    .p2__tasks is position:absolute (it overlays the hour grid),
+                    so it never contributes to this frame's size on its own;
+                    but its content is now a flex column of cards (real 16px
+                    gaps, no hand-computed cqh offsets — see .p2__tasks below),
+                    so its rendered height isn't a single static number anymore
+                    and has to be measured instead of hardcoded. */
   position: relative; /* anchors .p2__tasks (and each .p2__task-card's inline
-                          top/height) below */
-  overflow-x: hidden;  /* exploding shards must never cause horizontal scroll */
+                          height) below */
+  overflow: clip; /* NOT just overflow-x:hidden — exploding shards translate()
+                      far outside their card during the burst, and translate
+                      counts toward an ancestor's *scrollable* overflow region
+                      even when clipped visually by overflow:hidden. clip (unlike
+                      hidden) excludes that "ink overflow" from the scrollable
+                      region entirely, so it can never inflate .p2__scroll-body's
+                      scrollHeight mid-animation (the cause of the double-
+                      scrollbar/frame-shift bug). */
+  contain: paint; /* belt-and-suspenders: guarantees shards can only ever
+                      paint within this box's own bounds, never leak into any
+                      ancestor's scrollable region. */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -824,28 +834,52 @@ html, body {
   color: var(--color-light);
 }
 
-/* ── Task cards: absolutely positioned along the hour grid, variable height
-   per card (each card's exact top/height comes from its inline style,
-   restored from the pre-refactor layout) — explode-on-scroll, unchanged. ──
+/* ── Task cards: flow in a flex column (.p2__tasks above) overlaid on the
+   hour grid, variable height per card (each card's own duration-based
+   height comes from its inline style) — explode-on-scroll, unchanged. ──
    All sizing/timing knobs live here as custom properties — tweak these,
    not the rules below, to adjust spacing or the "explode" punch feel. */
 .p2__tasks {
   --p2-shatter-duration: 0.6s;     /* PER-SHARD explode duration (one-way, no hold/return) — each shard's own --stagger-delay (JS-injected) adds on top of this */
   --p2-strike-top: 68%;         /* strikethrough vertical position — pushed down so it doesn't clip the tops of Hebrew glyphs */
-  --p2-strike-delay: 0.45s;     /* real seconds after the card settles before the strikethrough starts appearing */
-  --p2-strike-draw-duration: 1.3s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
-  position: absolute;
-  top: 14.206cqh;
+  --p2-strike-delay: 0.30s;     /* real seconds after the card settles before the strikethrough starts appearing */
+  --p2-strike-draw-duration: 0.8s; /* how long the strikethrough takes to visibly draw across the text (1.2–1.5s) */
+  position: absolute; /* overlays the hour grid (.p2__hours-and-grid), which
+                          stays in-flow and paints first, behind this */
+  top: 9.655cqh; /* was 14.206cqh — trimmed ~25% so the first card starts a
+                     little higher in the grid */
   left: 0;
   width: 100%;
   font-family: 'Narkiss Asaf TRIAL';
+  /* Cards flow in a normal flex column instead of each being individually
+     absolutely-positioned against a hand-computed cqh `top`. That old
+     approach assumed every card renders at exactly its inline `height`, but
+     .p2__task-card also has a min-height:120px floor — at plenty of
+     realistic viewport heights a short card's cqh height resolves below
+     120px, the floor kicks in, and every card after it (still positioned
+     against the *nominal* height) drifts out of sync, producing uneven
+     gaps. A flex column with a real, fixed 16px gap can never drift: each
+     card's position is always exactly "previous card's real rendered
+     bottom + 16px", regardless of what the cqh/min-height floor produces. */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* cards are narrower than .p2__tasks (44.922cqw of
+                               it) and pinned to its physical left edge via
+                               each card's own margin-left below */
+  gap: 16px;
+  padding-right: 120px;
+  padding-left: 48px;
 }
 
 /* ── Card: black/bordered by default, flips to solid cream when active ── */
 .p2__task-card {
-  position: absolute; /* positioned via each card's own inline top/height —
-                          restored from the pre-refactor layout */
-  left: 1.465cqw;
+  position: relative; /* no longer absolutely positioned (see .p2__tasks
+                          above) — still `relative` (not static) so it stays
+                          the positioning context for its own absolutely-
+                          positioned children (.p2__shatter-overlay/.p2__shard) */
+  margin-left: 1.465cqw; /* physical offset from .p2__tasks's left edge —
+                             replaces the old `left` now that the card is a
+                             flex item, not absolutely positioned */
   width: 44.922cqw;
   min-height: 120px; /* safety floor so very short cards never shrink below a usable size */
   box-sizing: border-box;
@@ -865,7 +899,7 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-start; /* top-right aligned content, not vertically centered */
-  gap: 4px;
+  gap: 8px;
   /* no transition here on purpose — JS adds .p2--active in the same
      instant as the trigger (Step 1), so the flip is just a plain instant
      state change, no color interpolation at all */
@@ -994,9 +1028,13 @@ html, body {
      across the text instead of snapping fully on. */
   transition: opacity 0.2s ease, transform var(--p2-strike-draw-duration) ease;
 }
-/* Starts appearing shortly after the card has settled into Reality mode —
-   tune via --p2-strike-delay above. */
-.p2__task-card.p2--active .p2__task-title-text::after {
+/* Deliberately keyed off .p2--struck, NOT .p2--active: .p2--active lands the
+   instant cracking starts (see below), but the strikethrough must not begin
+   drawing until the explosion has actually finished for this card — JS only
+   adds .p2--struck at that later point (the last shard's animationend, see
+   runExplode), so the line never draws while shards are still on screen.
+   --p2-strike-delay is just a small residual pause after .p2--struck lands. */
+.p2__task-card.p2--struck .p2__task-title-text::after {
   opacity: 1;
   transform: translateY(-50%) scaleX(1);
   transition-delay: var(--p2-strike-delay);
@@ -1044,9 +1082,12 @@ html, body {
    shorthand) specifically so this rule does NOT reset the animation-delay
    set on the base .p2__shard rule above — the shorthand would silently
    zero out the per-shard stagger.
-   .p2--shattering is added by JS once the whole crack wave has finished
-   sweeping across plus --crack-hold's extra pause (see runExplode), and
-   never removed (one-way reveal). Tune via --p2-shatter-duration
+   .p2--shattering is added by JS once --crack-hold elapses (see
+   runExplode) — deliberately a FRACTION of the full crack-wave sweep time
+   (CRACK_HOLD_EXPLODE_FRACTION, see the shard-gen script), so the explosion
+   starts slightly before the sweep has visibly finished, overlapping the
+   tail of the crack wave on purpose. Never removed (one-way reveal). Tune
+   via --p2-shatter-duration
    (per-shard base length, before stagger) or any shard's
    --shard-dx/--shard-dy/--shard-rot (set by the JS generator). ── */
 .p2__task-card.p2--shattering .p2__shard {
@@ -3100,18 +3141,18 @@ html, body {
 
               </div>
 
-              <!-- Task cards: absolutely positioned along the hour grid; flip to "reality" (active) on scroll -->
+              <!-- Task cards: flex column overlaid on the hour grid; flip to "reality" (active) on scroll -->
               <div class="p2__tasks">
 
                 <!-- 1. מקלחת -->
-                <article class="p2__task-card" style="top:0;height:11.215cqh">
+                <article class="p2__task-card" style="height:11.215cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">מקלחת והתארגנות</span></span>
                   <span class="p2__task-subtitle">ההתפרצות במפשעה, שעה של שטיפות וחבישות, בקושי מצליח ללבוש מכנסיים.</span>
                 </article>
 
-                <!-- 2. פרזנטציה -->
-                <article class="p2__task-card" style="top:13.645cqh;height:45cqh">
+                <!-- 2. פרזנטציה: ~2h, 2× the 1h unit (11.215cqh) -->
+                <article class="p2__task-card" style="height:22.43cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">פרזנטציה חשובה בעבודה</span></span>
                   <span class="p2__task-subtitle">
@@ -3119,8 +3160,8 @@ html, body {
                   </span>
                 </article>
 
-                <!-- 3. עבודה -->
-                <article class="p2__task-card" style="top:61.075cqh;height:11.215cqh">
+                <!-- 3. עבודה: ~5h, 5× the 1h unit (11.215cqh) -->
+                <article class="p2__task-card" style="height:56.075cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">יום עבודה במשרד</span></span>
                   <span class="p2__task-subtitle">
@@ -3129,7 +3170,7 @@ html, body {
                 </article>
 
                 <!-- 4. קניות -->
-                <article class="p2__task-card" style="top:74.72cqh;height:11.215cqh">
+                <article class="p2__task-card" style="height:11.215cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">קניות בסופר בדרך חזרה הביתה</span></span>
                   <span class="p2__task-subtitle">
@@ -3137,8 +3178,8 @@ html, body {
                   </span>
                 </article>
 
-                <!-- 5. ספורט -->
-                <article class="p2__task-card" style="top:88.365cqh;height:11.215cqh">
+                <!-- 5. ספורט: ~2h, 2× the 1h unit (11.215cqh) -->
+                <article class="p2__task-card" style="height:22.43cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">אימון כושר עם חבר</span></span>
                   <span class="p2__task-subtitle">
@@ -3146,8 +3187,8 @@ html, body {
                   </span>
                 </article>
 
-                <!-- 6. דייט -->
-                <article class="p2__task-card" style="top:102.01cqh;height:25cqh">
+                <!-- 6. דייט: ~2h, 2× the 1h unit (11.215cqh) -->
+                <article class="p2__task-card" style="height:22.43cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">דייט ראשון</span></span>
                   <span class="p2__task-subtitle">
@@ -3156,7 +3197,7 @@ html, body {
                 </article>
 
                 <!-- 7. שינה -->
-                <article class="p2__task-card" style="top:129.44cqh;height:11.215cqh">
+                <article class="p2__task-card" style="height:11.215cqh">
                   <span class="p2__shatter-overlay" aria-hidden="true"></span>
                   <span class="p2__task-title"><span class="p2__task-title-text">התארגנות לשינה</span></span>
                   <span class="p2__task-subtitle">פורס מגבת מתחת לסדין ונאבק למצוא תנוחה שלא תכאיב</span>
@@ -4003,6 +4044,31 @@ html, body {
 
 
     /* ══════════════════════════════════════════
+       Panel 2 — keep frame height in sync
+       .p2__tasks is position:absolute (it overlays the hour grid behind it),
+       so its flex-column content — however tall the cards actually render —
+       never contributes to .p2__schedule-frame's own size. The frame needs
+       an explicit height anyway so .p2__scroll-body has something to scroll
+       (absolutely positioned descendants don't grow an ancestor otherwise).
+       Measure .p2__tasks's real rendered extent instead of hand-computing a
+       static cqh number (which is exactly what went stale in the old
+       per-card top-offset layout) — and re-measure via ResizeObserver so it
+       stays correct as cqh-based card heights change on viewport resize.
+       ══════════════════════════════════════════ */
+    (function () {
+      const frame = document.querySelector('.p2__schedule-frame');
+      const tasksEl = document.querySelector('.p2__tasks');
+      if (!frame || !tasksEl) return;
+      function syncFrameHeight() {
+        const framePaddingBottom = parseFloat(getComputedStyle(frame).paddingBottom) || 0;
+        frame.style.minHeight = (tasksEl.offsetTop + tasksEl.offsetHeight + framePaddingBottom) + 'px';
+      }
+      new ResizeObserver(syncFrameHeight).observe(tasksEl);
+      syncFrameHeight();
+    }());
+
+
+    /* ══════════════════════════════════════════
        Panel 2 — Shatter grid generation (per-card, dynamic density)
        Cards now have very different heights (restored variable-height
        layout, ~11cqh to ~78cqh — roughly a 7× range), so a single shared
@@ -4017,10 +4083,19 @@ html, body {
     (function () {
       const TARGET_SHARD_PX = 30;      // desired shard edge length — the "chunky, uniform size" knob
       const MIN_COLS = 4, MAX_COLS = 16;
-      const MIN_ROWS = 3, MAX_ROWS = 12; // clamps very tall cards from generating hundreds of rows
+      const MIN_ROWS = 3, MAX_ROWS = 15; // clamps very tall cards from generating hundreds of rows —
+                                          // raised from 12 to 15 so the tallest card (Task 3, ~5×
+                                          // the 1h unit) still gets its natural row count instead of
+                                          // being squashed into fewer, visibly taller-than-wide shards
       const STAGGER_WINDOW = 0.4;      // total right-to-left sweep time (s) — same regardless of column count
       const CRACK_TRANSITION_S = 0.15; // must match .p2__shard's transition-duration in CSS
       const CRACK_LEAD_PX = 35;        // "30-40px of the card length" — extra pause before the explosion wave starts chasing the crack wave
+      const CRACK_HOLD_EXPLODE_FRACTION = 0.78; // explosion now fires at ~78% of the full
+                                          // crack-hold time (instead of waiting for 100%+lead) so
+                                          // the last column or two are still visibly cracking when
+                                          // the first shards start flying — an intentional overlap
+                                          // between the crack wave's tail and the explosion's start,
+                                          // not a full simultaneous snap. Keep within ~0.70–0.85.
       // ── Tweak the organic irregularity here ──
       // JITTER_MIN/MAX: how far (as a fraction of one grid cell's own size)
       // each INTERIOR grid POINT is nudged, independently in both X and Y.
@@ -4099,15 +4174,17 @@ html, body {
         const rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, Math.round(h / TARGET_SHARD_PX)));
 
         // How long runExplode should wait after the crack starts before
-        // adding .p2--shattering: the full crack-wave sweep time
+        // adding .p2--shattering. The full crack-wave sweep time is
         // (STAGGER_WINDOW) + the time each shard's own crack transition
         // takes to settle (CRACK_TRANSITION_S) + a deliberate extra pause
         // (the requested ~30-40px lead, converted to seconds using this
-        // card's own width) so the explosion visibly starts a beat after
-        // the whole card has finished cracking, not the instant it does.
-        // Clamped so the pause stays perceptible regardless of card width.
+        // card's own width) — but --crack-hold itself is only
+        // CRACK_HOLD_EXPLODE_FRACTION of that total, so the explosion
+        // deliberately fires before the sweep has fully finished (see that
+        // constant above for why). Clamped so the pause stays perceptible
+        // regardless of card width.
         const crackLeadS = Math.min(0.15, Math.max(0.03, (CRACK_LEAD_PX / w) * STAGGER_WINDOW));
-        card.style.setProperty('--crack-hold', (STAGGER_WINDOW + CRACK_TRANSITION_S + crackLeadS).toFixed(3) + 's');
+        card.style.setProperty('--crack-hold', ((STAGGER_WINDOW + CRACK_TRANSITION_S + crackLeadS) * CRACK_HOLD_EXPLODE_FRACTION).toFixed(3) + 's');
 
         buildShardDefs(cols, rows).forEach((def) => {
           const shard = document.createElement('span');
@@ -4166,6 +4243,12 @@ html, body {
       // STAGGER_GAP_MS: pause AFTER one card finishes its burst
       // before the next one starts — raise this for a slower, more deliberate reveal.
       const STAGGER_GAP_MS = 450;
+      // SUBTITLE_OVERLAP_FRACTION: how far into the strikethrough's draw
+      // animation (0–1) the subtitle typewriter starts, instead of waiting
+      // for the line to be 100% drawn — the title should still be visibly
+      // mid-strikethrough when the subtitle starts typing. Keep within
+      // ~0.55–0.7 so the line is still clearly drawing, not already done.
+      const SUBTITLE_OVERLAP_FRACTION = 0.3;
 
       let queue = [];
       let isProcessing = false;
@@ -4199,28 +4282,22 @@ html, body {
         card.classList.add('p2--bursting'); // lifts clipping + raises z-index so shards can fly past the card's edges once they start moving
         observer.unobserve(card);           // one-way reveal — doesn't revert on scroll-up
 
-        // Typewriter: scheduled from this same instant, because that's also
-        // when the CSS strikethrough's own transition-delay (--p2-strike-
-        // delay) starts counting down (see .p2--active .p2__task-title-
-        // text::after) — keeps the typewriter's start in sync with when the
-        // strikethrough actually finishes drawing on screen.
         const cs = getComputedStyle(card);
         const strikeDelayMs = parseFloat(cs.getPropertyValue('--p2-strike-delay')) * 1000 || 0;
         const strikeDrawMs = parseFloat(cs.getPropertyValue('--p2-strike-draw-duration')) * 1000 || 0;
         const subtitle = card.querySelector('.p2__task-subtitle');
-        setTimeout(() => {
-          if (subtitle) typewriteForward(subtitle, subtitle.dataset.fullText || '', 35);
-        }, strikeDelayMs + strikeDrawMs);
 
-        // Step 2 (The Explosion) only starts once the ENTIRE crack wave has
-        // finished sweeping across (--crack-hold, JS-computed per card in
-        // the generation script: STAGGER_WINDOW + crack-transition duration
-        // + the requested ~30-40px lead). Adding .p2--shattering any
-        // earlier would break the crack wave for later columns —
-        // animation-fill-mode:both means the moment that class lands, every
-        // shard immediately snaps to the explosion keyframe's 0% state
-        // (scale(0.95)), regardless of whether that shard's own crack
-        // transition has even started yet.
+        // Step 2 (The Explosion) starts once --crack-hold elapses
+        // (JS-computed per card in the generation script: a FRACTION —
+        // CRACK_HOLD_EXPLODE_FRACTION — of the full crack-wave sweep time,
+        // so the explosion deliberately starts a little before the sweep
+        // has visibly finished, overlapping its tail rather than waiting
+        // for a hard stop). animation-fill-mode:both means the moment
+        // .p2--shattering lands, every shard immediately snaps to the
+        // explosion keyframe's 0% state (scale(0.95)), regardless of
+        // whether that shard's own crack transition has even started yet —
+        // fine for the last column or two, which is exactly the intended
+        // overlap.
         const crackHoldMs = parseFloat(cs.getPropertyValue('--crack-hold')) * 1000 || 550;
         setTimeout(() => {
           card.classList.add('p2--shattering');
@@ -4233,6 +4310,24 @@ html, body {
             // tear down the overlay. One-way: nothing here ever reverts.
             card.classList.remove('p2--bursting');
             card.querySelector('.p2__shatter-overlay').remove();
+
+            // Strikethrough is anchored HERE, not to .p2--active at
+            // crack-start — .p2--struck only lands once the explosion has
+            // fully cleared the card, so the line never draws across the
+            // title while shards are still visibly flying (see
+            // .p2--struck .p2__task-title-text::after in the CSS).
+            card.classList.add('p2--struck');
+
+            // Typewriter: anchored to this same explosion-end instant, but
+            // starts partway through the strikethrough's draw (at
+            // SUBTITLE_OVERLAP_FRACTION of strikeDrawMs) rather than waiting
+            // for it to finish — the title is still visibly mid-strikethrough
+            // when the subtitle starts typing, instead of the two feeling
+            // like two fully sequential beats.
+            setTimeout(() => {
+              if (subtitle) typewriteForward(subtitle, subtitle.dataset.fullText || '', 35);
+            }, strikeDelayMs + strikeDrawMs * SUBTITLE_OVERLAP_FRACTION);
+
             onDone();
           }, { once: true });
         }, crackHoldMs);
