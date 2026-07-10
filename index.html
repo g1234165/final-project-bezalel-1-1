@@ -2065,7 +2065,9 @@ html, body {
 .p3__col-illus--03-1,
 .p3__col-illus--03-2 { height: 148px; }
 .p3__col-illus--03-1 img { width: 124px; height: 148px; }
-.p3__col-illus--03-2 img { width: 21px; height: 69px; transform: rotate(32.67deg); }
+.p3__col-illus--03-2 img { transform: rotate(10deg); }
+.p3__col-illus--02 { width: 320px; max-width: 320px; }
+.p3__col-illus--02 img { width: 320px; height: auto; }
 .p3__col-text {
   display: flex;
   flex-direction: column;
@@ -3301,17 +3303,31 @@ html, body {
               </div>
             </div>
 
-            <!-- 02 איפה זה קורה? — absolute labels on body -->
+            <!-- 02 איפה זה קורה? — single column with bullet list, matches items 03/06 pattern -->
             <div class="p3__accordion-item" data-p3-item>
               <div class="p3__item-header"><div class="p3__item-title-row"><div class="p3__item-right"><span class="p3__item-num">(02)</span><span class="p3__item-label">איפה זה קורה?</span></div><div class="p3__chevron-wrap"><svg class="p3__chevron" viewBox="0 0 22 14" fill="none"><path d="M1 1L11 12L21 1" stroke="#F8F4EE" stroke-width="2" stroke-linecap="round"/></svg></div></div></div>
               <div class="p3__item-body">
-                <div class="p3__body-content">
+                <div class="p3__cards-container">
+                  <div class="p3__col-content">
+                    <div class="p3__col-row">
 
-                  <!-- RIGHT: description text (first in DOM = right in RTL) -->
-                  <p class="p3__body-text-02">פצעי HS עשויים להופיע כמעט בכל מקום, אך נוטים לפגוע בעיקר באזורי חיכוך ובקפלי עור כגון בתי שחי, מפשעות, ישבן ומתחת לשדיים (אצל נשים).</p>
+                      <div class="p3__col-item">
+                        <div class="p3__col-text">
+                          <p class="p3__col-body">פצעי HS עשויים להופיע כמעט בכל מקום, אך נוטים לפגוע בעיקר באזורי חיכוך ובקפלי עור כגון:</p>
+                          <ul class="p3__05-list">
+                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">בתי שחי</span></li>
+                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מפשעות</span></li>
+                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">ישבן</span></li>
+                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מתחת לשדיים (אצל נשים)</span></li>
+                          </ul>
+                        </div>
+                        <div class="p3__col-illus p3__col-illus--02">
+                          <img src="SVG/p3_02 illustration 5.svg" alt="" aria-hidden="true">
+                        </div>
+                      </div>
 
-                  <!-- LEFT: body illustration (single pre-composed SVG, includes labels) -->
-                  <img src="SVG/p3_02 illustration 3.svg" alt="Illustration" class="p3__body-svg-clean">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
