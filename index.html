@@ -546,26 +546,29 @@ html, body {
 }
 .p1__progress {
   position: absolute;
-  left: 24px;
+  left: 20px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 5;
+  border-left: 1.5px solid rgba(248,244,238,0.22);
+  padding-left: 8px;
 }
 .p1__progress-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+  width: 20px;
+  height: 1.5px;
+  border-radius: 1px;
   background: rgba(248,244,238,0.22);
-  transition: background 0.4s ease, transform 0.4s ease;
+  transition: background 0.4s ease, width 0.4s ease;
   flex-shrink: 0;
+  cursor: pointer;
 }
 .p1__progress-dot--active {
   background: rgba(248,244,238,0.85);
-  transform: scale(1.5);
+  width: 32px;
 }
 /* ═══════════════════════════════════════════
    Panel 2 — Schedule
@@ -3937,6 +3940,18 @@ html, body {
         }
         applySection(idx);
       }, { passive: true });
+
+      document.querySelectorAll('.p1__progress-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+          const idx = +dot.dataset.section;
+          const { scrollHeight, clientHeight } = doctorsMain;
+          const maxScroll = scrollHeight - clientHeight;
+          if (maxScroll <= 0) return;
+          // Snap positions: 0, maxScroll/3, 2*maxScroll/3, maxScroll
+          const target = idx === 0 ? 0 : idx === 3 ? maxScroll : (idx / 3) * maxScroll;
+          doctorsMain.scrollTo({ top: target, behavior: 'smooth' });
+        });
+      });
     }
 
     /* ══════════════════════════════════════════
