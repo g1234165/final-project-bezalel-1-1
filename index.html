@@ -532,6 +532,20 @@ html, body {
   display: flex;
   flex-direction: column;
 }
+/* Creates a snap point at scrollTop=0:
+   the ::after sits at scroll-offset 100cqh (sticky's bottom),
+   so scroll-snap-align:end fires when scrollTop + 100cqh = 100cqh → scrollTop=0 */
+.p1__doctors-sticky::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: end;
+}
 .p1__scroll-track {
   height: 40cqh;
   flex-shrink: 0;
@@ -553,11 +567,11 @@ html, body {
   flex-direction: column;
   pointer-events: auto;
   z-index: 5;
-  width: 56px;
+  width: 36px;
 }
 .p1__progress-dot {
   width: 100%;
-  height: 68px;
+  height: 56px;
   flex-shrink: 0;
   display: flex;
   align-items: flex-end;
@@ -3974,9 +3988,13 @@ html, body {
           const { scrollHeight, clientHeight } = doctorsMain;
           const maxScroll = scrollHeight - clientHeight;
           if (maxScroll <= 0) return;
-          // Snap positions: 0, maxScroll/3, 2*maxScroll/3, maxScroll
           if (idx === 0) {
+            // Snap fights scrollTo(0) — disable it briefly, jump instantly, re-enable
+            doctorsMain.style.scrollSnapType = 'none';
             doctorsMain.scrollTop = 0;
+            currentSection = -1;
+            applySection(0);
+            setTimeout(() => { doctorsMain.style.scrollSnapType = ''; }, 120);
           } else {
             const target = idx === 3 ? maxScroll : (idx / 3) * maxScroll;
             doctorsMain.scrollTo({ top: target, behavior: 'smooth' });
