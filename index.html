@@ -1453,54 +1453,37 @@ html, body {
   justify-content: flex-end;
 }
 
-/* big-right-frame-with-line */
-.p0__big-right-with-line {
-  height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  font-size: var(--fs-h2);
-}
-
-/* big-right-frame */
-.p0__big-right-frame {
+/* text-col: title/subtitle stacked above the description, fills remaining width */
+.p0__text-col {
+  flex: 1;
+  min-width: 0;
   align-self: stretch;
-  width: 50.0cqw;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 48px 80px;
-  box-sizing: border-box;
-  font-size: var(--fs-h2);
-  color: #F8F4EE;
-  font-family: 'Narkiss Asaf TRIAL';
-  text-align: right;
+  justify-content: center;
 }
 
-/* opening-text-parent */
-.p0__opening-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: 60px;
-}
-
-/* opening-text wrapper */
+/* opening-text: title + subtitle wrapper */
 .p0__opening-text {
-  width: 18.506cqw;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 48px 80px 48px;
+    box-sizing: border-box;
+    font-family: 'Narkiss Asaf TRIAL';
+    text-align: right;
 }
 
-/* question text (.div in Figma) */
-.p0__question {
+/* title (.div in Figma) — larger/bold headline */
+.p0__title {
   align-self: stretch;
   position: relative;
-  line-height: 100%;
+  line-height: 120%;
   font-family: 'Narkiss Asaf TRIAL';
   font-style: normal;
-  font-weight: 400;
   font-size: var(--fs-h2);
   color: #F8F4EE;
   text-align: right;
@@ -1508,14 +1491,30 @@ html, body {
   margin: 0;
 }
 
-/* navigation-barlogo-hs */
+/* subtitle — smaller/lighter, muted */
+.p0__subtitle {
+    align-self: stretch;
+    position: relative;
+    line-height: 100%;
+    font-family: 'Narkiss Asaf TRIAL';
+    font-style: normal;
+    font-size: var(--fs-h3);
+    color: #F8F4EE;
+    text-align: right;
+    direction: rtl;
+    margin: 0;
+}
+
+/* navigation-barlogo-hs: logo's own boxed column, flanked by .p0__v-line dividers */
 .p0__logo-nav {
-  height: 11.215cqh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 60px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 /* navigation-barlogo-hs-child */
@@ -2905,8 +2904,8 @@ html, body {
          ───────────────────────────── -->
     <div class="panel" data-panel="0">
       <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 0 — HS">
-        <img src="Logo small.svg"       alt="HS" class="panel__tab-logo panel__tab-logo--light">
-        <img src="Logo small balck.svg" alt=""   class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
+        <img src="SVG\HS logo small.svg" alt="HS" class="panel__tab-logo panel__tab-logo--light">
+        <img src="SVG\HS logo small black.svg" alt="HS" class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
         <span class="panel__tab-num">0</span>
       </div>
 
@@ -2926,31 +2925,32 @@ html, body {
           <!-- small-left-frame-parent: flex row -->
           <div class="p0__lower-row">
 
-            <!-- big-right-frame-with-line (first = right in RTL) -->
-            <div class="p0__big-right-with-line">
-              <!-- big-right-frame -->
-              <div class="p0__big-right-frame">
-                <!-- opening-text-parent -->
-                <div class="p0__opening-row">
-                  <!-- navigation-barlogo-hs -->
-                  <div class="p0__logo-nav">
-                    <img src="SVG/logo HS big.svg" alt="HS" class="p0__hs-logo">
-                  </div>
-                  <!-- opening-text -->
-                  <div class="p0__opening-text">
-                    <p class="p0__question">מה מרגישים כשחיים עם מחלה שאף אחד לא רואה?</p>
-                  </div>
-                </div>
-              </div>
-              <!-- line-icon (vertical separator) -->
-              <div class="p0__v-line" role="separator"></div>
+            <!-- outer vertical divider (right side of the logo box) -->
+            <div class="p0__v-line" role="separator"></div>
+
+            <!-- navigation-barlogo-hs: logo's own boxed column (first = right in RTL) -->
+            <div class="p0__logo-nav">
+              <img src="SVG\logo HS big 2.svg" alt="HS" class="p0__hs-logo">
             </div>
 
-            <!-- small-left-frame (last = left in RTL) -->
-            <div class="p0__small-left">
-              <p class="p0__desc-text">
-                הידרדניטיס סופורטיבה (HS) היא מחלת עור כרונית כואבת המשפיעה לא רק על הגוף, אלא גם על הנפש.
-              </p>
+            <!-- inner vertical divider (between logo and text) -->
+            <div class="p0__v-line" role="separator"></div>
+
+            <!-- text-col: title/subtitle stacked above the description (last = left in RTL) -->
+            <div class="p0__text-col">
+
+              <!-- opening-text: title + subtitle -->
+              <div class="p0__opening-text">
+                <p class="p0__title">
+                 Hidradenitis Suppurativa היא הרבה יותר ממחלת עור.
+                </p>
+                <p class="p0__subtitle">
+                 זוהי מחלה כרונית עם השפעה עמוקה על הגוף, הנפש ואיכות החיים. אתר זה נועד להעלות מודעות ולעורר אמפתיה כלפי החיים עם המחלה.
+                </p>
+              </div>
+                </p>
+              </div>
+
             </div>
 
           </div>
