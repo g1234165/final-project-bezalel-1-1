@@ -104,8 +104,8 @@ html, body {
   height: 100%;
   overflow: hidden;
   flex: 0 0 var(--nav-w);
-  transition: flex-basis 0.6s var(--ease-precise),
-              flex-grow   0.6s var(--ease-precise);
+  transition: flex-basis 0.75s var(--ease-precise),
+              flex-grow   0.75s var(--ease-precise);
 }
 
 .panel--active {
@@ -204,37 +204,36 @@ html, body {
    Panel content
    ═══════════════════════════════════════════ */
 /*
-  All structural layout props live here (not gated on --active)
-  so no reflow fires at the moment of click — only opacity
-  and visibility transition. This eliminates the layout jump.
+  Content is pinned to its final open width — calc(100cqw - 6 * var(--nav-w)):
+  the accordion's full width minus the 6 closed nav tabs (5 other panels +
+  this one's own tab) — regardless of the parent .panel's own current
+  (animating) width. cqw resolves against .accordion (container-type:size),
+  not this shrinking parent, so the value never changes mid-transition.
+  Content is therefore ALWAYS laid out at its true final size; it's the
+  ancestor .panel's own overflow:hidden clip that grows/shrinks around it
+  as flex-basis animates. That's a reveal, not a reflow — text never
+  rewraps mid-animation, and there's no separate fade-in to desync from
+  the clip, so no "empty box, then content pops in" moment either.
+  visibility is a plain on/off gate (paint + tab-order) with no
+  transition of its own — JS below flips it exactly at the two moments
+  that matter: on immediately when a panel is clicked open (so the
+  clip-reveal is visible from frame one), off only once the closing
+  panel's own flex-basis transition has fully finished (so it stays
+  paintable while its box is still visibly shrinking).
 */
 .panel__content {
-  flex: 1;
+  flex: 0 0 calc(100cqw - 6 * var(--nav-w));
+  flex-shrink: 0;
   display: flex;
   flex-direction: row;
   position: relative;
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  opacity: 0;
   visibility: hidden;
-  /* fast hide on close */
-  transition: opacity 0.18s ease,
-              visibility 0s linear 0.18s;
 }
-/*
-  --ease-precise front-loads almost all of the width change into the first
-  ~35% of the flex transition, so the content fade-in starts at 0.2s — the
-  panel is already ~85% expanded by then — and finishes at 0.42s, in sync
-  with the visual landing instead of trailing behind it.
-  overflow stays hidden during expansion; JS transitionend
-  switches it to visible after the full 0.6s flex animation.
-*/
-.panel--active .panel__content {
-  opacity: 1;
+.panel__content.panel__content--visible {
   visibility: visible;
-  transition: opacity 0.22s var(--ease-precise) 0.2s,
-              visibility 0s linear 0s;
 }
 /* Left-edge separator as pseudo-element — avoids border corner artifacts */
 .panel--active .panel__content::before {
@@ -4057,7 +4056,10 @@ html, body {
 
       const activate = () => {
         if (panel.classList.contains('panel--active')) return;
-        // Close all panels, clear any inline overflow from previous open
+        // Close all panels, but leave their content visible (mid clip
+        // -reveal, now shrinking away) — the transitionend handler below
+        // hides each one individually once its own flex-basis animation
+        // has actually finished collapsing.
         panels.forEach(p => {
           p.classList.remove('panel--active');
           const c = p.querySelector('.panel__content');
@@ -4068,7 +4070,13 @@ html, body {
         });
         panel.classList.add('panel--active');
         const c = panel.querySelector('.panel__content');
-        if (c) c.removeAttribute('aria-hidden');
+        if (c) {
+          c.removeAttribute('aria-hidden');
+          // Reveal now, from frame one — the clip (flex-basis animating on
+          // the ancestor .panel) does all the visual reveal, so there's no
+          // delay to desync from it.
+          c.classList.add('panel__content--visible');
+        }
       };
 
       // ── Tender Touch: bruise ripple on click ────────────
@@ -4091,15 +4099,21 @@ html, body {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
       });
 
-      // ── Overflow unlock after full panel expansion ───────
-      // Keeps overflow:hidden during the flex transition (prevents
-      // content bleeding into adjacent panels mid-animation), then
-      // switches to visible once the panel has fully opened.
+      // ── Settle once the flex-basis transition actually finishes ──
+      // Opening: unclip overflow so content isn't cut off if it ever
+      // needs to render beyond the exact final box (safety margin).
+      // Closing: only now — box fully collapsed — drop --visible, so
+      // content stays paintable while it was still visibly shrinking
+      // away, and only leaves paint/tab-order once that's done.
       panel.addEventListener('transitionend', e => {
         if (e.propertyName !== 'flex-basis') return;
-        if (!panel.classList.contains('panel--active')) return;
         const c = panel.querySelector('.panel__content');
-        if (c) c.style.overflow = 'visible';
+        if (!c) return;
+        if (panel.classList.contains('panel--active')) {
+          c.style.overflow = 'visible';
+        } else {
+          c.classList.remove('panel__content--visible');
+        }
       });
     });
 
@@ -4121,7 +4135,11 @@ html, body {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             const p0 = allPanels.find(p => p.dataset.panel === '0');
-            if (p0) p0.classList.add('panel--active');
+            if (p0) {
+              p0.classList.add('panel--active');
+              const c = p0.querySelector('.panel__content');
+              if (c) { c.removeAttribute('aria-hidden'); c.classList.add('panel__content--visible'); }
+            }
           });
         });
       }
@@ -4147,6 +4165,8 @@ html, body {
           const p0 = allPanels.find(p => p.dataset.panel === '0');
           if (p0 && !p0.classList.contains('panel--active')) {
             p0.classList.add('panel--active');
+            const c = p0.querySelector('.panel__content');
+            if (c) { c.removeAttribute('aria-hidden'); c.classList.add('panel__content--visible'); }
           }
         }
       }, (allPanels.length - 1) * STAGGER + 600);
