@@ -24,6 +24,9 @@
   --sp-content:        7.477cqh;
   --nav-w:             3.906cqw;
   --sidebar-w:         22.949cqw;
+  /* Precise, snappy ease-out — same curve as the entrance animation and the
+     wemakethings.de reference. Fast start, no resistance, smooth exact landing. */
+  --ease-precise:      cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ═══════════════════════════════════════════
@@ -101,9 +104,8 @@ html, body {
   height: 100%;
   overflow: hidden;
   flex: 0 0 var(--nav-w);
-  /* Circ in-out: deep initial resistance → powerful sweep → smooth landing */
-  transition: flex-basis 0.75s cubic-bezier(0.76, 0, 0.24, 1),
-              flex-grow   0.75s cubic-bezier(0.76, 0, 0.24, 1);
+  transition: flex-basis 0.6s var(--ease-precise),
+              flex-grow   0.6s var(--ease-precise);
 }
 
 .panel--active {
@@ -124,7 +126,7 @@ html, body {
   padding: var(--sp-pad) 0;
   border-left: 1px solid var(--color-light);
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.35s var(--ease-precise);
   /* Required for bruise ripple */
   position: relative;
   overflow: hidden;
@@ -155,7 +157,7 @@ html, body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.45s var(--ease-precise);
 }
 .panel__tab-title {
   font-family: var(--font-body);
@@ -166,6 +168,7 @@ html, body {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   line-height: var(--lh-body);
+  transition: color 0.35s var(--ease-precise);
 }
 .panel__tab-num {
   font-family: var(--font-body);
@@ -173,12 +176,12 @@ html, body {
   font-weight: 400;
   color: var(--color-light);
   line-height: 1;
-  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s ease;
+  transition: transform 0.45s var(--ease-precise), color 0.35s var(--ease-precise);
 }
 .panel__tab-logo {
   width: 44px;
   display: block;
-  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: transform 0.45s var(--ease-precise);
 }
 .panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
 .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
@@ -220,15 +223,17 @@ html, body {
               visibility 0s linear 0.18s;
 }
 /*
-  Content fades in at 0.52s — when the panel is ~70% expanded
-  and wide enough to show content without crowding.
+  --ease-precise front-loads almost all of the width change into the first
+  ~35% of the flex transition, so the content fade-in starts at 0.2s — the
+  panel is already ~85% expanded by then — and finishes at 0.42s, in sync
+  with the visual landing instead of trailing behind it.
   overflow stays hidden during expansion; JS transitionend
-  switches it to visible after the full 0.75s flex animation.
+  switches it to visible after the full 0.6s flex animation.
 */
 .panel--active .panel__content {
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.30s ease 0.52s,
+  transition: opacity 0.22s var(--ease-precise) 0.2s,
               visibility 0s linear 0s;
 }
 /* Left-edge separator as pseudo-element — avoids border corner artifacts */
@@ -3752,6 +3757,25 @@ html, body {
 
   <script>
     /* ══════════════════════════════════════════
+       0. Resize guard — shared by every scroll-reactive panel below
+       ══════════════════════════════════════════ */
+    /* A window resize (mobile address-bar show/hide, rotation, dragging the
+       browser window, even some zoom changes) fires a real native `scroll`
+       event on any already-scrolled container, with no user interaction at
+       all. Panels 1, 2 and 4 drive reveal / typewriter / explode / fall
+       animations off `scroll` events, so without this guard a resize alone
+       can cascade-trigger them — cards exploding, popups falling, text
+       retyping — with nobody touching the page. isResizing suppresses that
+       for a short window after any resize; real user scrolling is untouched. */
+    let isResizing = false;
+    let resizeGuardTimer = null;
+    window.addEventListener('resize', () => {
+      isResizing = true;
+      clearTimeout(resizeGuardTimer);
+      resizeGuardTimer = setTimeout(() => { isResizing = false; }, 200);
+    });
+
+    /* ══════════════════════════════════════════
        1. Star SVG (4-pointed star path)
        ══════════════════════════════════════════ */
     const STAR_PATH_SELECTED =
@@ -3992,7 +4016,7 @@ html, body {
       }
 
       doctorsMain.addEventListener('scroll', () => {
-        if (p1Transitioning) return;
+        if (p1Transitioning || isResizing) return;
         if (!p1Panel || !p1Panel.classList.contains('panel--active') || doctorsMain.clientHeight === 0) return;
         const { scrollTop, scrollHeight, clientHeight } = doctorsMain;
         const maxScroll = scrollHeight - clientHeight;
@@ -4430,7 +4454,7 @@ html, body {
       const OBSERVER_ROOT_MARGIN = '0px 0px -20% 0px';
 
       const observer = new IntersectionObserver((entries) => {
-        if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
+        if (!p2Panel || !p2Panel.classList.contains('panel--active') || isResizing) return;
         entries.forEach((entry) => {
           if (entry.isIntersecting) enqueue(entry.target);
         });
@@ -4453,7 +4477,7 @@ html, body {
       }
 
       scrollEl.addEventListener('scroll', () => {
-        if (!p2Panel || !p2Panel.classList.contains('panel--active')) return;
+        if (!p2Panel || !p2Panel.classList.contains('panel--active') || isResizing) return;
         startObserving();
 
         // ── Bug fix: the last card's trigger line can sit past the bottom of
@@ -4628,7 +4652,7 @@ html, body {
         }).observe(p4Panel, { attributeFilter: ['class'] });
       }
       scrollEl.addEventListener('scroll', () => {
-        if (falling) return;
+        if (falling || isResizing) return;
         if (!p4Panel || !p4Panel.classList.contains('panel--active') || scrollEl.clientHeight === 0) return;
         const { scrollTop, scrollHeight, clientHeight } = scrollEl;
         const maxScroll = scrollHeight - clientHeight;
