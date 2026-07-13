@@ -136,11 +136,6 @@ html, body {
   border-left: none;
   cursor: default;
 }
-/* In RTL flow, the next sibling in DOM sits physically to the LEFT of the active panel.
-   Its right edge = active panel's left edge → the separator we need. */
-.panel--active + .panel .panel__tab {
-  border-right: 1px solid var(--color-light);
-}
 .panel:last-child .panel__tab {
   border-left: none;
 }
@@ -176,7 +171,7 @@ html, body {
   font-weight: 400;
   color: var(--color-light);
   line-height: 1;
-  transition: transform 0.45s var(--ease-precise), color 0.35s var(--ease-precise);
+  transition: color 0.35s var(--ease-precise);
 }
 .panel__tab-logo {
   width: 44px;
@@ -185,10 +180,7 @@ html, body {
 }
 .panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
 .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
-  transform: translateX(-8px);
-}
-.panel:not(.panel--active) .panel__tab:hover .panel__tab-num {
-  transform: translateX(-8px) translateY(-4px);
+  transform: translateY(8px);
 }
 .panel__tab-logo--dark {
   display: none;
@@ -235,8 +227,13 @@ html, body {
 .panel__content.panel__content--visible {
   visibility: visible;
 }
-/* Left-edge separator as pseudo-element — avoids border corner artifacts */
-.panel--active .panel__content::before {
+/* Left-edge separator as pseudo-element — avoids border corner artifacts.
+   Gated on --visible (not .panel--active) so it belongs to, and moves with,
+   this panel's own content: it's part of the clip-reveal (appears from
+   frame one of opening, stays through the whole close until the box has
+   fully collapsed), instead of snapping on/off the instant the class
+   toggles regardless of where the box actually is. */
+.panel__content.panel__content--visible::before {
   content: '';
   position: absolute;
   left: 0;
@@ -247,13 +244,11 @@ html, body {
   pointer-events: none;
   z-index: 10;
 }
-/* Panel 3: accordion open-items share the same light color as the ::before,
-   so disable the pseudo-element and use a real border on the content-area instead.
-   A border lives outside the element's content box and cannot be covered by
-   the accordion items' backgrounds. */
-.panel--active .panel__content.p3::before,
-.panel--active .panel__content.p1::before,
-.panel--active .panel__content.p0::before {
+/* Panel 3: its whole background is var(--color-light) (see .p3), so a
+   light-on-light divider line would be invisible anyway — the background
+   change itself is the boundary. Panels 0 and 1 are dark like their
+   neighbors and need the real divider line. */
+.panel__content.p3.panel__content--visible::before {
   content: none;
 }
 
@@ -313,11 +308,9 @@ html, body {
 }
 /* vector-icon (the SVG image) */
 .p1__vector-icon {
-  width: 100%;
+  width: 13.818cqw;
   height: auto;
   display: block;
-  max-width: 100%;
-  object-fit: contain;
 }
 /* wrapper (episode label column — kept for CSS completeness) */
 .p1__episode-label-col {
@@ -3028,7 +3021,7 @@ html, body {
           <div class="p1__logo-section">
             <div class="p1__logo-big">
               <div class="p1__logo-big-child">
-                <img src="Frame 934.svg" alt="צורה אבסטרקטית — HS" class="p1__vector-icon">
+                <img src="p1-1-1.gif" alt="צורה אבסטרקטית — HS" class="p1__vector-icon">
               </div>
             </div>
           </div>
@@ -3112,7 +3105,7 @@ html, body {
 
           <div class="p2__logo-section">
             <div class="p2__logo-big">
-              <img src="Property 1=2.svg" alt="צורה אבסטרקטית — פאנל 2" class="p2__vector-icon">
+              <img src="p2-2.gif" alt="צורה אבסטרקטית — פאנל 2" class="p2__vector-icon">
             </div>
             <div class="p2__episode-label-col">
             </div>
@@ -3280,7 +3273,7 @@ html, body {
         <aside class="p3__sidebar">
           <div class="p3__logo-section">
             <div class="p3__logo-big">
-              <img src="p3 black.svg" alt="צורה — פאנל 3" class="p3__vector-icon">
+              <img src="p3-3.gif" alt="צורה — פאנל 3" class="p3__vector-icon">
             </div>
             <div class="p3__episode-label-col">
             </div>
@@ -3591,7 +3584,7 @@ html, body {
         <aside class="p4__sidebar">
           <div class="p4__logo-section">
             <div class="p4__logo-big">
-              <img src="Property 1=3.svg" alt="צורה — פאנל 4" class="p4__vector-icon">
+              <img src="p4-4.gif" alt="צורה — פאנל 4" class="p4__vector-icon">
             </div>
             <div class="p4__episode-label-col">
             </div>
@@ -4821,6 +4814,8 @@ html, body {
       });
 
       // ── Panel 5 ─────────────────────────────────
+      // Same spring-open/ease-close + staggered-reveal system as Panel 3,
+      // instead of the old instant display:none/flex snap.
       const p5Scroll = document.querySelector('.p5__main');
       const p5Panel  = p5Scroll?.closest('.panel');
       document.querySelectorAll('[data-p5-dropdown] .p5__dropdown-header').forEach(header => {
@@ -4830,10 +4825,12 @@ html, body {
 
           document.querySelectorAll('[data-p5-dropdown].is-open').forEach(openItem => {
             openItem.classList.remove('is-open');
+            closeBody(openItem.querySelector('.p5__dropdown-body'));
           });
 
           if (!isOpen) {
             item.classList.add('is-open');
+            openBody(item.querySelector('.p5__dropdown-body'));
             if (p5Scroll) smartScroll(header, p5Scroll, p5Panel);
           }
         });
@@ -4881,11 +4878,26 @@ html, body {
         const H = rect.height / scale;
         if (!W || !H) return;
 
-        engine = Engine.create({ gravity: { x: 0, y: 1.2 } });
+        // Higher position/velocity iterations than Matter's default (6/4) —
+        // with 4 stacked bodies each touching a wall AND a neighbor at once,
+        // the default solver leaves a few px of residual penetration, which
+        // read as shapes clipped by the frame's overflow:hidden and as
+        // shapes visually sinking into each other. More iterations resolve
+        // those contacts tightly enough that both go away.
+        engine = Engine.create({
+          gravity: { x: 0, y: 1.2 },
+          positionIterations: 14,
+          velocityIterations: 10,
+        });
         world  = engine.world;
 
         // ── Invisible static boundaries ──────────────────
         const thick = 80;
+        // INSET keeps the play area a safety margin inside the frame's own
+        // visual clip, so shapes always come to rest with room to spare
+        // instead of resting flush against the exact pixel the frame cuts
+        // at — the "cut off at the edges" look, even with a perfect solver.
+        const INSET = 24;
         World.add(world, [
           // floor
           Bodies.rectangle(W / 2, H + thick / 2, W + thick * 2, thick,
@@ -4893,11 +4905,11 @@ html, body {
           // ceiling — keeps thrown shapes from escaping upward
           Bodies.rectangle(W / 2, -thick / 2, W + thick * 2, thick,
             { isStatic: true, friction: 0.3, restitution: 0.1 }),
-          // left wall
-          Bodies.rectangle(-thick / 2, H / 2, thick, H + thick * 2,
+          // left wall — inner face at INSET, not 0
+          Bodies.rectangle(INSET - thick / 2, H / 2, thick, H + thick * 2,
             { isStatic: true, friction: 0.3, restitution: 0.1 }),
-          // right wall
-          Bodies.rectangle(W + thick / 2, H / 2, thick, H + thick * 2,
+          // right wall — inner face at W - INSET, not W
+          Bodies.rectangle(W - INSET + thick / 2, H / 2, thick, H + thick * 2,
             { isStatic: true, friction: 0.3, restitution: 0.1 }),
         ]);
 
