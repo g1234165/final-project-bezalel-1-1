@@ -105,6 +105,7 @@ html, body {
   transition: flex-basis 0.75s cubic-bezier(0.76, 0, 0.24, 1),
               flex-grow   0.75s cubic-bezier(0.76, 0, 0.24, 1);
 }
+
 .panel--active {
   flex: 1 0 0px;
 }
@@ -123,7 +124,7 @@ html, body {
   padding: var(--sp-pad) 0;
   border-left: 1px solid var(--color-light);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
   /* Required for bruise ripple */
   position: relative;
   overflow: hidden;
@@ -154,6 +155,7 @@ html, body {
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
 }
 .panel__tab-title {
   font-family: var(--font-body);
@@ -171,10 +173,19 @@ html, body {
   font-weight: 400;
   color: var(--color-light);
   line-height: 1;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), color 0.3s ease;
 }
 .panel__tab-logo {
   width: 44px;
   display: block;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
+.panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
+  transform: translateX(-8px);
+}
+.panel:not(.panel--active) .panel__tab:hover .panel__tab-num {
+  transform: translateX(-8px) translateY(-4px);
 }
 .panel__tab-logo--dark {
   display: none;
@@ -1429,6 +1440,15 @@ html, body {
   border-left: 1px solid var(--color-light) !important;
 }
 
+.panel[data-panel="3"].panel--active .panel__tab {
+  background-color: var(--color-light);
+  border-left: none !important;
+}
+.panel[data-panel="3"].panel--active .panel__tab .panel__tab-title,
+.panel[data-panel="3"].panel--active .panel__tab .panel__tab-num {
+  color: var(--color-dark);
+}
+
 .p0 {
   width: 100%;
   height: 100%;
@@ -1612,6 +1632,7 @@ html, body {
   flex-direction: row;
   height: 100%;
   width: 100%;
+  background-color: var(--color-light);
 }
 
 /* ── Sidebar (same as p1/p2) ── */
@@ -1620,7 +1641,8 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-left: 1px solid var(--color-light);
+  border-left: 1px solid var(--color-dark);
+  background-color: var(--color-light);
 }
 .p3__logo-section {
   width: 100%;
@@ -1664,7 +1686,7 @@ html, body {
   font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 400;
-  color: var(--color-light);
+  color: var(--color-dark);
   white-space: nowrap;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
@@ -1673,9 +1695,9 @@ html, body {
 .p3__hdivider {
   width: 100%;
   height: 1px;
-  background: var(--color-light);
+  background: var(--color-dark);
   flex-shrink: 0;
-  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
+  box-shadow: var(--nav-w) 0 0 0 var(--color-dark);
 }
 .p3__desc-section {
   flex: 1;
@@ -1696,7 +1718,7 @@ html, body {
   font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 400;
-  color: var(--color-light);
+  color: var(--color-dark);
   text-align: right;
   line-height: var(--lh-body);
   direction: rtl;
@@ -1709,7 +1731,7 @@ html, body {
   justify-content: center;
   font-family: var(--font-body);
   font-size: var(--fs-body);
-  color: var(--color-light);
+  color: var(--color-dark);
 }
 
 /* ── Content area ── */
@@ -1720,12 +1742,9 @@ html, body {
   height: 100%;
   overflow: hidden;
   min-width: 0;
-  border-left: 1px solid var(--color-light);
+  border-left: 1px solid var(--color-dark);
   box-sizing: border-box;
-  transition: border-color 0.3s ease;
-}
-.p3__content-area:has(.p3__accordion-item.is-open) {
-  border-left-color: var(--color-dark);
+  background-color: var(--color-light);
 }
 .p3__header {
   flex: 0 0 22.991cqh;
@@ -1741,7 +1760,7 @@ html, body {
   font-size: var(--fs-h2);
   font-weight: 400;
   line-height: 100%;
-  color: var(--color-light);
+  color: var(--color-dark);
   text-align: right;
   direction: rtl;
   margin: 0;
@@ -1749,7 +1768,7 @@ html, body {
 .p3__content-divider {
   width: 100%;
   height: 1px;
-  background: var(--color-light);
+  background: var(--color-dark);
   flex-shrink: 0;
 }
 .p3__scroll-body {
@@ -1785,7 +1804,7 @@ html, body {
 /* Header row: 108px, padding 36px 80px */
 .p3__item-header {
   height: 10.093cqh;
-  background: var(--color-dark);
+  background: var(--color-light);
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1794,7 +1813,7 @@ html, body {
   box-sizing: border-box;
   cursor: pointer;
   gap: 24px;
-  border-bottom: 1px solid var(--color-light);
+  border-bottom: 1px solid var(--color-dark);
 }
 .p3__accordion-item.is-open .p3__item-header {
   background: var(--color-light);
@@ -1828,23 +1847,17 @@ html, body {
   font-size: var(--fs-h3);
   font-weight: 400;
   line-height: 100%;
-  color: var(--color-light);
+  color: var(--color-dark);
   text-align: right;
   direction: rtl;
-  transition: color 0.3s ease;
 }
 .p3__item-num {
   font-family: 'Narkiss Asaf TRIAL';
   font-size: var(--fs-h3);
   font-weight: 400;
   line-height: 100%;
-  color: var(--color-light);
-  text-align: right;
-  transition: color 0.3s ease;
-}
-.p3__accordion-item.is-open .p3__item-label,
-.p3__accordion-item.is-open .p3__item-num {
   color: var(--color-dark);
+  text-align: right;
 }
 
 /* Left: chevron (last in DOM = left in RTL) */
@@ -1862,12 +1875,9 @@ html, body {
   transition: transform 0.48s cubic-bezier(0.34, 1.38, 0.64, 1);
   overflow: visible;
 }
-.p3__chevron path { transition: stroke 0.3s ease; }
+.p3__chevron path { stroke: var(--color-dark); transition: stroke 0.3s ease; }
 .p3__accordion-item.is-open .p3__chevron {
   transform: scaleY(-1);
-}
-.p3__accordion-item.is-open .p3__chevron path {
-  stroke: var(--color-dark);
 }
 
 /* Separator line between items */
@@ -3266,7 +3276,7 @@ html, body {
         <aside class="p3__sidebar">
           <div class="p3__logo-section">
             <div class="p3__logo-big">
-              <img src="Property 1=Variant5.svg" alt="צורה — פאנל 3" class="p3__vector-icon">
+              <img src="p3 black.svg" alt="צורה — פאנל 3" class="p3__vector-icon">
             </div>
             <div class="p3__episode-label-col">
             </div>
