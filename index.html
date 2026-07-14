@@ -1987,7 +1987,8 @@ html, body {
   transform-style: preserve-3d;
   transition: transform 0.5s ease;
 }
-.p3__card:hover .p3__card-inner {
+.p3__card:hover .p3__card-inner,
+.p3__card.is-flipped .p3__card-inner {
   transform: rotateY(180deg);
 }
 .p3__card-front,
@@ -2468,7 +2469,8 @@ html, body {
   transform-style: preserve-3d;
   transition: transform 0.5s ease;
 }
-.p3__card-07:hover .p3__card-07-inner {
+.p3__card-07:hover .p3__card-07-inner,
+.p3__card-07.is-flipped .p3__card-07-inner {
   transform: rotateY(180deg);
 }
 .p3__card-07-front,
@@ -2846,7 +2848,8 @@ html, body {
   transform-style: preserve-3d;
   transition: transform 0.5s ease;
 }
-.p5__card:hover .p5__card-inner { transform: rotateY(180deg); }
+.p5__card:hover .p5__card-inner,
+.p5__card.is-flipped .p5__card-inner { transform: rotateY(180deg); }
 .p5__card-front,
 .p5__card-back {
   position: absolute;
@@ -3020,6 +3023,513 @@ html, body {
   55%  { transform: translate(-50%, -50%) scale(1.2);  opacity: 0.52; }
   88%  { transform: translate(-50%, -50%) scale(2.0);  opacity: 0.14; }
   100% { transform: translate(-50%, -50%) scale(2.4);  opacity: 0;    }
+}
+
+/* ═══════════════════════════════════════════
+   Mobile — vertical accordion (≤768px)
+   ═══════════════════════════════════════════
+   Panels stay flex items with an animated flex-basis/flex-grow — same
+   mechanism as desktop, just with flex-direction:column so flex-basis
+   drives height instead of width. This is deliberate: the JS
+   transitionend listener that toggles panel__content--visible and
+   restores overflow (index.html ~4216) hard-filters on
+   e.propertyName === 'flex-basis', so keeping that exact property
+   animated means zero JS changes are needed for open/close to keep
+   working correctly on mobile. */
+@media (max-width: 768px) {
+  /* Override the ORIGINAL variable names (not parallel -m copies) so
+     every existing var(--fs-h2) etc. usage across all 6 panels picks
+     this up automatically — that's the whole point of using custom
+     properties here, matching the user's own item-4 suggestion. */
+  :root {
+    --sp-pad:          16px;
+    --sp-content:      16px;
+    --fs-body:         14px;
+    --fs-h2:           26px;
+    --fs-h3:           18px;
+    /* p3/p5 accordion item-header height (net-new mobile-only role, no
+       desktop equivalent) — sidebar/header blocks across p0/p1/p3/p4 use
+       height:auto driven by their own content instead of a shared fixed
+       guess, since title/description text length varies too much per
+       panel for one number to fit safely everywhere. */
+    --item-header-h-m: 56px;
+  }
+
+  .accordion {
+    flex-direction: column;
+  }
+
+  .panel {
+    flex-direction: column;
+    flex: 0 0 52px;
+  }
+  /* Re-assert active-panel growth inside this query: .panel and
+     .panel--active have equal specificity, and this media query's .panel
+     rule would otherwise win by coming later in source order, pinning
+     every panel — including the active one — to the closed 52px size. */
+  .panel--active {
+    flex: 1 0 0px;
+  }
+
+  .panel__tab {
+    flex-direction: row;
+    width: 100%;
+    height: 52px;
+    padding: 0 16px;
+    border-left: none;
+    border-bottom: 1px solid var(--color-light);
+  }
+  .panel--active .panel__tab {
+    border-bottom: none;
+  }
+  .panel:last-child .panel__tab {
+    border-bottom: none;
+  }
+
+  .panel__tab-title-wrap {
+    align-items: center;
+  }
+  .panel__tab-title {
+    writing-mode: horizontal-tb;
+    transform: none;
+    white-space: normal;
+    /* font-size already picks up the --fs-body override above */
+  }
+  .panel__tab-logo {
+    width: 32px;
+  }
+  /* The horizontal hover-shift reads oddly with a touch tap; neutralize it */
+  .panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
+  .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
+    transform: none;
+  }
+
+  /* Panels stack in from below instead of sliding in sideways */
+  @keyframes panel-enter-mobile {
+    from { opacity: 0; transform: translateY(40px); }
+    to   { opacity: 1; transform: translateY(0);     }
+  }
+  .panel--entering {
+    animation-name: panel-enter-mobile;
+  }
+
+  /* Content is no longer pinned to a fixed final width (that trick existed
+     to stop text reflowing as PANEL WIDTH animated on desktop — on mobile
+     only height animates, and width stays 100% throughout, so there's no
+     reflow risk to guard against). !important beats the inline
+     overflow:visible the transitionend listener applies once a panel
+     finishes opening — desktop content is exactly its final size so
+     overflow:visible is a no-op safety net there, but mobile content is
+     often taller than the open panel's box and needs to scroll, not spill
+     over neighboring panels. */
+  .panel__content {
+    flex: 1;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  /* Stacks each panel's sidebar above its main content area instead of
+     side-by-side. (.p0 already is column on desktop, listing it here is
+     harmless.) */
+  .p0, .p1, .p2, .p3, .p4, .p5 {
+    flex-direction: column;
+  }
+
+  /* ── Panel 0 ─────────────────────────────── */
+  /* Already a single column on desktop (.p0), so only the internal
+     proportions need retuning — the illustration was capped to leave
+     "enough" room for a short two-line title, but on a narrow mobile
+     width the title/subtitle wrap to many more lines and need a taller,
+     content-sized (not fixed-cqh) block below. */
+  .p0__top-frame {
+    padding: 20px 16px;
+  }
+  .p0__illustration {
+    max-height: 22vh;
+  }
+  .p0__lower-frame {
+    height: auto;
+  }
+  /* Row (v-line | logo | v-line | text) becomes a simple stack; the
+     vertical divider lines only made sense as side-by-side dividers */
+  .p0__lower-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .p0__v-line {
+    display: none;
+  }
+  .p0__logo-nav {
+    padding: 16px 0;
+  }
+  .p0__hs-logo {
+    width: 32px;
+    height: 32px;
+  }
+  .p0__opening-text {
+    padding: 0 16px 20px;
+    gap: 8px;
+  }
+
+  /* ── Panel 3 (light theme — border/text use --color-dark, not light) ── */
+  .p3__sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    border-left: none;
+    border-bottom: 1px solid var(--color-dark);
+  }
+  .p3__logo-section {
+    height: auto;
+    padding: 16px;
+    justify-content: flex-start;
+  }
+  .p3__episode-label-col {
+    display: none;
+  }
+  .p3__desc-section {
+    padding: 0 16px 16px;
+  }
+  .p3__desc-inner {
+    padding-left: 0;
+  }
+  .p3__ep-num {
+    display: none;
+  }
+  .p3__header {
+    flex: 0 0 auto;
+    padding: 16px;
+  }
+  .p3__item-header {
+    height: var(--item-header-h-m);
+    padding: 12px 16px;
+  }
+  /* .p3__body-content/.p3__body-svg-clean/.p3__body-text-02 (the
+     "item-02 illustration bleeds into header" feature described in the
+     desktop CSS comment at ~2088) turned out to be dead CSS — verified
+     against the live markup, no accordion item actually uses those
+     classes today — so no mobile override is needed for them.
+     .p3__col-row already wraps (flex-wrap:wrap, items flex-basis 380px)
+     so items' two-column layouts fall back to one column per row
+     naturally on a narrow screen without an explicit override — verified
+     visually rather than assumed. */
+  .p3__cards-container,
+  .p3__05-container {
+    padding: 16px 16px 24px;
+  }
+
+  /* ── Panel 1 ─────────────────────────────── */
+  .p1__sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    border-left: none;
+    border-bottom: 1px solid var(--color-light);
+  }
+  .p1__logo-section {
+    height: auto;
+    padding: 16px;
+    justify-content: flex-start;
+  }
+  .p1__logo-big {
+    padding-left: 0;
+  }
+  .p1__episode-label-col {
+    display: none;
+  }
+  /* The box-shadow trick extends this line into the vertical side-tab
+     column, which no longer exists on mobile (tabs are a top bar) */
+  .p1__hdivider {
+    box-shadow: none;
+  }
+  .p1__desc-section {
+    padding: 0 16px 16px;
+  }
+  .p1__desc-inner {
+    padding-left: 0;
+  }
+
+  /* The sticky+invisible-scroll-track mechanism (content visually stays
+     put while an extra bit of scroll room drives section-switching) was
+     sized in cqh — a percentage of the whole accordion/viewport — which
+     assumed the panel always spans the full accordion height. On mobile
+     .p1__doctors-main only gets whatever's left after the stacked
+     sidebar/header above it, so 100cqh badly overshoots.
+     goToSection()/the scroll listener (index.html ~4106-4140) both read
+     doctorsMain.scrollTop/scrollHeight/clientHeight directly — the nav
+     bar's arrows and dots only work if doctorsMain genuinely IS the
+     scrolling element with real scrollable room, so it can't just be
+     switched off. Keep the exact same mechanism, just rebased onto a
+     bounded local height (60vh, deliberately vh not cqh — this needs to
+     stay stable relative to the real device viewport regardless of how
+     tall the sidebar above it ends up being) instead of the accordion's
+     full 100cqh, with .p1__doctors-sticky's height following its actual
+     parent (100%) instead of the old global viewport figure. */
+  .p1__doctors-area {
+    height: auto;
+    overflow: visible;
+  }
+  .p1__doctors-main {
+    /* flex:0 0 <length>, not just height — the desktop flex:1 shorthand
+       (flex-basis:0%) otherwise wins sizing over a plain height override,
+       same class of bug as .panel__content earlier in this file. */
+    flex: 0 0 60vh;
+    height: 60vh;
+  }
+  .p1__doctors-sticky {
+    height: 100%;
+  }
+  .p1__scroll-track {
+    height: 30vh;
+  }
+  .p1__doctors-header {
+    flex: 0 0 auto;
+  }
+  .p1__doctors-title {
+    height: auto;
+    overflow: visible;
+    padding: 16px;
+  }
+  .p1__doctors-body {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  /* height was 7.477cqh — a percentage of the whole accordion, sized for
+     when this quote area lived inside a full-viewport-height panel. Now
+     that it's inside the bounded 60vh sticky box, that fixed percentage
+     way overshoots its actual share of the available room; auto lets it
+     size from its own (already-small, already mobile-clamped) text. */
+  .p1__quote {
+    height: auto;
+  }
+  .p1__quote-text {
+    width: auto;
+    max-width: 100%;
+  }
+  /* Same story as .p1__quote: width/gap were cqw/cqh percentages of the
+     full accordion, and .p1__star's min(5.778cqh,100%) alone produced
+     ~47px stars — sized for a full-height desktop panel, not this
+     bounded 60vh box, which is exactly the "content overflows and
+     justify-content:center pushes it out both ends" bug already found
+     and fixed once this session for this same grid. Fixed px instead of
+     cqh here since the whole point is to stop depending on the
+     full-viewport basis.
+     Columns stay at 10 (not reduced) — the JS builds a hardcoded 6
+     rows-of-10-children DOM structure (not driven by grid-template-
+     columns), so redeclaring fewer columns here doesn't regroup the
+     stars, it just makes each 10-child row wrap into extra implicit
+     grid rows and roughly double the total height. 10 columns at 32px
+     fits comfortably in the 343px-wide grid and is still a fine tap
+     target. */
+  .p1__stars-grid {
+    width: 100%;
+    gap: 8px;
+  }
+  .p1__star {
+    width: min(32px, 100%);
+  }
+
+  /* ── Panel 2 (sidebar mirrors Panel 1's — same pattern, same values) ── */
+  .p2__sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    border-left: none;
+    border-bottom: 1px solid var(--color-light);
+  }
+  .p2__logo-section {
+    height: auto;
+    padding: 16px;
+    justify-content: flex-start;
+  }
+  .p2__logo-big {
+    padding-left: 0;
+  }
+  .p2__episode-label-col {
+    display: none;
+  }
+  .p2__hdivider {
+    box-shadow: none;
+  }
+  .p2__desc-section {
+    padding: 0 16px 16px;
+  }
+  .p2__desc-inner {
+    padding-left: 0;
+  }
+  .p2__schedule-header {
+    flex: 0 0 auto;
+  }
+  .p2__title {
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+    padding: 16px;
+  }
+  .p2__schedule-frame {
+    padding: 16px;
+  }
+  /* The hour-grid backdrop (labels + horizontal lines) exists so cards
+     can be absolutely-positioned against real hour offsets — a desktop
+     timeline visualization. Recreating that accurately at a 375px width
+     isn't worth the fragility, and the grid itself carries no content —
+     just the cards' own text does. Simplify to a plain full-width
+     stacked list instead. */
+  .p2__hours-and-grid {
+    display: none;
+  }
+  .p2__tasks {
+    position: static;
+    width: 100%;
+    padding: 0;
+  }
+  .p2__task-card {
+    width: 100%;
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  /* ── Panel 4 (sidebar mirrors Panel 1/2's) — static card list, no
+     scroll-reveal/shake/fall/drag (gated off in JS via isMobile) ── */
+  .p4__sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    border-left: none;
+    border-bottom: 1px solid var(--color-light);
+  }
+  .p4__logo-section {
+    height: auto;
+    padding: 16px;
+    justify-content: flex-start;
+  }
+  .p4__logo-big {
+    padding-left: 0;
+  }
+  .p4__episode-label-col {
+    display: none;
+  }
+  .p4__hdivider {
+    box-shadow: none;
+  }
+  .p4__desc-section {
+    padding: 0 16px 16px;
+  }
+  .p4__desc-inner {
+    padding-left: 0;
+  }
+  .p4__header {
+    flex: 0 0 auto;
+  }
+  .p4__title {
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+    padding: 16px;
+  }
+  /* No scroll-triggered sequence left to drive on mobile (JS returns
+     early before wiring the scroll listener when isMobile) — let content
+     flow normally and the outer .panel__content handle all scrolling,
+     rather than nesting a second independent scroll region. */
+  .p4__scroll-body {
+    overflow-y: visible;
+    height: auto;
+  }
+  .p4__scroll-track {
+    display: none;
+  }
+  .p4__sticky {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+  /* From an absolutely-positioned canvas (cards scattered at hardcoded
+     desktop pixel coordinates) to a plain vertical stack. It's actually
+     the first DOM child of .p4 — before the sidebar — since on desktop
+     it's position:absolute and overlays everything regardless of source
+     order; order:1 keeps it visually last (after the sidebar and
+     header, which stay at the default order:0) now that it's static and
+     therefore part of the normal flex-column flow. */
+  .p4__popup-stage {
+    position: static;
+    order: 1;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .p4__popup {
+    position: static;
+    width: 100%;
+  }
+  /* A scattered wall of slightly-rotated cards reads as intentional on a
+     wide desktop canvas; the same rotation in a single narrow column just
+     looks like a mistake. */
+  .p4__popup.p4--visible {
+    transform: none;
+    cursor: default;
+  }
+  .p4__popup--small,
+  .p4__popup--big,
+  .p4__popup--xl {
+    width: 100%;
+    min-height: auto;
+  }
+
+  /* ── Panel 5 ─────────────────────────────── */
+  .p5__sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    /* Unlike p1/p2/p4's sidebars this one is pure illustration with no
+       text content to size itself from, so it needs an explicit height —
+       auto would collapse to 0. Matter.js is gated off on mobile (see the
+       JS), so this is a fixed static illustration, not an interactive
+       physics stage. */
+    height: 280px;
+    border-left: none;
+    border-bottom: 1px solid var(--color-dark);
+    cursor: default;
+  }
+  /* Static fallback layout for the 4 shapes — the desktop values
+     (top: -40% to -200%) are each shape's pre-physics OFF-SCREEN spawn
+     position (above the frame, waiting to fall into view), not a resting
+     position, so they can't be reused as-is now that physics never runs
+     on mobile. Same width/left, new top offsets to lay them out as a
+     simple overlapping stack that fits inside the fixed 280px frame. */
+  .p5__shape1 { top: 0%; }
+  .p5__shape2 { top: 18%; }
+  .p5__shape3 { top: 38%; }
+  .p5__shape4 { top: 48%; }
+  /* Physics applied this flip via inline transform at throw-time; add it
+     back directly since that code never runs on mobile. */
+  .p5__shape3 {
+    transform: scaleX(-1);
+  }
+  /* Desktop pins this to height:100%+overflow-y:scroll as a flex sibling
+     of the sidebar in a row layout, where it fills the remaining row
+     height exactly. In the mobile column layout that turns into its own
+     cramped inner scrollbox (500px panel - 280px sidebar = ~220px), so
+     let .panel__content (already overflow-y:auto) be the only scroll
+     container instead. */
+  .p5__main {
+    flex: 1 1 auto;
+    height: auto;
+    overflow-y: visible;
+    align-items: stretch;
+  }
+  .p5__header {
+    padding: 16px;
+    min-height: auto;
+  }
+  .p5__about {
+    padding: 16px;
+    gap: 24px;
+  }
+  .p5__dropdown-header {
+    padding: 12px 16px;
+  }
+  .p5__cards-row {
+    padding: 0 16px 24px;
+  }
 }
 
   </style>
@@ -4627,6 +5137,14 @@ html, body {
       const stageEl   = document.getElementById('p4-popup-stage');
       if (!scrollEl || !stageEl) return;
 
+      /* Mobile: no drag (fights page-scroll gestures) and no scroll-
+         triggered reveal/shake/fall sequence (the popups' desktop pixel
+         coordinates and stage size assumptions don't hold on a narrow
+         screen either). Cards render statically, all visible at once, in
+         the plain stacked list .p4__popup-stage becomes under the mobile
+         CSS (position:static instead of absolute) — see the media query. */
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
       /* Current scale of the accordion canvas */
       function getScale() {
         const acc = document.querySelector('.accordion');
@@ -4683,32 +5201,41 @@ html, body {
           </div>`;
         stageEl.appendChild(el);
 
-        /* Drag: bring to front + free movement */
-        el.addEventListener('mousedown', (e) => {
-          if (!el.classList.contains('p4--visible')) return;
-          e.preventDefault();
-          el.style.zIndex = ++globalZ;
-          el.style.transition = '';
-          el.classList.add('p4--dragging');
-          const scale = getScale();
-          const mx0   = e.clientX, my0 = e.clientY;
-          const t0    = parseFloat(el.style.top)  || 0;
-          const l0    = parseFloat(el.style.left) || 0;
-          const move  = (e) => {
-            el.style.top  = (t0 + (e.clientY - my0) / scale) + 'px';
-            el.style.left = (l0 + (e.clientX - mx0) / scale) + 'px';
-          };
-          const up = () => {
-            el.classList.remove('p4--dragging');
-            document.removeEventListener('mousemove', move);
-            document.removeEventListener('mouseup',   up);
-          };
-          document.addEventListener('mousemove', move);
-          document.addEventListener('mouseup',   up);
-        });
+        /* Drag: bring to front + free movement (desktop only) */
+        if (!isMobile) {
+          el.addEventListener('mousedown', (e) => {
+            if (!el.classList.contains('p4--visible')) return;
+            e.preventDefault();
+            el.style.zIndex = ++globalZ;
+            el.style.transition = '';
+            el.classList.add('p4--dragging');
+            const scale = getScale();
+            const mx0   = e.clientX, my0 = e.clientY;
+            const t0    = parseFloat(el.style.top)  || 0;
+            const l0    = parseFloat(el.style.left) || 0;
+            const move  = (e) => {
+              el.style.top  = (t0 + (e.clientY - my0) / scale) + 'px';
+              el.style.left = (l0 + (e.clientX - mx0) / scale) + 'px';
+            };
+            const up = () => {
+              el.classList.remove('p4--dragging');
+              document.removeEventListener('mousemove', move);
+              document.removeEventListener('mouseup',   up);
+            };
+            document.addEventListener('mousemove', move);
+            document.addEventListener('mouseup',   up);
+          });
+        }
 
         return el;
       });
+
+      if (isMobile) {
+        // Static mobile fallback: every card visible immediately, no
+        // scroll-reveal/shake/fall/drag sequence below.
+        nodes.forEach((_, i) => revealCard(i));
+        return;
+      }
 
       /* כרטיס ראשון גלוי מיד עם פתיחת הפאנל */
       shown = 1;
@@ -4956,6 +5483,12 @@ html, body {
       ].filter(Boolean);
 
       if (!frame || imgEls.length < 4) return;
+      // Mobile: skip Matter.js entirely (drag-to-throw fights page-scroll
+      // gestures on touch, and the physics walls/shape sizing assume the
+      // current tall/narrow desktop sidebar). The shapes simply keep their
+      // static CSS fallback position (.p5__shape1..4 below) — no physics
+      // ever runs, no engine, no rAF loop, nothing to tear down either.
+      if (window.matchMedia('(max-width: 768px)').matches) return;
 
       // wF: shape width as fraction of sidebar width (13.818cqw / 19.043cqw)
       // aspect: SVG natural height/width ratio — bh is derived from bw, not from H
@@ -5138,6 +5671,24 @@ html, body {
         }
         wasActive = isActive;
       }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
+    }());
+
+    /* ══════════════════════════════════════════
+       Mobile — tap-to-flip for the hover-only cards
+       ══════════════════════════════════════════ */
+    /* .p3__card / .p3__card-07 / .p5__card all flip via CSS :hover, which
+       never fires on touch — their back-side content (the actual answer
+       text) would be permanently unreachable on mobile. Their CSS now
+       also matches a .is-flipped class (see the shared :hover rules), so
+       tapping just toggles that class. Only wired up on mobile — deskop
+       keeps pure-hover behavior unchanged, and a tap there would otherwise
+       fight with the hover state. */
+    (function () {
+      const mobileMQ = window.matchMedia('(max-width: 768px)');
+      if (!mobileMQ.matches) return;
+      document.querySelectorAll('.p3__card, .p3__card-07, .p5__card').forEach(card => {
+        card.addEventListener('click', () => card.classList.toggle('is-flipped'));
+      });
     }());
 
   </script>
