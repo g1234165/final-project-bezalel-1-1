@@ -621,8 +621,14 @@ html, body {
   height: 12px;
   transition: transform 0.4s var(--ease-precise), opacity 0.3s var(--ease-precise);
 }
+/* stroke-width:1.2 (CSS overrides the inline stroke-width="2" attribute)
+   — this SVG renders at 18/22 ≈ 0.82 of its viewBox, so a raw "1" here
+   would come out a touch thinner than .p3__chevron/.p5__chevron's 1:1
+   scale; 1.2 lands both at the same ~1px effective line weight as the
+   hamburger/plus icons. */
 .p1__nav-chevron path {
   stroke: var(--color-light);
+  stroke-width: 1.2;
 }
 /* Outward-pointing: prev renders rightmost in RTL and points further
    right (away from the dots); next renders leftmost and points further
@@ -1952,7 +1958,10 @@ html, body {
   transition: transform 0.4s var(--ease-precise);
   overflow: visible;
 }
-.p3__chevron path { stroke: var(--color-dark); transition: stroke 0.35s var(--ease-precise); }
+/* stroke-width:1 (CSS overrides the inline stroke-width="2" attribute)
+   — matches the hamburger/plus icons' 1px line weight; this SVG renders
+   at 1:1 CSS-size-to-viewBox scale so "2" was a literal 2px line. */
+.p3__chevron path { stroke: var(--color-dark); stroke-width: 1; transition: stroke 0.35s var(--ease-precise); }
 .p3__accordion-item.is-open .p3__chevron {
   transform: scaleY(-1);
 }
@@ -2808,6 +2817,11 @@ html, body {
 }
 .p5__chevron path {
   stroke: var(--color-dark);
+  /* CSS stroke-width overrides the inline stroke-width="2" attribute —
+     at this SVG's 1:1 CSS-size-to-viewBox scale, "2" rendered as a
+     literal 2px line, visibly heavier than the hamburger/plus icons'
+     1px bars. 1 matches them at this element's own scale. */
+  stroke-width: 1;
   transition: stroke 0.35s var(--ease-precise);
 }
 
@@ -3171,11 +3185,12 @@ html, body {
   /* Third flex child, row-reverse + space-between with exactly 3 items
      — logo/button land at the two edges (as before) and this one falls
      naturally in the middle, no extra positioning needed. */
+  /* No gray — same rule as the nav item numbers: the palette is
+     strictly black/white, solid var(--color-light) not a dimmed one. */
   .mobile-topbar-progress {
     font-family: var(--font-body);
     font-size: 13px;
     color: var(--color-light);
-    opacity: 0.6;
     letter-spacing: 0.02em;
   }
   .mobile-nav-toggle {
@@ -3874,6 +3889,17 @@ html, body {
      stay at the default order:0, now that it's in normal flow. */
   .p4__popup-stage {
     position: relative;
+    /* Desktop's left:0; right:var(--sidebar-w) (for its position:absolute
+       layout) don't get cleared just by switching position to relative —
+       an inset property still shifts a relatively-positioned element
+       from its normal-flow spot, and in RTL with both left/right set and
+       a determined width, right wins: the whole stage was sliding left
+       by var(--sidebar-w) (~86px), pushing everything off the left edge
+       of the screen. */
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
     order: 1;
     width: calc(100% - 32px);
     height: 56vh;
