@@ -95,10 +95,12 @@ html, body {
      Horizontal clipping is already guaranteed by html, body { overflow: hidden }. */
 }
 
-/* Hamburger nav only exists on mobile — see the max-width:768px query for
-   its actual layout; this just keeps it off desktop by default. */
+/* Hamburger nav and Panel 4's tap-to-reveal button only exist on mobile
+   — see the max-width:768px query for their actual layout; this just
+   keeps them off desktop by default. */
 .mobile-topbar,
-.mobile-nav-overlay {
+.mobile-nav-overlay,
+.p4__reveal-btn {
   display: none;
 }
 
@@ -3349,10 +3351,21 @@ html, body {
   .p3__episode-label-col {
     display: none;
   }
+  /* Desktop's 84px/48px top/bottom padding collapsed to 0/16px on mobile
+     — text sat flush against the divider above it. */
   .p3__desc-section {
-    padding: 0 16px 16px;
+    padding: 24px 16px 20px;
   }
+  /* align-items:stretch (not desktop's flex-end) — flex-end shrinks each
+     paragraph to its own content width before aligning the box, and in
+     RTL that box-level alignment resolves to the LEFT edge (RTL's
+     cross-end), not the right — text-align:right inside a shrunk box
+     does nothing to fix that, since the box itself is already sitting
+     at the wrong edge. Stretching every paragraph to the full container
+     width sidesteps the RTL cross-axis quirk entirely; text-align:right
+     alone is then what actually right-aligns it. */
   .p3__desc-inner {
+    align-items: stretch;
     padding-left: 0;
   }
   .p3__ep-num {
@@ -3368,8 +3381,13 @@ html, body {
   .p3__content-area {
     overflow: visible;
   }
+  /* overflow-x must also flip to visible — CSS requires both axes to
+     agree on visible vs. non-visible; leaving desktop's overflow-x:
+     hidden here silently promotes overflow-y:visible to auto instead,
+     recreating the exact inner scroll region this override exists to
+     remove. */
   .p3__scroll-body {
-    overflow-y: visible;
+    overflow: visible;
   }
   .p3__header {
     flex: 0 0 auto;
@@ -3429,10 +3447,17 @@ html, body {
   .p1__hdivider {
     box-shadow: none;
   }
+  /* Desktop's 84px/48px top/bottom padding collapsed to 0/16px on mobile
+     — text sat flush against the divider above it. Give it real
+     breathing room instead of none. */
   .p1__desc-section {
-    padding: 0 16px 16px;
+    padding: 24px 16px 20px;
   }
+  /* align-items:stretch — see the .p3__desc-inner comment for why
+     desktop's flex-end leaves shorter paragraphs sitting at the
+     visual LEFT edge in RTL instead of the right. */
   .p1__desc-inner {
+    align-items: stretch;
     padding-left: 0;
   }
 
@@ -3481,6 +3506,17 @@ html, body {
   }
   .p1__doctors-main {
     min-height: 520px;
+    /* Was overflow-y:scroll (desktop) — a second, independent touch-
+       scroll region layered under .panel__content's own, so a finger
+       landing on the star grid dragged THIS instead of the page, and
+       one landing elsewhere dragged the page: two competing scrolls on
+       one screen. goToSection() below only ever moves this via
+       scrollTo()/scrollTop, both of which still work on a hidden-
+       overflow element (only the user-drag gesture and scrollbar are
+       what overflow:hidden removes) — so the prev/next arrows and dots
+       keep working exactly as before, just without a second thing
+       responding to a raw touch-drag. */
+    overflow-y: hidden;
   }
   .p1__doctors-sticky {
     height: 100%;
@@ -3491,8 +3527,16 @@ html, body {
   .p1__doctors-header {
     flex: 0 0 auto;
   }
+  /* min-height reserves room for 2 lines (26px font * 2 * line-height:1
+     + 40px padding ≈ 96px) so the typewriter effect (backspacing the
+     old section title, then typing the new one letter by letter) never
+     shifts .p1__doctors-divider below it — mid-animation the in-progress
+     string can wrap to a different line count than either its start or
+     end state, and without a floor that reflow visibly pushed the
+     divider up/down on every section change. */
   .p1__doctors-title {
     height: auto;
+    min-height: 96px;
     overflow: visible;
     padding: 20px 16px;
   }
@@ -3570,10 +3614,14 @@ html, body {
   .p2__hdivider {
     box-shadow: none;
   }
+  /* Desktop's 84px/48px top/bottom padding collapsed to 0/16px on mobile
+     — text sat flush against the divider above it. */
   .p2__desc-section {
-    padding: 0 16px 16px;
+    padding: 24px 16px 20px;
   }
+  /* align-items:stretch — see the .p3__desc-inner comment. */
   .p2__desc-inner {
+    align-items: stretch;
     padding-left: 0;
   }
   /* Desktop clips .p2__schedule-area to exactly its flex share and gives
@@ -3588,8 +3636,11 @@ html, body {
   .p2__schedule-area {
     overflow: visible;
   }
+  /* overflow-x must also flip to visible — see the .p3__scroll-body
+     comment above for why leaving overflow-x:hidden here silently
+     promotes overflow-y:visible to auto instead. */
   .p2__scroll-body {
-    overflow-y: visible;
+    overflow: visible;
   }
   .p2__schedule-header {
     flex: 0 0 auto;
@@ -3656,10 +3707,14 @@ html, body {
   .p4__hdivider {
     box-shadow: none;
   }
+  /* Desktop's 84px/48px top/bottom padding collapsed to 0/16px on mobile
+     — text sat flush against the divider above it. */
   .p4__desc-section {
-    padding: 0 16px 16px;
+    padding: 24px 16px 20px;
   }
+  /* align-items:stretch — see the .p3__desc-inner comment. */
   .p4__desc-inner {
+    align-items: stretch;
     padding-left: 0;
   }
   .p4__header {
@@ -3687,37 +3742,67 @@ html, body {
     height: auto;
     overflow: visible;
   }
-  /* From an absolutely-positioned canvas (cards scattered at hardcoded
-     desktop pixel coordinates) to a plain vertical stack. It's actually
-     the first DOM child of .p4 — before the sidebar — since on desktop
-     it's position:absolute and overlays everything regardless of source
-     order; order:1 keeps it visually last (after the sidebar and
-     header, which stay at the default order:0) now that it's static and
-     therefore part of the normal flex-column flow. */
+  /* Tap-to-reveal pile (not a flat scrolling list, not the desktop
+     drag/fall sequence — see the JS) — each tap of .p4__reveal-btn drops
+     one more card into a loosely scattered pile, closer to the desktop
+     version's own "cards falling into a pile" feel than either a static
+     list or trying to adapt drag-and-throw to touch. .p4__popup-stage
+     becomes the pile's own bounded, positioned canvas instead of a
+     flex-column list; it's the first DOM child of .p4 (desktop has it
+     position:absolute, overlaying everything regardless of source
+     order) — order:1 keeps it visually after the sidebar/header, which
+     stay at the default order:0, now that it's in normal flow. */
   .p4__popup-stage {
-    position: static;
+    position: relative;
     order: 1;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    width: calc(100% - 32px);
+    height: 56vh;
+    min-height: 340px;
+    margin: 16px;
   }
   .p4__popup {
-    position: static;
-    width: 100%;
+    position: absolute;
+    width: 78%;
+    max-width: 300px;
   }
-  /* A scattered wall of slightly-rotated cards reads as intentional on a
-     wide desktop canvas; the same rotation in a single narrow column just
-     looks like a mistake. */
   .p4__popup.p4--visible {
-    transform: none;
     cursor: default;
   }
   .p4__popup--small,
   .p4__popup--big,
   .p4__popup--xl {
-    width: 100%;
+    width: 78%;
+    max-width: 300px;
     min-height: auto;
+  }
+  .p4__reveal-btn {
+    display: flex;
+    position: fixed;
+    left: 20px;
+    bottom: 28px;
+    z-index: 500;
+    width: 56px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-light);
+    color: var(--color-dark);
+    font-family: var(--font-body);
+    font-size: 30px;
+    font-weight: 300;
+    line-height: 1;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s var(--ease-precise), opacity 0.2s var(--ease-precise);
+  }
+  .p4__reveal-btn:active {
+    transform: scale(0.88);
+  }
+  .p4__reveal-btn:disabled {
+    opacity: 0.35;
+    pointer-events: none;
   }
 
   /* ── Panel 5 ─────────────────────────────── */
@@ -4432,6 +4517,9 @@ html, body {
       <div class="panel__content p4">
 
         <div class="p4__popup-stage" id="p4-popup-stage"></div>
+        <!-- Mobile-only — reveals one more testimony card per tap (see
+             the JS); hidden on desktop by default CSS. -->
+        <button type="button" class="p4__reveal-btn" id="p4-reveal-btn" aria-label="הצג עדות נוספת">+</button>
 
         <!-- Sidebar -->
         <aside class="p4__sidebar">
@@ -5498,9 +5586,49 @@ html, body {
       });
 
       if (isMobile) {
-        // Static mobile fallback: every card visible immediately, no
-        // scroll-reveal/shake/fall/drag sequence below.
-        nodes.forEach((_, i) => revealCard(i));
+        // Tap-to-reveal pile: each press of #p4-reveal-btn drops one more
+        // card into a loosely scattered pile inside .p4__popup-stage,
+        // closer to the desktop version's own "cards land in a pile"
+        // feel than either a flat static list or trying to adapt
+        // drag-and-throw to a touch screen. Positions are index-derived
+        // (not random) so the pile looks the same on every visit, not
+        // reshuffled on each reflow.
+        const revealBtn = document.getElementById('p4-reveal-btn');
+        function pileReveal(i) {
+          const node = nodes[i];
+          const topPct  = 6  + (i % 5) * 9;
+          const leftPct = 8  + ((i * 3) % 4) * 6;
+          const rot     = ((i * 37) % 24) - 12;
+          node.style.top  = topPct + '%';
+          node.style.left = leftPct + '%';
+          node.style.setProperty('--rot', rot + 'deg');
+          node.style.zIndex = 10 + i;
+          node.classList.add('p4--visible');
+        }
+        function resetPile() {
+          nodes.forEach(n => n.classList.remove('p4--visible'));
+          shown = 1;
+          pileReveal(0);
+          if (revealBtn) revealBtn.disabled = false;
+        }
+        resetPile();
+        if (revealBtn) {
+          revealBtn.addEventListener('click', () => {
+            if (shown >= nodes.length) return;
+            pileReveal(shown++);
+            if (shown >= nodes.length) revealBtn.disabled = true;
+          });
+        }
+        // Fresh pile each time the panel is (re)activated — matches
+        // desktop's own resetAll()-on-reactivate below (unreachable here
+        // since this branch returns early). p4Panel itself isn't defined
+        // until further down this IIFE, so look it up locally.
+        const p4PanelMobile = stageEl.closest('.panel');
+        if (p4PanelMobile) {
+          new MutationObserver(() => {
+            if (p4PanelMobile.classList.contains('panel--active')) resetPile();
+          }).observe(p4PanelMobile, { attributeFilter: ['class'] });
+        }
         return;
       }
 
