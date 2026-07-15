@@ -95,6 +95,13 @@ html, body {
      Horizontal clipping is already guaranteed by html, body { overflow: hidden }. */
 }
 
+/* Hamburger nav only exists on mobile — see the max-width:768px query for
+   its actual layout; this just keeps it off desktop by default. */
+.mobile-nav-toggle,
+.mobile-nav-overlay {
+  display: none;
+}
+
 /* ═══════════════════════════════════════════
    Panel — base
    ═══════════════════════════════════════════ */
@@ -3055,83 +3062,173 @@ html, body {
     --item-header-h-m: 56px;
   }
 
+  /* v2: no more tab-stack. .accordion becomes a plain block flow — its
+     height is simply the natural sum of its 6 panel children, which is
+     what lets the whole PAGE scroll through them (real scroll, not a
+     clipped 100vh box — see .panel below for why that matters). */
+  /* Only ONE of html/body may own the scroll — giving both overflow:auto
+     creates two independent nested scroll containers (body silently
+     absorbs all the scrolling since it's the innermost overflowing
+     ancestor, while html — document.scrollingElement, what scrollY and
+     scrollIntoView both actually target — stays stuck at 0). html stays
+     the single scroller; body just needs to stop clipping it. */
+  html {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-light) transparent;
+  }
+  body {
+    overflow: visible;
+  }
+  html::-webkit-scrollbar {
+    width: 4px;
+  }
+  html::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  html::-webkit-scrollbar-thumb {
+    background: var(--color-light);
+  }
   .accordion {
-    flex-direction: column;
-  }
-
-  .panel {
-    flex-direction: column;
-    flex: 0 0 52px;
-  }
-  /* Re-assert active-panel growth inside this query: .panel and
-     .panel--active have equal specificity, and this media query's .panel
-     rule would otherwise win by coming later in source order, pinning
-     every panel — including the active one — to the closed 52px size. */
-  .panel--active {
-    flex: 1 0 0px;
-  }
-
-  .panel__tab {
-    flex-direction: row;
+    container-type: normal;
+    display: block;
     width: 100%;
-    height: 52px;
-    padding: 0 16px;
-    border-left: none;
-    border-bottom: 1px solid var(--color-light);
-  }
-  .panel--active .panel__tab {
-    border-bottom: none;
-  }
-  .panel:last-child .panel__tab {
-    border-bottom: none;
+    height: auto;
+    min-height: 0;
   }
 
-  .panel__tab-title-wrap {
-    align-items: center;
+  /* Each panel becomes its own full-screen page AND its own container-
+     query context (container-name matches .accordion's, so every cqh/cqw
+     value already written throughout the file — desktop's numbers —
+     keeps working unchanged, just now resolving against ONE mobile
+     screen instead of the old shared accordion). dvh (not vh) is the fix
+     for panels being unreachable below the fold: vh resolves against the
+     LARGEST possible viewport (mobile browser chrome collapsed), which
+     is taller than what's actually visible when the address bar is
+     showing — with the old overflow:hidden that extra height was simply
+     unreachable. dvh tracks the real visible viewport as chrome
+     shows/hides, so a panel is never laid out taller than what you can
+     actually scroll to.
+     container-type:size needs the overflow boundary on a CHILD, never on
+     itself (see the .accordion comment above — same circular-layout risk
+     one level down), so .panel__content (already overflow-y:auto below)
+     is what actually scrolls a panel's content that's taller than one
+     screen. */
+  .panel {
+    container-type: size;
+    container-name: accordion;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    overflow: visible;
   }
-  .panel__tab-title {
-    writing-mode: horizontal-tb;
-    transform: none;
-    white-space: normal;
-    /* font-size already picks up the --fs-body override above */
-  }
-  .panel__tab-logo {
-    width: 32px;
-  }
-  /* The horizontal hover-shift reads oddly with a touch tap; neutralize it */
-  .panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
-  .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
-    transform: none;
+  /* Tabs are replaced by the hamburger nav (below) — no open/close
+     mechanic on mobile, every panel is simply always its own page. */
+  .panel__tab {
+    display: none;
   }
 
-  /* Panels stack in from below instead of sliding in sideways */
-  @keyframes panel-enter-mobile {
-    from { opacity: 0; transform: translateY(40px); }
-    to   { opacity: 1; transform: translateY(0);     }
-  }
-  .panel--entering {
-    animation-name: panel-enter-mobile;
-  }
-
-  /* Content is no longer pinned to a fixed final width (that trick existed
-     to stop text reflowing as PANEL WIDTH animated on desktop — on mobile
-     only height animates, and width stays 100% throughout, so there's no
-     reflow risk to guard against). !important beats the inline
-     overflow:visible the transitionend listener applies once a panel
-     finishes opening — desktop content is exactly its final size so
-     overflow:visible is a no-op safety net there, but mobile content is
-     often taller than the open panel's box and needs to scroll, not spill
-     over neighboring panels. */
   .panel__content {
     flex: 1;
+    min-height: 0;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    visibility: visible !important;
+  }
+  /* The left-edge divider line existed to mark the boundary between an
+     open panel's content and its neighboring tab column — there's no
+     side-by-side tab column on mobile anymore, so it'd just be a stray
+     vertical line down the edge of every page. */
+  .panel__content.panel__content--visible::before {
+    display: none;
   }
   /* Stacks each panel's sidebar above its main content area instead of
      side-by-side. (.p0 already is column on desktop, listing it here is
      harmless.) */
   .p0, .p1, .p2, .p3, .p4, .p5 {
     flex-direction: column;
+  }
+
+  /* ── Hamburger nav (replaces the tab bar) ─────────────────────────── */
+  .mobile-nav-toggle {
+    display: flex;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1000;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex-direction: column;
+    background: var(--color-dark);
+    border: 1px solid var(--color-light);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .mobile-nav-toggle span {
+    display: block;
+    width: 20px;
+    height: 1px;
+    background: var(--color-light);
+    transition: transform 0.3s var(--ease-precise), opacity 0.3s var(--ease-precise);
+  }
+  .mobile-nav-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+  .mobile-nav-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+  .mobile-nav-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+  .mobile-nav-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--color-dark);
+    transform: translateX(100%);
+    transition: transform 0.4s var(--ease-precise);
+  }
+  .mobile-nav-overlay[data-open="true"] {
+    transform: translateX(0);
+  }
+  .mobile-nav-list {
+    display: flex;
+    flex-direction: column;
+    padding: 96px 16px 16px;
+    gap: 4px;
+  }
+  .mobile-nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px 8px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--color-light);
+    color: var(--color-light);
+    font-family: var(--font-body);
+    font-size: 16px;
+    text-align: right;
+    direction: rtl;
+    cursor: pointer;
+  }
+  .mobile-nav-item[data-current="true"] {
+    color: var(--color-accent, var(--color-light));
+    font-weight: 600;
+  }
+  .mobile-nav-item-num {
+    font-size: 13px;
+    opacity: 0.6;
   }
 
   /* ── Panel 0 ─────────────────────────────── */
@@ -3144,7 +3241,7 @@ html, body {
     padding: 20px 16px;
   }
   .p0__illustration {
-    max-height: 22vh;
+    max-height: 28vh;
   }
   .p0__lower-frame {
     height: auto;
@@ -3201,7 +3298,7 @@ html, body {
   }
   .p3__item-header {
     height: var(--item-header-h-m);
-    padding: 12px 16px;
+    padding: 16px;
   }
   /* .p3__body-content/.p3__body-svg-clean/.p3__body-text-02 (the
      "item-02 illustration bleeds into header" feature described in the
@@ -3249,31 +3346,36 @@ html, body {
   }
 
   /* The sticky+invisible-scroll-track mechanism (content visually stays
-     put while an extra bit of scroll room drives section-switching) was
-     sized in cqh — a percentage of the whole accordion/viewport — which
-     assumed the panel always spans the full accordion height. On mobile
-     .p1__doctors-main only gets whatever's left after the stacked
-     sidebar/header above it, so 100cqh badly overshoots.
-     goToSection()/the scroll listener (index.html ~4106-4140) both read
+     put while an extra bit of scroll room drives section-switching) is
+     driven by cqh, which now resolves against .panel (100dvh) instead of
+     the old shared accordion — same "one full mobile screen" meaning
+     desktop's numbers already assume, EXCEPT .p1__doctors-main itself
+     doesn't get the full screen on mobile (the sidebar stacks above it,
+     stealing some of that 100dvh) the way it does on desktop (sidebar
+     beside it, stealing width not height). So .p1__doctors-sticky's own
+     100cqh still needs rebasing onto its real parent (100%) — that
+     mismatch is structural (row→column), not a budget issue, and stays
+     regardless of how much room the panel has overall.
+     goToSection()/the scroll listener (index.html ~4600-4660) both read
      doctorsMain.scrollTop/scrollHeight/clientHeight directly — the nav
      bar's arrows and dots only work if doctorsMain genuinely IS the
      scrolling element with real scrollable room, so it can't just be
-     switched off. Keep the exact same mechanism, just rebased onto a
-     bounded local height (60vh, deliberately vh not cqh — this needs to
-     stay stable relative to the real device viewport regardless of how
-     tall the sidebar above it ends up being) instead of the accordion's
-     full 100cqh, with .p1__doctors-sticky's height following its actual
-     parent (100%) instead of the old global viewport figure. */
+     switched off. flex:1 (not a hand-picked vh) lets it claim whatever's
+     left after the sidebar above it, same as desktop's own flex:1 — a
+     min-height keeps the sub-carousel usable even if the sidebar ends up
+     tall. */
+  /* min-height:0 (not overflow:visible — that was the previous pass's
+     fix for a now-gone problem, and removing desktop's overflow:hidden
+     here backfires: .p1__doctors-main's own content is DELIBERATELY
+     inflated (the sticky+scroll-track scroll-jacking mechanism below), so
+     without a clip/min-height:0 floor, that inflated min-content size
+     leaks out and overrides this flex item's fair flex:1 share, pushing
+     .p1's total content taller than one screen for no visible reason). */
   .p1__doctors-area {
-    height: auto;
-    overflow: visible;
+    min-height: 0;
   }
   .p1__doctors-main {
-    /* flex:0 0 <length>, not just height — the desktop flex:1 shorthand
-       (flex-basis:0%) otherwise wins sizing over a plain height override,
-       same class of bug as .panel__content earlier in this file. */
-    flex: 0 0 60vh;
-    height: 60vh;
+    min-height: 0;
   }
   .p1__doctors-sticky {
     height: 100%;
@@ -3287,38 +3389,42 @@ html, body {
   .p1__doctors-title {
     height: auto;
     overflow: visible;
-    padding: 16px;
+    padding: 20px 16px;
   }
   .p1__doctors-body {
-    padding: 12px 16px;
-    gap: 12px;
+    padding: 20px 16px;
+    gap: 20px;
   }
-  /* height was 7.477cqh — a percentage of the whole accordion, sized for
-     when this quote area lived inside a full-viewport-height panel. Now
-     that it's inside the bounded 60vh sticky box, that fixed percentage
-     way overshoots its actual share of the available room; auto lets it
-     size from its own (already-small, already mobile-clamped) text. */
+  /* Tapping/focusing a star swaps this box's text between empty and a
+     quote up to ~75 characters (index.html ~4596-4606) — desktop keeps it
+     to one line via white-space:nowrap and just shrinks the font with
+     cqw; that clamp bottoms out at 14px on a narrow mobile screen, so
+     nowrap would instead overflow sideways. Let it wrap, and reserve a
+     min-height for the longest quote at 3 wrapped lines so swapping text
+     never shifts .p1__doctors-divider/.p1__nav-divider above/below. */
   .p1__quote {
     height: auto;
+    min-height: 76px;
   }
   .p1__quote-text {
     width: auto;
     max-width: 100%;
+    white-space: normal;
+    line-height: 1.35;
+    word-break: break-word;
   }
-  /* Same story as .p1__quote: width/gap were cqw/cqh percentages of the
-     full accordion, and .p1__star's min(5.778cqh,100%) alone produced
-     ~47px stars — sized for a full-height desktop panel, not this
-     bounded 60vh box, which is exactly the "content overflows and
-     justify-content:center pushes it out both ends" bug already found
-     and fixed once this session for this same grid. Fixed px instead of
-     cqh here since the whole point is to stop depending on the
-     full-viewport basis.
+  /* .p1__star's min(5.778cqh,100%) now resolves against a full mobile
+     screen (via the per-panel container) rather than a shrunk one, but a
+     desktop-proportioned star grid still doesn't fit a 375px-wide mobile
+     screen at 10 columns — fixed px instead, same "content overflows and
+     justify-content:center pushes it out both ends" bug class already
+     hit once this session for this exact grid.
      Columns stay at 10 (not reduced) — the JS builds a hardcoded 6
      rows-of-10-children DOM structure (not driven by grid-template-
      columns), so redeclaring fewer columns here doesn't regroup the
      stars, it just makes each 10-child row wrap into extra implicit
      grid rows and roughly double the total height. 10 columns at 32px
-     fits comfortably in the 343px-wide grid and is still a fine tap
+     fits comfortably in a 343px-wide grid and is still a fine tap
      target. */
   .p1__stars-grid {
     width: 100%;
@@ -3476,40 +3582,24 @@ html, body {
   }
 
   /* ── Panel 5 ─────────────────────────────── */
+  /* Physics now runs on mobile too (IntersectionObserver-triggered — see
+     the JS), so this is a real interactive stage, not a static fallback.
+     Full 100dvh panel means it can get a generous chunk of the screen
+     instead of the old cramped 280px band. Shapes keep their desktop
+     off-screen spawn positions (.p5__shape1..4's top:-40%..-200%, unset
+     here) and fall in via gravity exactly like desktop. */
   .p5__sidebar {
     flex: 0 0 auto;
     width: 100%;
-    /* Unlike p1/p2/p4's sidebars this one is pure illustration with no
-       text content to size itself from, so it needs an explicit height —
-       auto would collapse to 0. Matter.js is gated off on mobile (see the
-       JS), so this is a fixed static illustration, not an interactive
-       physics stage. */
-    height: 280px;
+    height: 52vh;
     border-left: none;
     border-bottom: 1px solid var(--color-dark);
-    cursor: default;
-  }
-  /* Static fallback layout for the 4 shapes — the desktop values
-     (top: -40% to -200%) are each shape's pre-physics OFF-SCREEN spawn
-     position (above the frame, waiting to fall into view), not a resting
-     position, so they can't be reused as-is now that physics never runs
-     on mobile. Same width/left, new top offsets to lay them out as a
-     simple overlapping stack that fits inside the fixed 280px frame. */
-  .p5__shape1 { top: 0%; }
-  .p5__shape2 { top: 18%; }
-  .p5__shape3 { top: 38%; }
-  .p5__shape4 { top: 48%; }
-  /* Physics applied this flip via inline transform at throw-time; add it
-     back directly since that code never runs on mobile. */
-  .p5__shape3 {
-    transform: scaleX(-1);
   }
   /* Desktop pins this to height:100%+overflow-y:scroll as a flex sibling
      of the sidebar in a row layout, where it fills the remaining row
      height exactly. In the mobile column layout that turns into its own
-     cramped inner scrollbox (500px panel - 280px sidebar = ~220px), so
-     let .panel__content (already overflow-y:auto) be the only scroll
-     container instead. */
+     cramped inner scrollbox, so let .panel__content (already
+     overflow-y:auto) be the only scroll container instead. */
   .p5__main {
     flex: 1 1 auto;
     height: auto;
@@ -3517,15 +3607,15 @@ html, body {
     align-items: stretch;
   }
   .p5__header {
-    padding: 16px;
+    padding: 20px 16px;
     min-height: auto;
   }
   .p5__about {
-    padding: 16px;
-    gap: 24px;
+    padding: 20px 16px;
+    gap: 28px;
   }
   .p5__dropdown-header {
-    padding: 12px 16px;
+    padding: 16px;
   }
   .p5__cards-row {
     padding: 0 16px 24px;
@@ -3535,6 +3625,15 @@ html, body {
   </style>
 </head>
 <body>
+
+  <!-- Mobile-only hamburger nav — built/wired entirely from JS (reads
+       .panel__tab text at runtime), hidden on desktop by default CSS. -->
+  <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="תפריט" aria-expanded="false" aria-controls="mobile-nav-overlay">
+    <span></span><span></span><span></span>
+  </button>
+  <nav class="mobile-nav-overlay" id="mobile-nav-overlay" aria-hidden="true">
+    <div class="mobile-nav-list" id="mobile-nav-list"></div>
+  </nav>
 
   <!-- ══════════════════════════════
        Accordion canvas
@@ -4740,6 +4839,22 @@ html, body {
        ══════════════════════════════════════════ */
     (function () {
       const allPanels = Array.from(document.querySelectorAll('.panel'));
+
+      /* Mobile: no open/close accordion mechanic anymore — every panel is
+         simply its own always-on full-screen page, so every panel needs
+         panel--active/panel__content--visible simultaneously (a lot of
+         per-panel logic elsewhere, e.g. Panel 2's ResizeObserver, gates on
+         .panel--active being present). Skip the desktop stagger-reveal
+         entirely and just flip every panel on once at init. */
+      if (window.matchMedia('(max-width: 768px)').matches) {
+        allPanels.forEach(p => {
+          p.classList.add('panel--active');
+          const c = p.querySelector('.panel__content');
+          if (c) { c.removeAttribute('aria-hidden'); c.classList.add('panel__content--visible'); }
+        });
+        return;
+      }
+
       const STAGGER   = 150; // ms between panels
 
       // Start everything closed
@@ -5483,12 +5598,12 @@ html, body {
       ].filter(Boolean);
 
       if (!frame || imgEls.length < 4) return;
-      // Mobile: skip Matter.js entirely (drag-to-throw fights page-scroll
-      // gestures on touch, and the physics walls/shape sizing assume the
-      // current tall/narrow desktop sidebar). The shapes simply keep their
-      // static CSS fallback position (.p5__shape1..4 below) — no physics
-      // ever runs, no engine, no rAF loop, nothing to tear down either.
-      if (window.matchMedia('(max-width: 768px)').matches) return;
+      const isMobile5 = window.matchMedia('(max-width: 768px)').matches;
+      // Matter.js's Mouse module translates touchstart/touchmove/touchend
+      // to mouse-equivalent events internally, so drag-to-throw works on
+      // mobile with zero changes to the simulation itself — only the
+      // trigger mechanism differs below (see the isMobile5 branch at the
+      // bottom of this IIFE).
 
       // wF: shape width as fraction of sidebar width (13.818cqw / 19.043cqw)
       // aspect: SVG natural height/width ratio — bh is derived from bw, not from H
@@ -5640,37 +5755,70 @@ html, body {
         });
       }
 
-      let wasActive = false;
-      new MutationObserver(() => {
-        const isActive = panel5.classList.contains('panel--active');
-        if (isActive && !wasActive) {
-          // Wait for the 0.75s flex-basis transition to finish before measuring boundaries
-          if (startTimer) { clearTimeout(startTimer); startTimer = null; }
-          startTimer = setTimeout(() => {
-            startTimer = null;
-            startPhysics();
-            // Debounced resize: tear down and restart so walls match the new frame size
-            const onResize = () => {
-              if (!panel5.classList.contains('panel--active')) return;
-              if (resizeTimer) clearTimeout(resizeTimer);
-              resizeTimer = setTimeout(() => {
-                resizeTimer = null;
-                stopPhysics();
-                startPhysics();
-                // stopPhysics() removes resizeCleanup, so re-register after restart
-                window.addEventListener('resize', onResize);
-                resizeCleanup = () => window.removeEventListener('resize', onResize);
-              }, 250);
-            };
-            window.addEventListener('resize', onResize);
-            resizeCleanup = () => window.removeEventListener('resize', onResize);
-          }, 800);
-        } else if (!isActive && wasActive) {
-          if (startTimer) { clearTimeout(startTimer); startTimer = null; }
-          stopPhysics();
-        }
-        wasActive = isActive;
-      }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
+      function beginPhysics() {
+        if (startTimer) { clearTimeout(startTimer); startTimer = null; }
+        startTimer = setTimeout(() => {
+          startTimer = null;
+          startPhysics();
+          // Debounced resize: tear down and restart so walls match the new frame size
+          const onResize = () => {
+            if (isMobile5) {
+              if (!panel5.classList.contains('p5--in-view')) return;
+            } else if (!panel5.classList.contains('panel--active')) {
+              return;
+            }
+            if (resizeTimer) clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+              resizeTimer = null;
+              stopPhysics();
+              startPhysics();
+              // stopPhysics() removes resizeCleanup, so re-register after restart
+              window.addEventListener('resize', onResize);
+              resizeCleanup = () => window.removeEventListener('resize', onResize);
+            }, 250);
+          };
+          window.addEventListener('resize', onResize);
+          resizeCleanup = () => window.removeEventListener('resize', onResize);
+        }, 800);
+      }
+      function endPhysics() {
+        if (startTimer) { clearTimeout(startTimer); startTimer = null; }
+        stopPhysics();
+      }
+
+      if (isMobile5) {
+        // No more open/close class-toggling on mobile (every panel is
+        // permanently .panel--active — see the entrance-animation IIFE),
+        // so a MutationObserver watching that class would never fire here.
+        // Use scroll visibility instead: start physics once panel 5's
+        // stage scrolls into view, tear it down once it's fully scrolled
+        // away (no orphaned rAF loop running off-screen).
+        let inView = false;
+        new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            const nowIn = entry.isIntersecting;
+            if (nowIn && !inView) {
+              panel5.classList.add('p5--in-view');
+              beginPhysics();
+            } else if (!nowIn && inView) {
+              panel5.classList.remove('p5--in-view');
+              endPhysics();
+            }
+            inView = nowIn;
+          });
+        }, { threshold: 0.3 }).observe(panel5);
+      } else {
+        let wasActive = false;
+        new MutationObserver(() => {
+          const isActive = panel5.classList.contains('panel--active');
+          if (isActive && !wasActive) {
+            beginPhysics();
+          } else if (!isActive && wasActive) {
+            endPhysics();
+          }
+          wasActive = isActive;
+        }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
+      }
     }());
 
     /* ══════════════════════════════════════════
@@ -5689,6 +5837,69 @@ html, body {
       document.querySelectorAll('.p3__card, .p3__card-07, .p5__card').forEach(card => {
         card.addEventListener('click', () => card.classList.toggle('is-flipped'));
       });
+    }());
+
+    /* ══════════════════════════════════════════
+       Mobile — hamburger nav
+       ══════════════════════════════════════════ */
+    /* Built entirely from the existing .panel__tab DOM (no duplicated
+       content) — each panel becomes one tappable row that scrolls that
+       panel's page into view. Panel 0 has no .panel__tab-title (just a
+       logo), so it gets a fallback label. */
+    (function () {
+      if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+      const toggle  = document.getElementById('mobile-nav-toggle');
+      const overlay = document.getElementById('mobile-nav-overlay');
+      const list    = document.getElementById('mobile-nav-list');
+      const panels  = Array.from(document.querySelectorAll('.panel'));
+      if (!toggle || !overlay || !list || !panels.length) return;
+
+      const items = panels.map(panel => {
+        const num   = panel.dataset.panel;
+        const titleEl = panel.querySelector('.panel__tab-title');
+        const label = titleEl ? titleEl.textContent.trim() : 'HS';
+
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'mobile-nav-item';
+        item.dataset.panel = num;
+        item.innerHTML = `<span>${label}</span><span class="mobile-nav-item-num">${num}</span>`;
+        item.addEventListener('click', () => {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          closeNav();
+        });
+        list.appendChild(item);
+        return item;
+      });
+
+      function openNav() {
+        overlay.dataset.open = 'true';
+        overlay.removeAttribute('aria-hidden');
+        toggle.setAttribute('aria-expanded', 'true');
+      }
+      function closeNav() {
+        overlay.dataset.open = 'false';
+        overlay.setAttribute('aria-hidden', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+      toggle.addEventListener('click', () => {
+        if (overlay.dataset.open === 'true') closeNav(); else openNav();
+      });
+
+      // Highlight whichever panel is currently in view — low-cost reuse of
+      // the same IntersectionObserver pattern already used elsewhere in
+      // this file (e.g. Panel 2's explode-on-scroll).
+      const currentObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const idx = panels.indexOf(entry.target);
+          items.forEach((item, i) => {
+            item.dataset.current = i === idx ? 'true' : 'false';
+          });
+        });
+      }, { threshold: 0.5 });
+      panels.forEach(p => currentObserver.observe(p));
     }());
 
   </script>
