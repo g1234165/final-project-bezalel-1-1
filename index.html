@@ -200,6 +200,13 @@ html, body {
 .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo--dark {
   display: block;
 }
+/* Panel 0's mobile-only "HS" text stand-in for its logo images (see the
+   HTML comment above it) — desktop's vertical tab already shows those
+   images, so keep this text out of the way there; the mobile media
+   query below turns it back on. */
+[data-panel="0"] .panel__tab-title-wrap {
+  display: none;
+}
 
 /* ═══════════════════════════════════════════
    Panel content
@@ -3157,6 +3164,16 @@ html, body {
     height: 28px;
     display: block;
   }
+  /* Third flex child, row-reverse + space-between with exactly 3 items
+     — logo/button land at the two edges (as before) and this one falls
+     naturally in the middle, no extra positioning needed. */
+  .mobile-topbar-progress {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--color-light);
+    opacity: 0.6;
+    letter-spacing: 0.02em;
+  }
   .mobile-nav-toggle {
     display: flex;
     align-items: center;
@@ -3165,11 +3182,6 @@ html, body {
     border: none;
     cursor: pointer;
     padding: 0;
-  }
-  .mobile-nav-toggle-label {
-    font-family: var(--font-body);
-    font-size: 14px;
-    color: var(--color-light);
   }
   .mobile-nav-toggle-bars {
     display: flex;
@@ -3282,6 +3294,12 @@ html, body {
   .panel__tab-logo {
     display: none;
   }
+  /* ...and turn its mobile-only text stand-in back on (hidden by
+     default outside this query — see the base CSS near
+     .panel__tab-logo--dark). */
+  [data-panel="0"] .panel__tab-title-wrap {
+    display: flex;
+  }
   .panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
   .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
     transform: none;
@@ -3311,16 +3329,22 @@ html, body {
   .p0__v-line {
     display: none;
   }
+  /* This HS wordmark sat beside the opening text as a third-column
+     divider ornament on desktop's row layout — redundant on mobile now
+     that the topbar carries its own HS logo on every panel, and Panel
+     0's own header row does too. */
   .p0__logo-nav {
-    padding: 16px 0;
+    display: none;
   }
   .p0__hs-logo {
     width: 32px;
     height: 32px;
   }
+  /* Same fix as the other panels' desc-sections — 0 top padding sat the
+     title flush against the divider line above it. */
   .p0__opening-text {
-    padding: 0 16px 20px;
-    gap: 8px;
+    padding: 24px 16px 24px;
+    gap: 10px;
   }
 
   /* ── Panel 3 (light theme — border/text use --color-dark, not light) ── */
@@ -3409,6 +3433,85 @@ html, body {
   .p3__cards-container,
   .p3__05-container {
     padding: 16px 16px 24px;
+  }
+  /* Desktop's 320px/220px min-heights assume a wide multi-column grid
+     (flex:1 1 200-380px) with several cards sharing a row — on a mobile
+     column each card is nearly the full 342px width, leaving a couple
+     of short words floating in a mostly-empty box. front/back stay
+     position:absolute (that overlay is what makes the 3D flip work —
+     switching to relative would stack them instead of crossfading),
+     which means the card's height can't just be "auto" from content;
+     it has to stay an explicit value, just a much smaller one sized for
+     the actual label+description text instead of the desktop grid. */
+  .p3__card {
+    min-height: 160px;
+  }
+  .p3__card-front,
+  .p3__card-back {
+    padding: 20px;
+  }
+  .p3__card-label {
+    font-size: 18px;
+  }
+  .p3__card-desc {
+    font-size: 15px;
+  }
+  .p3__card-07 {
+    min-height: 150px;
+  }
+  .p3__card-07-front,
+  .p3__card-07-back {
+    padding: 20px;
+  }
+  .p3__card-07-title {
+    font-size: 18px;
+  }
+  .p3__card-07-body {
+    font-size: 15px;
+  }
+  /* .p3__col-illus--02 is hardcoded to a 320px-wide desktop illustration
+     — inside .p3__col-item's row layout that leaves almost nothing for
+     .p3__col-text (flex:1 1 auto) on a ~310px-wide mobile column,
+     squeezing the paragraph into a near-vertical strip of one-word
+     lines. Stack illustration above text instead of beside it, and cap
+     every illustration to a sane mobile width. */
+  .p3__col-item {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+  }
+  .p3__col-illus {
+    align-self: center;
+  }
+  .p3__col-illus--02,
+  .p3__col-illus--02 img {
+    width: 100%;
+    max-width: 220px;
+  }
+  .p3__col-illus--03-1,
+  .p3__col-illus--03-2 {
+    height: auto;
+  }
+  .p3__col-illus--03-1 img {
+    width: 90px;
+    height: auto;
+  }
+  /* Item 05 ("who does it happen to?") uses a completely separate
+     .p3__05-* class scheme, not .p3__col-*, so the fix above didn't
+     reach it — same underlying bug: .p3__05-col's row layout (text
+     block + up-to-180px illustration side by side) squeezes the text
+     block on a narrow screen exactly like .p3__col-item did. */
+  .p3__05-row {
+    gap: 24px;
+  }
+  .p3__05-col {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+  }
+  .p3__05-illus {
+    align-self: center;
+    max-width: 140px;
   }
 
   /* ── Panel 1 ─────────────────────────────── */
@@ -3505,7 +3608,13 @@ html, body {
     overflow: visible;
   }
   .p1__doctors-main {
-    min-height: 520px;
+    /* 96 header + 1 divider + 368 body (20+76+20+232+20 padding/quote/
+       gap/grid) + 1 nav-divider + ~63 nav ≈ 529px needed — 540px leaves
+       a small margin so .p1__doctors-body's own 20px bottom padding
+       isn't quietly eaten by a too-tight floor (was 520px, ~9px short,
+       which is exactly why the star grid sat almost flush against the
+       nav divider below it instead of having real breathing room). */
+    min-height: 540px;
     /* Was overflow-y:scroll (desktop) — a second, independent touch-
        scroll region layered under .panel__content's own, so a finger
        landing on the star grid dragged THIS instead of the page, and
@@ -3788,11 +3897,6 @@ html, body {
     border-radius: 50%;
     border: none;
     background: var(--color-light);
-    color: var(--color-dark);
-    font-family: var(--font-body);
-    font-size: 30px;
-    font-weight: 300;
-    line-height: 1;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     cursor: pointer;
     transition: transform 0.2s var(--ease-precise), opacity 0.2s var(--ease-precise);
@@ -3800,9 +3904,54 @@ html, body {
   .p4__reveal-btn:active {
     transform: scale(0.88);
   }
+  /* Thin-line plus, matching .mobile-nav-toggle-bars' line weight rather
+     than a bold text glyph — two 1px bars crossed, same idea as the
+     hamburger icon just rotated into a plus. */
+  .p4__reveal-btn-plus {
+    position: relative;
+    width: 20px;
+    height: 20px;
+  }
+  .p4__reveal-btn-plus span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: var(--color-dark);
+  }
+  .p4__reveal-btn-plus span:first-child {
+    width: 20px;
+    height: 1px;
+    transform: translate(-50%, -50%);
+  }
+  .p4__reveal-btn-plus span:last-child {
+    width: 1px;
+    height: 20px;
+    transform: translate(-50%, -50%);
+  }
   .p4__reveal-btn:disabled {
     opacity: 0.35;
     pointer-events: none;
+  }
+  /* Desktop sizes these cards' text at 28-80px for wide (23-41cqw)
+     cinematic cards — on a ~230px-wide mobile card that wraps almost
+     every word onto its own line. Scale down to something that actually
+     reads as a quote card, and shrink the padding/quote-mark gutters to
+     match the smaller card instead of eating most of its width. */
+  .p4__popup-body {
+    gap: 4px;
+  }
+  .p4__popup--small .p4__popup-body,
+  .p4__popup--big   .p4__popup-body,
+  .p4__popup--xl    .p4__popup-body {
+    padding: 20px;
+  }
+  .p4__popup--small .p4__popup-text { font-size: 16px; }
+  .p4__popup--big   .p4__popup-text { font-size: 18px; }
+  .p4__popup--xl    .p4__popup-text { font-size: 20px; line-height: 1.15; }
+  .p4__popup-qclose,
+  .p4__popup-qopen {
+    width: 12px;
+    font-size: 18px;
   }
 
   /* ── Panel 5 ─────────────────────────────── */
@@ -3842,7 +3991,33 @@ html, body {
     padding: 16px;
   }
   .p5__cards-row {
-    padding: 0 16px 24px;
+    padding: 16px 16px 24px;
+  }
+  /* Desktop's 0/80px top/horizontal padding — 0 top sat the links list
+     flush against the dropdown header when opened, and 80px horizontal
+     would eat almost half a 375px screen. Matches .p5__cards-row's
+     rhythm above. */
+  .p5__links-content {
+    padding: 16px 16px 24px;
+  }
+  /* Same fix as Panel 3's flip cards — desktop's 380px min-height (its
+     grid shares 3-4 cards per row; mobile is one nearly-full-width card
+     per row) left a line or two of text stranded in a huge empty box.
+     front/back stay position:absolute (needed for the flip crossfade),
+     so height has to stay an explicit — just much smaller — value. */
+  .p5__card {
+    min-height: 200px;
+  }
+  .p5__card-front,
+  .p5__card-back {
+    padding: 20px;
+  }
+  .p5__card-text,
+  .p5__card-label {
+    font-size: 18px;
+  }
+  .p5__card-desc {
+    font-size: 14px;
   }
 }
 
@@ -3855,8 +4030,10 @@ html, body {
        hidden on desktop by default CSS. -->
   <header class="mobile-topbar">
     <img src="SVG\HS logo small.svg" alt="HS" class="mobile-topbar-logo">
+    <!-- Current/total panel indicator — a quiet hint that there's more
+         to scroll through, kept in sync with panel--active by JS. -->
+    <span class="mobile-topbar-progress" id="mobile-topbar-progress" aria-hidden="true">0/5</span>
     <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="תפריט" aria-expanded="false" aria-controls="mobile-nav-overlay">
-      <span class="mobile-nav-toggle-label">תפריט</span>
       <span class="mobile-nav-toggle-bars"><span></span><span></span><span></span></span>
     </button>
   </header>
@@ -3877,6 +4054,13 @@ html, body {
       <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 0 — HS">
         <img src="SVG\HS logo small.svg" alt="HS" class="panel__tab-logo panel__tab-logo--light">
         <img src="SVG\HS logo small black.svg" alt="HS" class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
+        <!-- Mobile-only text counterpart to the logo images above (which
+             desktop's vertical tab shows instead of text, unlike every
+             other panel) — hidden on desktop by the rule right after
+             .panel__tab-logo, below. -->
+        <div class="panel__tab-title-wrap">
+          <span class="panel__tab-title">HS</span>
+        </div>
         <span class="panel__tab-num">0</span>
       </div>
 
@@ -4519,7 +4703,9 @@ html, body {
         <div class="p4__popup-stage" id="p4-popup-stage"></div>
         <!-- Mobile-only — reveals one more testimony card per tap (see
              the JS); hidden on desktop by default CSS. -->
-        <button type="button" class="p4__reveal-btn" id="p4-reveal-btn" aria-label="הצג עדות נוספת">+</button>
+        <button type="button" class="p4__reveal-btn" id="p4-reveal-btn" aria-label="הצג עדות נוספת">
+          <span class="p4__reveal-btn-plus"><span></span><span></span></span>
+        </button>
 
         <!-- Sidebar -->
         <aside class="p4__sidebar">
@@ -6106,13 +6292,15 @@ html, body {
     (function () {
       if (!window.matchMedia('(max-width: 768px)').matches) return;
 
-      const toggle  = document.getElementById('mobile-nav-toggle');
-      const overlay = document.getElementById('mobile-nav-overlay');
-      const list    = document.getElementById('mobile-nav-list');
-      const panels  = Array.from(document.querySelectorAll('.panel'));
+      const toggle   = document.getElementById('mobile-nav-toggle');
+      const overlay  = document.getElementById('mobile-nav-overlay');
+      const list     = document.getElementById('mobile-nav-list');
+      const progress = document.getElementById('mobile-topbar-progress');
+      const panels   = Array.from(document.querySelectorAll('.panel'));
       if (!toggle || !overlay || !list || !panels.length) return;
 
       function activatePanel(panel) {
+        if (progress) progress.textContent = `${panel.dataset.panel}/${panels.length - 1}`;
         if (panel.classList.contains('panel--active')) return;
         panels.forEach(p => {
           p.classList.remove('panel--active');
