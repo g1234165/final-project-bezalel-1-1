@@ -97,7 +97,7 @@ html, body {
 
 /* Hamburger nav only exists on mobile — see the max-width:768px query for
    its actual layout; this just keeps it off desktop by default. */
-.mobile-nav-toggle,
+.mobile-topbar,
 .mobile-nav-overlay {
   display: none;
 }
@@ -3062,74 +3062,52 @@ html, body {
     --item-header-h-m: 56px;
   }
 
-  /* v2: no more tab-stack. .accordion becomes a plain block flow — its
-     height is simply the natural sum of its 6 panel children, which is
-     what lets the whole PAGE scroll through them (real scroll, not a
-     clipped 100vh box — see .panel below for why that matters). */
-  /* Only ONE of html/body may own the scroll — giving both overflow:auto
-     creates two independent nested scroll containers (body silently
-     absorbs all the scrolling since it's the innermost overflowing
-     ancestor, while html — document.scrollingElement, what scrollY and
-     scrollIntoView both actually target — stays stuck at 0). html stays
-     the single scroller; body just needs to stop clipping it. */
-  html {
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-light) transparent;
-  }
-  body {
-    overflow: visible;
-  }
-  html::-webkit-scrollbar {
-    width: 4px;
-  }
-  html::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  html::-webkit-scrollbar-thumb {
-    background: var(--color-light);
+  /* v3: back to exactly one panel visible at a time (like desktop's
+     .panel--active), reached only via the hamburger — not a continuous
+     scroll through all 6 stacked (v2). No outer page scroll exists
+     anymore, which is also the fix for "scroll inside scroll": the only
+     scroll region left on any given page is that panel's own
+     .panel__content (plus whatever a specific panel nests inside itself,
+     like Panel 1's sub-carousel — that nesting is intentional to that
+     one feature and exists on desktop too, it's not what was conflicting
+     before). */
+  html, body {
+    overflow: hidden;
   }
   .accordion {
-    container-type: normal;
-    display: block;
     width: 100%;
-    height: auto;
-    min-height: 0;
+    height: 100dvh;
   }
 
-  /* Each panel becomes its own full-screen page AND its own container-
-     query context (container-name matches .accordion's, so every cqh/cqw
-     value already written throughout the file — desktop's numbers —
-     keeps working unchanged, just now resolving against ONE mobile
-     screen instead of the old shared accordion). dvh (not vh) is the fix
-     for panels being unreachable below the fold: vh resolves against the
-     LARGEST possible viewport (mobile browser chrome collapsed), which
-     is taller than what's actually visible when the address bar is
-     showing — with the old overflow:hidden that extra height was simply
-     unreachable. dvh tracks the real visible viewport as chrome
-     shows/hides, so a panel is never laid out taller than what you can
-     actually scroll to.
-     container-type:size needs the overflow boundary on a CHILD, never on
-     itself (see the .accordion comment above — same circular-layout risk
-     one level down), so .panel__content (already overflow-y:auto below)
-     is what actually scrolls a panel's content that's taller than one
-     screen. */
+  /* display:none by default, .panel--active gets shown — mirrors
+     desktop's own show/hide model (activate() in the JS already does
+     exactly "remove active from all, add to one," completely unchanged
+     for mobile) instead of a separate mechanism. container-type:size
+     stays on .panel (not .accordion) so every cqh/cqw value already
+     written throughout the file keeps resolving against ONE mobile
+     screen. dvh (not vh) tracks the actual visible viewport as mobile
+     browser chrome shows/hides, so nothing is ever laid out taller than
+     what's on screen. overflow stays off .panel itself (container-
+     type:size + overflow on the same element risks circular layout, see
+     the .accordion comment above) — .panel__content's overflow-y:auto
+     below is what scrolls content taller than one screen. */
   .panel {
+    display: none;
+  }
+  .panel--active {
     container-type: size;
     container-name: accordion;
     display: flex;
     flex-direction: column;
     width: 100%;
     height: 100dvh;
-    overflow: visible;
+    /* Clears the fixed .mobile-topbar (see below) — on .panel itself, not
+       just .panel__content, since .panel__tab (the number/name header,
+       restyled below) is .panel__content's sibling and starts at the very
+       top of .panel too; padding only on .panel__content would leave the
+       header rendering underneath the fixed bar. */
+    padding-top: 60px;
   }
-  /* Tabs are replaced by the hamburger nav (below) — no open/close
-     mechanic on mobile, every panel is simply always its own page. */
-  .panel__tab {
-    display: none;
-  }
-
   .panel__content {
     flex: 1;
     min-height: 0;
@@ -3151,39 +3129,68 @@ html, body {
     flex-direction: column;
   }
 
-  /* ── Hamburger nav (replaces the tab bar) ─────────────────────────── */
+  /* ── Persistent top bar: logo (left) + hamburger (right) + divider ── */
+  .mobile-topbar {
+    display: flex;
+    /* DOM order is logo-then-hamburger; under RTL a plain flex row puts
+       the first child at the visual RIGHT (row start = right in RTL).
+       row-reverse flips that so the logo lands visually LEFT and the
+       hamburger visually RIGHT, matching the reference layout exactly
+       rather than mirroring it for RTL. */
+    flex-direction: row-reverse;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    height: 60px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: var(--color-dark);
+    border-bottom: 1px solid var(--color-light);
+  }
+  .mobile-topbar-logo {
+    width: 28px;
+    height: 28px;
+    display: block;
+  }
   .mobile-nav-toggle {
     display: flex;
-    position: fixed;
-    top: 16px;
-    left: 16px;
-    z-index: 1000;
-    width: 44px;
-    height: 44px;
     align-items: center;
-    justify-content: center;
-    gap: 5px;
-    flex-direction: column;
-    background: var(--color-dark);
-    border: 1px solid var(--color-light);
-    border-radius: 4px;
+    gap: 10px;
+    background: none;
+    border: none;
     cursor: pointer;
     padding: 0;
   }
-  .mobile-nav-toggle span {
+  .mobile-nav-toggle-label {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--color-light);
+  }
+  .mobile-nav-toggle-bars {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 24px;
+    height: 24px;
+  }
+  .mobile-nav-toggle-bars span {
     display: block;
-    width: 20px;
+    width: 100%;
     height: 1px;
     background: var(--color-light);
     transition: transform 0.3s var(--ease-precise), opacity 0.3s var(--ease-precise);
   }
-  .mobile-nav-toggle[aria-expanded="true"] span:nth-child(1) {
+  .mobile-nav-toggle[aria-expanded="true"] .mobile-nav-toggle-bars span:nth-child(1) {
     transform: translateY(6px) rotate(45deg);
   }
-  .mobile-nav-toggle[aria-expanded="true"] span:nth-child(2) {
+  .mobile-nav-toggle[aria-expanded="true"] .mobile-nav-toggle-bars span:nth-child(2) {
     opacity: 0;
   }
-  .mobile-nav-toggle[aria-expanded="true"] span:nth-child(3) {
+  .mobile-nav-toggle[aria-expanded="true"] .mobile-nav-toggle-bars span:nth-child(3) {
     transform: translateY(-6px) rotate(-45deg);
   }
   .mobile-nav-overlay {
@@ -3231,6 +3238,45 @@ html, body {
     opacity: 0.6;
   }
 
+  /* ── Panel tab, repurposed as each panel's own number/name header row
+     (no longer a clickable tab on mobile — navigation is hamburger-only,
+     desktop's :hover/click-to-activate rules simply never fire from a
+     tap). DOM order is title-wrap-then-num; plain row (not reversed)
+     under dir=rtl already puts the first child (title/name) at the
+     visual RIGHT and the last child (num) at the visual LEFT, matching
+     the reference layout without needing row-reverse. */
+  .panel__tab {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: auto;
+    padding: 20px 16px;
+    border-left: none;
+    cursor: default;
+  }
+  .panel__tab-title-wrap {
+    flex: 0 0 auto;
+    align-items: center;
+  }
+  .panel__tab-title {
+    writing-mode: horizontal-tb;
+    transform: none;
+    white-space: normal;
+    font-size: 16px;
+  }
+  .panel__tab-num {
+    font-size: 14px;
+  }
+  .panel__tab-logo {
+    width: 32px;
+  }
+  .panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
+  .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
+    transform: none;
+  }
+
   /* ── Panel 0 ─────────────────────────────── */
   /* Already a single column on desktop (.p0), so only the internal
      proportions need retuning — the illustration was capped to leave
@@ -3241,7 +3287,7 @@ html, body {
     padding: 20px 16px;
   }
   .p0__illustration {
-    max-height: 28vh;
+    max-height: 34vh;
   }
   .p0__lower-frame {
     height: auto;
@@ -3275,10 +3321,22 @@ html, body {
     border-left: none;
     border-bottom: 1px solid var(--color-dark);
   }
+  /* Icon enlarged + centered to read as the panel's big hero shape
+     (matches the reference site's per-section centered icon) — desktop's
+     14.795cqw sidebar-column width is far too narrow once the sidebar is
+     a full-width stacked block instead of a side column. */
   .p3__logo-section {
     height: auto;
     padding: 16px;
-    justify-content: flex-start;
+    justify-content: center;
+  }
+  .p3__logo-big {
+    width: 60%;
+    align-items: center;
+    padding: 0;
+  }
+  .p3__vector-icon {
+    width: 100%;
   }
   .p3__episode-label-col {
     display: none;
@@ -3322,13 +3380,25 @@ html, body {
     border-left: none;
     border-bottom: 1px solid var(--color-light);
   }
+  /* Icon enlarged + centered to read as the panel's big hero shape
+     (matches the reference site's per-section centered icon) — desktop's
+     14.795cqw sidebar-column width is far too narrow once the sidebar is
+     a full-width stacked block instead of a side column. */
   .p1__logo-section {
     height: auto;
     padding: 16px;
-    justify-content: flex-start;
+    justify-content: center;
   }
   .p1__logo-big {
-    padding-left: 0;
+    width: 60%;
+    align-items: center;
+    padding: 0;
+  }
+  .p1__logo-big-child {
+    width: 100%;
+  }
+  .p1__vector-icon {
+    width: 100%;
   }
   .p1__episode-label-col {
     display: none;
@@ -3445,10 +3515,15 @@ html, body {
   .p2__logo-section {
     height: auto;
     padding: 16px;
-    justify-content: flex-start;
+    justify-content: center;
   }
   .p2__logo-big {
-    padding-left: 0;
+    width: 60%;
+    align-items: center;
+    padding: 0;
+  }
+  .p2__vector-icon {
+    width: 100%;
   }
   .p2__episode-label-col {
     display: none;
@@ -3506,10 +3581,15 @@ html, body {
   .p4__logo-section {
     height: auto;
     padding: 16px;
-    justify-content: flex-start;
+    justify-content: center;
   }
   .p4__logo-big {
-    padding-left: 0;
+    width: 60%;
+    align-items: center;
+    padding: 0;
+  }
+  .p4__vector-icon {
+    width: 100%;
   }
   .p4__episode-label-col {
     display: none;
@@ -3626,11 +3706,16 @@ html, body {
 </head>
 <body>
 
-  <!-- Mobile-only hamburger nav — built/wired entirely from JS (reads
-       .panel__tab text at runtime), hidden on desktop by default CSS. -->
-  <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="תפריט" aria-expanded="false" aria-controls="mobile-nav-overlay">
-    <span></span><span></span><span></span>
-  </button>
+  <!-- Mobile-only persistent top bar + hamburger nav — the nav list is
+       built/wired entirely from JS (reads .panel__tab text at runtime),
+       hidden on desktop by default CSS. -->
+  <header class="mobile-topbar">
+    <img src="SVG\HS logo small.svg" alt="HS" class="mobile-topbar-logo">
+    <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="תפריט" aria-expanded="false" aria-controls="mobile-nav-overlay">
+      <span class="mobile-nav-toggle-label">תפריט</span>
+      <span class="mobile-nav-toggle-bars"><span></span><span></span><span></span></span>
+    </button>
+  </header>
   <nav class="mobile-nav-overlay" id="mobile-nav-overlay" aria-hidden="true">
     <div class="mobile-nav-list" id="mobile-nav-list"></div>
   </nav>
@@ -4840,18 +4925,19 @@ html, body {
     (function () {
       const allPanels = Array.from(document.querySelectorAll('.panel'));
 
-      /* Mobile: no open/close accordion mechanic anymore — every panel is
-         simply its own always-on full-screen page, so every panel needs
-         panel--active/panel__content--visible simultaneously (a lot of
-         per-panel logic elsewhere, e.g. Panel 2's ResizeObserver, gates on
-         .panel--active being present). Skip the desktop stagger-reveal
-         entirely and just flip every panel on once at init. */
+      /* Mobile: every panel is display:none until it's .panel--active (see
+         the media query), including panel 0 at this point — CSS animations
+         never run/fire animationend on a display:none element, so the
+         stagger-then-reveal sequence below has nothing to observe and
+         would silently stall until its own safety-fallback timeout. Skip
+         straight to showing panel 0, no animation, no stagger. */
       if (window.matchMedia('(max-width: 768px)').matches) {
-        allPanels.forEach(p => {
-          p.classList.add('panel--active');
-          const c = p.querySelector('.panel__content');
+        const p0 = allPanels.find(p => p.dataset.panel === '0');
+        if (p0) {
+          p0.classList.add('panel--active');
+          const c = p0.querySelector('.panel__content');
           if (c) { c.removeAttribute('aria-hidden'); c.classList.add('panel__content--visible'); }
-        });
+        }
         return;
       }
 
@@ -5598,12 +5684,12 @@ html, body {
       ].filter(Boolean);
 
       if (!frame || imgEls.length < 4) return;
-      const isMobile5 = window.matchMedia('(max-width: 768px)').matches;
       // Matter.js's Mouse module translates touchstart/touchmove/touchend
       // to mouse-equivalent events internally, so drag-to-throw works on
-      // mobile with zero changes to the simulation itself — only the
-      // trigger mechanism differs below (see the isMobile5 branch at the
-      // bottom of this IIFE).
+      // mobile with zero changes to the simulation itself. Mobile panels
+      // now show/hide via .panel--active exactly like desktop (v3), so
+      // the same MutationObserver trigger below serves both breakpoints
+      // — no separate mobile branch needed.
 
       // wF: shape width as fraction of sidebar width (13.818cqw / 19.043cqw)
       // aspect: SVG natural height/width ratio — bh is derived from bw, not from H
@@ -5762,11 +5848,7 @@ html, body {
           startPhysics();
           // Debounced resize: tear down and restart so walls match the new frame size
           const onResize = () => {
-            if (isMobile5) {
-              if (!panel5.classList.contains('p5--in-view')) return;
-            } else if (!panel5.classList.contains('panel--active')) {
-              return;
-            }
+            if (!panel5.classList.contains('panel--active')) return;
             if (resizeTimer) clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
               resizeTimer = null;
@@ -5786,39 +5868,16 @@ html, body {
         stopPhysics();
       }
 
-      if (isMobile5) {
-        // No more open/close class-toggling on mobile (every panel is
-        // permanently .panel--active — see the entrance-animation IIFE),
-        // so a MutationObserver watching that class would never fire here.
-        // Use scroll visibility instead: start physics once panel 5's
-        // stage scrolls into view, tear it down once it's fully scrolled
-        // away (no orphaned rAF loop running off-screen).
-        let inView = false;
-        new IntersectionObserver(entries => {
-          entries.forEach(entry => {
-            const nowIn = entry.isIntersecting;
-            if (nowIn && !inView) {
-              panel5.classList.add('p5--in-view');
-              beginPhysics();
-            } else if (!nowIn && inView) {
-              panel5.classList.remove('p5--in-view');
-              endPhysics();
-            }
-            inView = nowIn;
-          });
-        }, { threshold: 0.3 }).observe(panel5);
-      } else {
-        let wasActive = false;
-        new MutationObserver(() => {
-          const isActive = panel5.classList.contains('panel--active');
-          if (isActive && !wasActive) {
-            beginPhysics();
-          } else if (!isActive && wasActive) {
-            endPhysics();
-          }
-          wasActive = isActive;
-        }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
-      }
+      let wasActive = false;
+      new MutationObserver(() => {
+        const isActive = panel5.classList.contains('panel--active');
+        if (isActive && !wasActive) {
+          beginPhysics();
+        } else if (!isActive && wasActive) {
+          endPhysics();
+        }
+        wasActive = isActive;
+      }).observe(panel5, { attributes: true, attributeFilter: ['class'] });
     }());
 
     /* ══════════════════════════════════════════
@@ -5843,9 +5902,13 @@ html, body {
        Mobile — hamburger nav
        ══════════════════════════════════════════ */
     /* Built entirely from the existing .panel__tab DOM (no duplicated
-       content) — each panel becomes one tappable row that scrolls that
-       panel's page into view. Panel 0 has no .panel__tab-title (just a
-       logo), so it gets a fallback label. */
+       content) — each panel becomes one tappable row that swaps which
+       panel is .panel--active (same show/hide model desktop's own tab
+       clicks use — see activate() above — just triggered from the
+       hamburger instead of a visible tab, and without the flex-basis
+       animation since mobile panels aren't width/height-animated open).
+       Panel 0 has no .panel__tab-title (just a logo), so it gets a
+       fallback label. */
     (function () {
       if (!window.matchMedia('(max-width: 768px)').matches) return;
 
@@ -5854,6 +5917,24 @@ html, body {
       const list    = document.getElementById('mobile-nav-list');
       const panels  = Array.from(document.querySelectorAll('.panel'));
       if (!toggle || !overlay || !list || !panels.length) return;
+
+      function activatePanel(panel) {
+        if (panel.classList.contains('panel--active')) return;
+        panels.forEach(p => {
+          p.classList.remove('panel--active');
+          const c = p.querySelector('.panel__content');
+          if (c) {
+            c.setAttribute('aria-hidden', 'true');
+            c.classList.remove('panel__content--visible');
+          }
+        });
+        panel.classList.add('panel--active');
+        const c = panel.querySelector('.panel__content');
+        if (c) {
+          c.removeAttribute('aria-hidden');
+          c.classList.add('panel__content--visible');
+        }
+      }
 
       const items = panels.map(panel => {
         const num   = panel.dataset.panel;
@@ -5866,14 +5947,20 @@ html, body {
         item.dataset.panel = num;
         item.innerHTML = `<span>${label}</span><span class="mobile-nav-item-num">${num}</span>`;
         item.addEventListener('click', () => {
-          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          activatePanel(panel);
           closeNav();
         });
         list.appendChild(item);
         return item;
       });
 
+      function refreshCurrent() {
+        items.forEach((item, i) => {
+          item.dataset.current = panels[i].classList.contains('panel--active') ? 'true' : 'false';
+        });
+      }
       function openNav() {
+        refreshCurrent();
         overlay.dataset.open = 'true';
         overlay.removeAttribute('aria-hidden');
         toggle.setAttribute('aria-expanded', 'true');
@@ -5886,20 +5973,6 @@ html, body {
       toggle.addEventListener('click', () => {
         if (overlay.dataset.open === 'true') closeNav(); else openNav();
       });
-
-      // Highlight whichever panel is currently in view — low-cost reuse of
-      // the same IntersectionObserver pattern already used elsewhere in
-      // this file (e.g. Panel 2's explode-on-scroll).
-      const currentObserver = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-          if (!entry.isIntersecting) return;
-          const idx = panels.indexOf(entry.target);
-          items.forEach((item, i) => {
-            item.dataset.current = i === idx ? 'true' : 'false';
-          });
-        });
-      }, { threshold: 0.5 });
-      panels.forEach(p => currentObserver.observe(p));
     }());
 
   </script>
