@@ -3199,7 +3199,11 @@ html, body {
     z-index: 999;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    /* flex-start (not center) — .mobile-nav-list's own 96px top padding
+       already clears the fixed topbar; centering pushed the whole list
+       down into the middle of the screen instead of starting normally
+       right under the bar. */
+    justify-content: flex-start;
     background: var(--color-dark);
     transform: translateX(100%);
     transition: transform 0.4s var(--ease-precise);
@@ -3269,8 +3273,12 @@ html, body {
   .panel__tab-num {
     font-size: 14px;
   }
+  /* Panel 0's own header row would otherwise repeat the same HS mark
+     shown in .mobile-topbar-logo (which is always visible, every panel)
+     — redundant, so just don't render it a second (and, counting the
+     dark variant sharing the same box, third) time here. */
   .panel__tab-logo {
-    width: 32px;
+    display: none;
   }
   .panel:not(.panel--active) .panel__tab:hover .panel__tab-title-wrap,
   .panel:not(.panel--active) .panel__tab:hover .panel__tab-logo {
@@ -3349,6 +3357,19 @@ html, body {
   }
   .p3__ep-num {
     display: none;
+  }
+  /* Same fix as Panel 2's schedule-area/scroll-body: desktop clips
+     .p3__content-area to exactly its flex share with its own inner
+     overflow-y:scroll on .p3__scroll-body — on mobile that inner box
+     gets squeezed by the enlarged icon above, and .panel__content's own
+     scroll (the only scroll region a mobile page should need) can't
+     reach anything past the clip. Drop both so the accordion items flow
+     normally and .panel__content reveals all of them. */
+  .p3__content-area {
+    overflow: visible;
+  }
+  .p3__scroll-body {
+    overflow-y: visible;
   }
   .p3__header {
     flex: 0 0 auto;
@@ -3434,18 +3455,32 @@ html, body {
      left after the sidebar above it, same as desktop's own flex:1 — a
      min-height keeps the sub-carousel usable even if the sidebar ends up
      tall. */
-  /* min-height:0 (not overflow:visible — that was the previous pass's
-     fix for a now-gone problem, and removing desktop's overflow:hidden
-     here backfires: .p1__doctors-main's own content is DELIBERATELY
-     inflated (the sticky+scroll-track scroll-jacking mechanism below), so
-     without a clip/min-height:0 floor, that inflated min-content size
-     leaks out and overrides this flex item's fair flex:1 share, pushing
-     .p1's total content taller than one screen for no visible reason). */
+  /* overflow stays visible here (desktop's overflow:hidden would clip
+     the min-height floor below instead of letting it flow to
+     .panel__content's own scroll — .p1__doctors-main's OWN internal
+     overflow-y:scroll already self-contains its deliberately-inflated
+     sticky+scroll-track content, so doctors-area doesn't need to clip
+     anything itself).
+     min-height on .p1__doctors-main is a real floor now, not 0 — 0 let
+     it shrink below what its own fixed content (title+quote+star-grid+
+     nav) actually needs whenever the enlarged icon above took more room,
+     and .p1__doctors-body's justify-content:center then split that
+     overflow symmetrically both above AND below its box — the quote
+     visibly rendering on top of the title above it. Content this size
+     needs a guaranteed minimum; anything beyond one screen is what
+     .panel__content's own scroll (already the outer scroll everywhere
+     else) is for. */
   .p1__doctors-area {
     min-height: 0;
+    /* Desktop sets overflow:hidden here (never overridden until now) —
+       that clips .p1__doctors-main's min-height floor right at whatever
+       cramped share flex handed doctors-area, instead of letting it
+       overflow up into .panel__content's own scroll like everything
+       else on mobile does. */
+    overflow: visible;
   }
   .p1__doctors-main {
-    min-height: 0;
+    min-height: 520px;
   }
   .p1__doctors-sticky {
     height: 100%;
@@ -3462,6 +3497,10 @@ html, body {
     padding: 20px 16px;
   }
   .p1__doctors-body {
+    /* flex-start (not center) — center is what split the overflow both
+       ways above; content starting at the top and spilling only
+       downward stays reachable via .panel__content's scroll. */
+    justify-content: flex-start;
     padding: 20px 16px;
     gap: 20px;
   }
@@ -3537,6 +3576,21 @@ html, body {
   .p2__desc-inner {
     padding-left: 0;
   }
+  /* Desktop clips .p2__schedule-area to exactly its flex share and gives
+     .p2__scroll-body its own inner overflow-y:scroll for the card list —
+     fine on desktop where that inner box is the full panel height, but
+     on mobile the enlarged icon above eats into the sidebar's share,
+     squeezing this area down to a sliver, so the inner scroll technically
+     "works" but only shows a couple inches of one card at a time.
+     Dropping the clip and the inner scroll lets the card list flow
+     normally and .panel__content's own scroll (the only scroll region
+     any mobile page needs) reveal all of it. */
+  .p2__schedule-area {
+    overflow: visible;
+  }
+  .p2__scroll-body {
+    overflow-y: visible;
+  }
   .p2__schedule-header {
     flex: 0 0 auto;
   }
@@ -3548,6 +3602,11 @@ html, body {
   }
   .p2__schedule-frame {
     padding: 16px;
+    /* Stays overflow:clip (not visible) — deliberately keeps exploding
+       shards' translate() ink-overflow out of any ancestor's scrollable
+       region (see the desktop comment above this class), independent of
+       .p2__schedule-area/.p2__scroll-body no longer clipping/scrolling
+       above. */
   }
   /* The hour-grid backdrop (labels + horizontal lines) exists so cards
      can be absolutely-positioned against real hour offsets — a desktop
@@ -5167,6 +5226,13 @@ html, body {
       const cards = Array.from(document.querySelectorAll('.p2__task-card'));
       if (!scrollEl || !cards.length) return;
       const p2Panel = scrollEl.closest('.panel');
+      /* Mobile: .p2__scroll-body stops being its own nested scroll region
+         (see the media query) — every panel scrolls through exactly one
+         region, .panel__content, not a scroll-within-a-scroll. The
+         explode-on-scroll interaction itself is unchanged, it just now
+         watches/listens on that outer container instead of scrollEl. */
+      const isMobileP2 = window.matchMedia('(max-width: 768px)').matches;
+      const scrollRoot = isMobileP2 ? p2Panel.querySelector('.panel__content') : scrollEl;
 
       // ── Typewriter: capture each card's real subtitle text once, then
       // clear it — JS types it back in letter-by-letter once the
@@ -5298,7 +5364,7 @@ html, body {
           if (entry.isIntersecting) enqueue(entry.target);
         });
       }, {
-        root: scrollEl,               // observe against the scroll container, not the window
+        root: scrollRoot,             // observe against the scroll container, not the window
         threshold: OBSERVER_THRESHOLD,
         rootMargin: OBSERVER_ROOT_MARGIN,
       });
@@ -5315,7 +5381,7 @@ html, body {
         cards.forEach((card) => observer.observe(card));
       }
 
-      scrollEl.addEventListener('scroll', () => {
+      scrollRoot.addEventListener('scroll', () => {
         if (!p2Panel || !p2Panel.classList.contains('panel--active') || isResizing) return;
         startObserving();
 
@@ -5324,7 +5390,7 @@ html, body {
         // user has scrolled to (essentially) the bottom, queue up any card(s)
         // still in "ideal" mode so the sequence always finishes — they still
         // go through the same one-at-a-time queue, not an instant burst. ──
-        const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 2;
+        const atBottom = scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - 2;
         if (atBottom) cards.forEach(enqueue);
       }, { passive: true });
     }());
