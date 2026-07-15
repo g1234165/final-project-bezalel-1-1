@@ -2849,7 +2849,10 @@ html, body {
   width: 100%;
   flex-wrap: wrap;
   box-sizing: border-box;
-  padding: 0 80px 48px;
+  /* 36px top (was 0) — matches .p3__cards-container's own 36px/80px/48px
+     rhythm; without it the cards sat flush against the dropdown header
+     the instant it opened. */
+  padding: 36px 80px 48px;
 }
 .p5__card {
   flex: 1 1 200px;
@@ -2934,7 +2937,8 @@ html, body {
   align-items: flex-end;
   gap: 16px;
   width: 100%;
-  padding: 0 80px 48px;
+  /* 36px top (was 0) — same fix as .p5__cards-row above, same reason. */
+  padding: 36px 80px 48px;
   box-sizing: border-box;
   direction: rtl;
 }
@@ -3225,18 +3229,25 @@ html, body {
   .mobile-nav-overlay[data-open="true"] {
     transform: translateX(0);
   }
+  /* Horizontal padding moved to the item itself (below) so the
+     border-bottom divider runs edge-to-edge instead of stopping short
+     on both sides — was on the list, insetting every line. Top padding
+     cut down (was 96px, most of it dead black space above the first
+     row) but not below 60px — .mobile-topbar is position:fixed with a
+     higher z-index than this overlay, so anything above 60px renders
+     hidden underneath it, not just visually close to it. */
   .mobile-nav-list {
     display: flex;
     flex-direction: column;
-    padding: 96px 16px 16px;
-    gap: 4px;
+    padding: 60px 0 0;
+    gap: 0;
   }
   .mobile-nav-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 16px 8px;
+    padding: 18px 20px;
     background: none;
     border: none;
     border-bottom: 1px solid var(--color-light);
@@ -3248,12 +3259,12 @@ html, body {
     cursor: pointer;
   }
   .mobile-nav-item[data-current="true"] {
-    color: var(--color-accent, var(--color-light));
     font-weight: 600;
   }
+  /* No gray — the palette is strictly black/white, so "de-emphasized"
+     is done with weight (regular vs. the 600 above), not opacity. */
   .mobile-nav-item-num {
     font-size: 13px;
-    opacity: 0.6;
   }
 
   /* ── Panel tab, repurposed as each panel's own number/name header row
@@ -4100,7 +4111,7 @@ html, body {
                  Hidradenitis Suppurativa היא הרבה יותר ממחלת עור.
                 </p>
                 <p class="p0__subtitle">
-                 זוהי מחלה כרונית עם השפעה עמוקה על הגוף, הנפש ואיכות החיים. אתר זה נועד להעלות מודעות ולעורר אמפתיה כלפי החיים עם המחלה.
+                 זוהי מחלה כרונית עם השפעה עמוקה על הגוף, הנפש ואיכות החיים.
                 </p>
               </div>
                 </p>
@@ -6108,13 +6119,25 @@ html, body {
         });
         world  = engine.world;
 
+        // wF (0.55) was tuned against desktop's narrow, tall sidebar,
+        // where 4 shapes that size comfortably stack within a frame
+        // several times taller than it is wide. Mobile's frame is wide
+        // and short instead (full-width, ~52vh), so the same fraction of
+        // W produces shapes too large to fit 4 of without heavy overlap
+        // — which is what pushed one past the floor wall entirely in
+        // testing. Scale down for mobile specifically, and give the
+        // walls a bigger safety margin too — these shapes' visible ink
+        // isn't centered in their own bounding box, so even a
+        // contained physics body can still paint past a tight wall.
+        const mobileWF = window.matchMedia('(max-width: 768px)').matches;
+
         // ── Invisible static boundaries ──────────────────
         const thick = 80;
         // INSET keeps the play area a safety margin inside the frame's own
         // visual clip, so shapes always come to rest with room to spare
         // instead of resting flush against the exact pixel the frame cuts
         // at — the "cut off at the edges" look, even with a perfect solver.
-        const INSET = 24;
+        const INSET = mobileWF ? 40 : 24;
         World.add(world, [
           // floor
           Bodies.rectangle(W / 2, H + thick / 2, W + thick * 2, thick,
@@ -6132,7 +6155,7 @@ html, body {
 
         // ── One physics body per shape ────────────────────
         bodies = defs.map((d, i) => {
-          const bw = W * d.wF;
+          const bw = W * (mobileWF ? d.wF * 0.4 : d.wF);
           const bh = bw * d.aspect;           // height from true SVG aspect ratio
           // Spawn within frame near the top so bodies clear the ceiling at y=-thick/2
           const startX = W / 2 + (Math.random() - 0.5) * W * 0.08;
@@ -6176,7 +6199,12 @@ html, body {
         // so the loop only writes transform, eliminating 5 forced style/layout passes/frame.
         const bodyConsts = bodies.map((b, i) => {
           const d  = defs[i];
-          const bw = W * d.wF;
+          // Same mobileWF scale as the physics body above — this sets
+          // the actual rendered <img> size, independent of the
+          // (correctly-scaled) collision body, so leaving it at the
+          // desktop fraction here rendered oversized images sitting on
+          // top of properly-sized invisible physics bounds.
+          const bw = W * (mobileWF ? d.wF * 0.4 : d.wF);
           const bh = bw * d.aspect;
           const img = imgEls[i];
           img.style.left            = '0';
@@ -6199,8 +6227,20 @@ html, body {
             const { bw, bh, flip } = bodyConsts[i];
             const { x, y } = b.position;
             const a = b.angle;
+            // scaleX(-1), applied last in the string, is the first thing
+            // a local point sees — it mirrors around this element's own
+            // transform-origin (0 0, its left edge), not its center. The
+            // -bw/2 centering translate that follows it in point-transform
+            // order (so precedes it in the string) then carries that
+            // already-mirrored point another half-width further left,
+            // landing the shape's true center a full bw to the left of
+            // the physics body it's supposed to track — barely visible
+            // against desktop's generous margins, but enough to push the
+            // shape past a mobile frame's tighter walls. Flipped shapes
+            // need +bw/2 here instead of -bw/2 to land back on-center.
+            const centerX = flip ? bw / 2 : -bw / 2;
             imgEls[i].style.transform =
-              `translate(${x}px,${y}px) rotate(${a}rad) translate(${-bw / 2}px,${-bh / 2}px)${flip}`;
+              `translate(${x}px,${y}px) rotate(${a}rad) translate(${centerX}px,${-bh / 2}px)${flip}`;
           });
         }
         animId = requestAnimationFrame(loop);
