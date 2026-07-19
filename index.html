@@ -5221,34 +5221,80 @@ html, body {
        ══════════════════════════════════════════ */
     const panels = Array.from(document.querySelectorAll('.panel'));
 
+    // ── Single source of truth for opening a panel ──────────
+    // Every code path that opens a panel (tab clicks, keyboard, the
+    // entrance animation, its safety-fallback timeout, and the mobile
+    // hamburger nav) must go through this one function so "exactly one
+    // panel is ever panel--active" can't be violated by two places
+    // racing to write the class list independently.
+    function activatePanel(panel) {
+      if (panel.classList.contains('panel--active')) return;
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      // Close all panels. On desktop, leave their content visible (mid
+      // clip-reveal, now shrinking away) — settlePanelTransition() below
+      // hides each one individually once its own flex-basis animation has
+      // actually finished (or been cancelled). On mobile there is no
+      // flex-basis close animation (panels hard-toggle display:none), so
+      // hide content immediately instead of waiting for an event that
+      // will never fire.
+      panels.forEach(p => {
+        p.classList.remove('panel--active');
+        const c = p.querySelector('.panel__content');
+        if (c) {
+          c.setAttribute('aria-hidden', 'true');
+          if (isMobile) {
+            c.classList.remove('panel__content--visible');
+          } else {
+            c.style.overflow = ''; // reset inline overflow
+          }
+        }
+      });
+      panel.classList.add('panel--active');
+      const c = panel.querySelector('.panel__content');
+      if (c) {
+        c.removeAttribute('aria-hidden');
+        // Reveal now, from frame one — the clip (flex-basis animating on
+        // the ancestor .panel) does all the visual reveal, so there's no
+        // delay to desync from it.
+        c.classList.add('panel__content--visible');
+      }
+    }
+
+    // ── Auto-open guard ──────────────────────────────────────
+    // Used by automatic/delayed panel-opens (entrance animation, its
+    // fallback timer) that should only fire "if nothing happened yet" —
+    // if the user has already opened any panel by the time an automatic
+    // open would fire, it must be skipped entirely rather than force-
+    // opening a default panel on top of the user's choice.
+    function openDefaultPanelIfIdle(panel) {
+      if (!panel) return;
+      if (panels.some(p => p.classList.contains('panel--active'))) return;
+      activatePanel(panel);
+    }
+
+    // ── Settle once the flex-basis transition actually finishes (or is
+    // interrupted) ──
+    // Opening: unclip overflow so content isn't cut off if it ever needs
+    // to render beyond the exact final box (safety margin).
+    // Closing: only now — box fully collapsed, or the close transition
+    // was cancelled by a new click before it finished — drop --visible,
+    // so content stays paintable while it was still visibly shrinking
+    // away, and never gets stuck visible if that shrink gets interrupted.
+    function settlePanelTransition(e) {
+      if (e.propertyName !== 'flex-basis') return;
+      const panel = e.currentTarget;
+      const c = panel.querySelector('.panel__content');
+      if (!c) return;
+      if (panel.classList.contains('panel--active')) {
+        c.style.overflow = 'visible';
+      } else {
+        c.classList.remove('panel__content--visible');
+      }
+    }
+
     panels.forEach(panel => {
       const tab = panel.querySelector('.panel__tab');
       if (!tab) return;
-
-      const activate = () => {
-        if (panel.classList.contains('panel--active')) return;
-        // Close all panels, but leave their content visible (mid clip
-        // -reveal, now shrinking away) — the transitionend handler below
-        // hides each one individually once its own flex-basis animation
-        // has actually finished collapsing.
-        panels.forEach(p => {
-          p.classList.remove('panel--active');
-          const c = p.querySelector('.panel__content');
-          if (c) {
-            c.setAttribute('aria-hidden', 'true');
-            c.style.overflow = ''; // reset inline overflow
-          }
-        });
-        panel.classList.add('panel--active');
-        const c = panel.querySelector('.panel__content');
-        if (c) {
-          c.removeAttribute('aria-hidden');
-          // Reveal now, from frame one — the clip (flex-basis animating on
-          // the ancestor .panel) does all the visual reveal, so there's no
-          // delay to desync from it.
-          c.classList.add('panel__content--visible');
-        }
-      };
 
       // ── Tender Touch: bruise ripple on click ────────────
       tab.addEventListener('click', e => {
@@ -5263,29 +5309,15 @@ html, body {
           bruise.classList.add('panel__bruise--spreading');
           bruise.addEventListener('animationend', () => bruise.remove(), { once: true });
         }
-        activate();
+        activatePanel(panel);
       });
 
       tab.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activatePanel(panel); }
       });
 
-      // ── Settle once the flex-basis transition actually finishes ──
-      // Opening: unclip overflow so content isn't cut off if it ever
-      // needs to render beyond the exact final box (safety margin).
-      // Closing: only now — box fully collapsed — drop --visible, so
-      // content stays paintable while it was still visibly shrinking
-      // away, and only leaves paint/tab-order once that's done.
-      panel.addEventListener('transitionend', e => {
-        if (e.propertyName !== 'flex-basis') return;
-        const c = panel.querySelector('.panel__content');
-        if (!c) return;
-        if (panel.classList.contains('panel--active')) {
-          c.style.overflow = 'visible';
-        } else {
-          c.classList.remove('panel__content--visible');
-        }
-      });
+      panel.addEventListener('transitionend', settlePanelTransition);
+      panel.addEventListener('transitioncancel', settlePanelTransition);
     });
 
     /* ══════════════════════════════════════════
@@ -5301,12 +5333,7 @@ html, body {
          would silently stall until its own safety-fallback timeout. Skip
          straight to showing panel 0, no animation, no stagger. */
       if (window.matchMedia('(max-width: 768px)').matches) {
-        const p0 = allPanels.find(p => p.dataset.panel === '0');
-        if (p0) {
-          p0.classList.add('panel--active');
-          const c = p0.querySelector('.panel__content');
-          if (c) { c.removeAttribute('aria-hidden'); c.classList.add('panel__content--visible'); }
-        }
+        openDefaultPanelIfIdle(allPanels.find(p => p.dataset.panel === '0'));
         return;
       }
 
@@ -5319,15 +5346,12 @@ html, body {
 
       function onAllEntered() {
         // Let the browser paint one frame (all panel--entering removed),
-        // then open panel 0 so the flex transition fires cleanly.
+        // then open panel 0 so the flex transition fires cleanly — but
+        // only if the user hasn't already opened a different panel while
+        // this animation was running.
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            const p0 = allPanels.find(p => p.dataset.panel === '0');
-            if (p0) {
-              p0.classList.add('panel--active');
-              const c = p0.querySelector('.panel__content');
-              if (c) { c.removeAttribute('aria-hidden'); c.classList.add('panel__content--visible'); }
-            }
+            openDefaultPanelIfIdle(allPanels.find(p => p.dataset.panel === '0'));
           });
         });
       }
@@ -5350,12 +5374,9 @@ html, body {
             p.classList.remove('panel--entering');
             p.style.animationDelay = '';
           });
-          const p0 = allPanels.find(p => p.dataset.panel === '0');
-          if (p0 && !p0.classList.contains('panel--active')) {
-            p0.classList.add('panel--active');
-            const c = p0.querySelector('.panel__content');
-            if (c) { c.removeAttribute('aria-hidden'); c.classList.add('panel__content--visible'); }
-          }
+          // Same idle guard as onAllEntered() — don't force-open panel 0
+          // over a panel the user already opened during the stagger.
+          openDefaultPanelIfIdle(allPanels.find(p => p.dataset.panel === '0'));
         }
       }, (allPanels.length - 1) * STAGGER + 600);
     }());
@@ -6364,25 +6385,10 @@ html, body {
       const panels   = Array.from(document.querySelectorAll('.panel'));
       if (!toggle || !overlay || !list || !panels.length) return;
 
-      function activatePanel(panel) {
-        if (progress) progress.textContent = `${panel.dataset.panel}/${panels.length - 1}`;
-        if (panel.classList.contains('panel--active')) return;
-        panels.forEach(p => {
-          p.classList.remove('panel--active');
-          const c = p.querySelector('.panel__content');
-          if (c) {
-            c.setAttribute('aria-hidden', 'true');
-            c.classList.remove('panel__content--visible');
-          }
-        });
-        panel.classList.add('panel--active');
-        const c = panel.querySelector('.panel__content');
-        if (c) {
-          c.removeAttribute('aria-hidden');
-          c.classList.add('panel__content--visible');
-        }
-      }
-
+      // Panel activation itself goes through the single shared
+      // activatePanel() defined in "6. Accordion — tab clicks" above —
+      // same show/hide model desktop's own tab clicks use, just triggered
+      // from the hamburger instead of a visible tab.
       const items = panels.map(panel => {
         const num   = panel.dataset.panel;
         const titleEl = panel.querySelector('.panel__tab-title');
@@ -6394,6 +6400,7 @@ html, body {
         item.dataset.panel = num;
         item.innerHTML = `<span>${label}</span><span class="mobile-nav-item-num">${num}</span>`;
         item.addEventListener('click', () => {
+          if (progress) progress.textContent = `${panel.dataset.panel}/${panels.length - 1}`;
           activatePanel(panel);
           closeNav();
         });
