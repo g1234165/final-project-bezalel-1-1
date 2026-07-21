@@ -136,13 +136,11 @@ html, body {
   border-left: 1px solid var(--color-light);
   cursor: pointer;
   transition: background-color 0.35s var(--ease-precise);
-  /* Required for bruise ripple */
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
 .panel--active .panel__tab {
-  border-left: none;
   cursor: default;
 }
 .panel:last-child .panel__tab {
@@ -244,12 +242,11 @@ html, body {
   visibility: visible;
 }
 /* Left-edge separator as pseudo-element — avoids border corner artifacts.
-   Gated on --visible (not .panel--active) so it belongs to, and moves with,
-   this panel's own content: it's part of the clip-reveal (appears from
-   frame one of opening, stays through the whole close until the box has
-   fully collapsed), instead of snapping on/off the instant the class
-   toggles regardless of where the box actually is. */
-.panel__content.panel__content--visible::before {
+   Unconditional (not gated on any class) and explicitly visibility:visible
+   so its presence is driven purely by the ancestor .panel's animating
+   overflow:hidden clip box — always in sync with the panel's own
+   flex-basis transition, never an instant on/off snap from JS timing. */
+.panel__content::before {
   content: '';
   position: absolute;
   left: 0;
@@ -259,12 +256,18 @@ html, body {
   background: var(--color-light);
   pointer-events: none;
   z-index: 10;
+  /* Overrides the inherited visibility:hidden from .panel__content itself
+     (a descendant/pseudo may opt back into visible) so this line's
+     presence is driven purely by the ancestor .panel's animating
+     overflow:hidden clip box, continuously — not by whichever moment JS
+     happens to add/remove panel__content--visible. */
+  visibility: visible;
 }
 /* Panel 3: its whole background is var(--color-light) (see .p3), so a
    light-on-light divider line would be invisible anyway — the background
    change itself is the boundary. Panels 0 and 1 are dark like their
    neighbors and need the real divider line. */
-.panel__content.p3.panel__content--visible::before {
+.panel__content.p3::before {
   content: none;
 }
 
@@ -1496,7 +1499,6 @@ html, body {
 .panel[data-panel="3"].panel--active .panel__tab,
 .panel[data-panel="5"].panel--active .panel__tab {
   background-color: var(--color-light);
-  border-left: none !important;
 }
 .panel[data-panel="3"].panel--active .panel__tab .panel__tab-title,
 .panel[data-panel="3"].panel--active .panel__tab .panel__tab-num,
@@ -3019,43 +3021,6 @@ html, body {
     animation-duration: 0.01ms;
     animation-delay:    0ms !important;
   }
-}
-
-/* ═══════════════════════════════════════════
-   Tender Touch — bruise ripple
-   A slow, dark bloom that originates from the
-   click point and dissolves over 1.5 s.
-   Heavy, organic, not playful.
-   ═══════════════════════════════════════════ */
-.panel__bruise {
-  position: absolute;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  /* dark bruise core that bleeds outward */
-  background: radial-gradient(circle,
-    rgba(4, 3, 3, 0.72) 0%,
-    rgba(16, 18, 18, 0.38) 38%,
-    transparent 68%
-  );
-  /* soft, amorphous edge — not a clean circle */
-  filter: blur(16px);
-  pointer-events: none;
-  z-index: 0;
-  /* centered on the click coordinates via JS left/top */
-  transform: translate(-50%, -50%) scale(0);
-  will-change: transform, opacity;
-}
-.panel__bruise--spreading {
-  /* expo-out: fast initial expansion that slows as it spreads */
-  animation: bruise-spread 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-@keyframes bruise-spread {
-  0%   { transform: translate(-50%, -50%) scale(0);   opacity: 1;    }
-  20%  { transform: translate(-50%, -50%) scale(0.45); opacity: 0.88; }
-  55%  { transform: translate(-50%, -50%) scale(1.2);  opacity: 0.52; }
-  88%  { transform: translate(-50%, -50%) scale(2.0);  opacity: 0.14; }
-  100% { transform: translate(-50%, -50%) scale(2.4);  opacity: 0;    }
 }
 
 /* ═══════════════════════════════════════════
@@ -5327,21 +5292,7 @@ html, body {
       const tab = panel.querySelector('.panel__tab');
       if (!tab) return;
 
-      // ── Tender Touch: bruise ripple on click ────────────
-      tab.addEventListener('click', e => {
-        if (!panel.classList.contains('panel--active')) {
-          const rect   = tab.getBoundingClientRect();
-          const bruise = document.createElement('span');
-          bruise.className    = 'panel__bruise';
-          bruise.style.left   = (e.clientX - rect.left)  + 'px';
-          bruise.style.top    = (e.clientY - rect.top)   + 'px';
-          tab.appendChild(bruise);
-          bruise.offsetWidth; // force reflow so animation fires from scale(0)
-          bruise.classList.add('panel__bruise--spreading');
-          bruise.addEventListener('animationend', () => bruise.remove(), { once: true });
-        }
-        activatePanel(panel);
-      });
+      tab.addEventListener('click', () => activatePanel(panel));
 
       tab.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activatePanel(panel); }
