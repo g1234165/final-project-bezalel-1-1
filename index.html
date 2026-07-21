@@ -5164,11 +5164,17 @@ html, body {
         // Trigger section 0 typewriter each time Panel 1 becomes active.
         // currentSection starts at -1 so the applySection(0) guard (idx === currentSection)
         // never short-circuits the very first call.
+        // Only fire on the false→true edge of panel--active — incidental class
+        // churn while already active (e.g. the entrance animation's panel--entering
+        // removal landing after the panel was opened) must not restart the typewriter.
+        let p1WasActive = p1Panel.classList.contains('panel--active');
         new MutationObserver(() => {
-          if (p1Panel.classList.contains('panel--active')) {
+          const isActive = p1Panel.classList.contains('panel--active');
+          if (isActive && !p1WasActive) {
             currentSection = -1;
             applySection(0);
           }
+          p1WasActive = isActive;
         }).observe(p1Panel, { attributeFilter: ['class'] });
       }
 
