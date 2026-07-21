@@ -259,6 +259,13 @@ html, body {
 }
 .panel__content.panel__content--visible {
   visibility: visible;
+  /* Ties overflow to the same, already-correct --visible timing (on
+     instantly at open-click, off only once the closing panel's own
+     flex-basis transition finishes) instead of a separately-timed JS
+     side effect — so anything meant to bleed past content's fixed box
+     (e.g. the p*__hdivider box-shadow into the tab column) is visible
+     from frame one of opening, not just once the animation settles. */
+  overflow: visible;
 }
 
 /* ═══════════════════════════════════════════
@@ -5226,8 +5233,6 @@ html, body {
           c.setAttribute('aria-hidden', 'true');
           if (isMobile) {
             c.classList.remove('panel__content--visible');
-          } else {
-            c.style.overflow = ''; // reset inline overflow
           }
         }
       });
@@ -5256,22 +5261,18 @@ html, body {
 
     // ── Settle once the flex-basis transition actually finishes (or is
     // interrupted) ──
-    // Opening: unclip overflow so content isn't cut off if it ever needs
-    // to render beyond the exact final box (safety margin).
-    // Closing: only now — box fully collapsed, or the close transition
-    // was cancelled by a new click before it finished — drop --visible,
-    // so content stays paintable while it was still visibly shrinking
-    // away, and never gets stuck visible if that shrink gets interrupted.
+    // Only now — box fully collapsed, or the close transition was
+    // cancelled by a new click before it finished — drop --visible, so
+    // content (and its CSS-driven overflow: visible, see
+    // .panel__content--visible) stays paintable while it was still
+    // visibly shrinking away, and never gets stuck visible if that
+    // shrink gets interrupted.
     function settlePanelTransition(e) {
       if (e.propertyName !== 'flex-basis') return;
       const panel = e.currentTarget;
+      if (panel.classList.contains('panel--active')) return;
       const c = panel.querySelector('.panel__content');
-      if (!c) return;
-      if (panel.classList.contains('panel--active')) {
-        c.style.overflow = 'visible';
-      } else {
-        c.classList.remove('panel__content--visible');
-      }
+      if (c) c.classList.remove('panel__content--visible');
     }
 
     panels.forEach(panel => {
