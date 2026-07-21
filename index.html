@@ -2704,27 +2704,29 @@ html, body {
 
 /* Top header bar */
 .p5__header {
-  flex-shrink: 0;
-  width: 100%;
+  flex: 0 0 22.991cqh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-end;
-  padding: 80px;
-  box-sizing: border-box;
-  min-height: 22.991cqh;
+  justify-content: flex-start;
+  width: 100%;
 }
 
 .p5__title {
-  font-family: 'Narkiss Asaf TRIAL', sans-serif;
+  min-height: 17.196cqh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: var(--sp-pad) var(--sp-content);
+  font-family: var(--font-heading);
   font-size: var(--fs-h2);
   font-weight: 400;
-  line-height: 100%;
   color: var(--color-dark);
   text-align: right;
+  line-height: var(--lh-heading);
   direction: rtl;
-  margin: 0;
   width: 100%;
+  margin: 0;
 }
 
 .p5__hdivider {
@@ -2734,17 +2736,7 @@ html, body {
   flex-shrink: 0;
 }
 
-/* About section */
-.p5__about {
-  width: 100%;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding: 80px;
-  gap: 60px;
-  box-sizing: border-box;
-}
+
 
 .p5__about-inner {
   width: 100%;
@@ -2799,6 +2791,7 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  padding: 48px 80px;
 }
 
 .p5__footnote {
@@ -2942,7 +2935,7 @@ html, body {
   align-items: stretch;
   gap: 12px;
   width: 100%;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   box-sizing: border-box;
   padding: 3.364cqh 3.906cqw 4.486cqh;
 }
@@ -4088,8 +4081,13 @@ html, body {
     align-items: stretch;
   }
   .p5__header {
-    padding: 20px 16px;
+    flex: 0 0 auto;
+  }
+  .p5__title {
     min-height: auto;
+    height: auto;
+    overflow: visible;
+    padding: 16px;
   }
   .p5__about {
     padding: 20px 16px;
@@ -4098,9 +4096,17 @@ html, body {
   .p5__dropdown-header {
     padding: 16px;
   }
-  .p5__cards-row {
-    padding: 16px 16px 24px;
-  }
+   .p5__cards-row {
+    display: flex;
+    flex-direction: row;
+    direction: rtl;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+    padding: 36px 36px;
+}
   /* Desktop's 0/80px top/horizontal padding — 0 top sat the links list
      flush against the dropdown header when opened, and 80px horizontal
      would eat almost half a 375px screen. Matches .p5__cards-row's
