@@ -113,6 +113,7 @@ html, body {
   flex-direction: row;
   height: 100%;
   overflow: hidden;
+  position: relative;
   flex: 0 0 var(--nav-w);
   transition: flex-basis 0.75s var(--ease-precise),
               flex-grow   0.75s var(--ease-precise);
@@ -120,6 +121,28 @@ html, body {
 
 .panel--active {
   flex: 1 0 0px;
+}
+
+/* Boundary divider, anchored to the panel's own (animating) left edge —
+   not to anything inside its fixed-size content — so it tracks the real
+   visible boundary with the next panel continuously through the whole
+   flex-basis/flex-grow transition, closed, open, or mid-animation. */
+.panel::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-light);
+  pointer-events: none;
+  z-index: 10;
+}
+.panel:last-child::after {
+  content: none; /* panel 5 — nothing further left, no boundary needed */
+}
+.panel[data-panel="3"].panel--active::after {
+  content: none; /* p3's active bg is var(--color-light) — same color as the line, invisible anyway */
 }
 
 /* ═══════════════════════════════════════════
@@ -134,20 +157,21 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-pad) 0;
-  border-left: 1px solid var(--color-light);
   cursor: pointer;
   transition: background-color 0.35s var(--ease-precise);
-  /* Required for bruise ripple */
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
 .panel--active .panel__tab {
-  border-left: none;
   cursor: default;
 }
-.panel:last-child .panel__tab {
-  border-left: none;
+/* Panel 0's tab has no title text (just the logo), so unlike other
+   panels it keeps a permanent divider between the tab and its own
+   content, even when open — the other panels intentionally don't (see
+   .panel::after for the shared inter-panel boundary). */
+.panel[data-panel="0"] .panel__tab {
+  border-left: 1px solid var(--color-light);
 }
 .panel:not(.panel--active) .panel__tab:hover {
   background-color: var(--color-light);
@@ -248,29 +272,17 @@ html, body {
 .panel__content.panel__content--visible {
   visibility: visible;
 }
-/* Left-edge separator as pseudo-element — avoids border corner artifacts.
-   Gated on --visible (not .panel--active) so it belongs to, and moves with,
-   this panel's own content: it's part of the clip-reveal (appears from
-   frame one of opening, stays through the whole close until the box has
-   fully collapsed), instead of snapping on/off the instant the class
-   toggles regardless of where the box actually is. */
-.panel__content.panel__content--visible::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--color-light);
-  pointer-events: none;
-  z-index: 10;
-}
-/* Panel 3: its whole background is var(--color-light) (see .p3), so a
-   light-on-light divider line would be invisible anyway — the background
-   change itself is the boundary. Panels 0 and 1 are dark like their
-   neighbors and need the real divider line. */
-.panel__content.p3.panel__content--visible::before {
-  content: none;
+/* Keyed on .panel--active (not panel__content--visible) deliberately:
+   --active add/remove both happen synchronously at click time for every
+   panel, opening and closing alike, which is exactly the instant-on/
+   instant-off timing this needs — unlike --visible, whose removal is
+   deliberately delayed until the closing panel's flex-basis transition
+   finishes. So anything meant to bleed past content's fixed box (e.g.
+   the p*__hdivider box-shadow into the tab column) appears the instant
+   a panel opens and disappears the instant you navigate away from it,
+   instead of lingering through the whole close animation. */
+.panel--active .panel__content {
+  overflow: visible;
 }
 
 /* ═══════════════════════════════════════════
@@ -1499,14 +1511,9 @@ html, body {
    Panel 0 — Home page
    ========================================= */
 
-.panel[data-panel="0"] .panel__tab {
-  border-left: 1px solid var(--color-light) !important;
-}
-
 .panel[data-panel="3"].panel--active .panel__tab,
 .panel[data-panel="5"].panel--active .panel__tab {
   background-color: var(--color-light);
-  border-left: none !important;
 }
 .panel[data-panel="3"].panel--active .panel__tab .panel__tab-title,
 .panel[data-panel="3"].panel--active .panel__tab .panel__tab-num,
@@ -3053,43 +3060,6 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════
-   Tender Touch — bruise ripple
-   A slow, dark bloom that originates from the
-   click point and dissolves over 1.5 s.
-   Heavy, organic, not playful.
-   ═══════════════════════════════════════════ */
-.panel__bruise {
-  position: absolute;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  /* dark bruise core that bleeds outward */
-  background: radial-gradient(circle,
-    rgba(4, 3, 3, 0.72) 0%,
-    rgba(16, 18, 18, 0.38) 38%,
-    transparent 68%
-  );
-  /* soft, amorphous edge — not a clean circle */
-  filter: blur(16px);
-  pointer-events: none;
-  z-index: 0;
-  /* centered on the click coordinates via JS left/top */
-  transform: translate(-50%, -50%) scale(0);
-  will-change: transform, opacity;
-}
-.panel__bruise--spreading {
-  /* expo-out: fast initial expansion that slows as it spreads */
-  animation: bruise-spread 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-@keyframes bruise-spread {
-  0%   { transform: translate(-50%, -50%) scale(0);   opacity: 1;    }
-  20%  { transform: translate(-50%, -50%) scale(0.45); opacity: 0.88; }
-  55%  { transform: translate(-50%, -50%) scale(1.2);  opacity: 0.52; }
-  88%  { transform: translate(-50%, -50%) scale(2.0);  opacity: 0.14; }
-  100% { transform: translate(-50%, -50%) scale(2.4);  opacity: 0;    }
-}
-
-/* ═══════════════════════════════════════════
    Mobile — vertical accordion (≤768px)
    ═══════════════════════════════════════════
    Panels stay flex items with an animated flex-basis/flex-grow — same
@@ -3185,7 +3155,7 @@ html, body {
      open panel's content and its neighboring tab column — there's no
      side-by-side tab column on mobile anymore, so it'd just be a stray
      vertical line down the edge of every page. */
-  .panel__content.panel__content--visible::before {
+  .panel::after {
     display: none;
   }
   /* Stacks each panel's sidebar above its main content area instead of
@@ -4236,9 +4206,7 @@ html, body {
             <div class="p1__doctors-sticky">
 
               <header class="p1__doctors-header">
-                <h1 class="p1__doctors-title">
-                  "לקח 7 שנים ו-60 רופאים ורופאות עד שקיבלתי אבחון"
-                </h1>
+                <h1 class="p1__doctors-title"></h1>
               </header>
 
               <div class="p1__doctors-divider" role="separator"></div>
@@ -5217,18 +5185,51 @@ html, body {
       // scroll-snap-type: y mandatory fires real scroll events on every reflow,
       // so without this gate the typewriter loop can ignite mid-animation.
       if (p1Panel) {
+        // Snap re-fights any programmatic scrollTop reset for as long as the panel
+        // keeps resizing — so scroll-snap-type must stay disabled for the panel's
+        // whole 0.75s flex-basis open transition, not just a short window at the
+        // start of it. Re-enabling it early lets the browser's own resnap-on-resize
+        // behavior settle on the wrong section mid-animation, and that correction's
+        // scroll event lands right as p1Transitioning flips back to false below —
+        // exactly when the scroll listener's guard stops ignoring it.
         p1Panel.addEventListener('transitionstart',  e => { if (e.propertyName === 'flex-basis') p1Transitioning = true;  });
-        p1Panel.addEventListener('transitionend',    e => { if (e.propertyName === 'flex-basis') p1Transitioning = false; });
-        p1Panel.addEventListener('transitioncancel', e => { if (e.propertyName === 'flex-basis') p1Transitioning = false; });
+        p1Panel.addEventListener('transitionend',    e => {
+          if (e.propertyName !== 'flex-basis') return;
+          p1Transitioning = false;
+          if (p1Panel.classList.contains('panel--active')) {
+            doctorsMain.scrollTop = 0;
+            doctorsMain.style.scrollSnapType = '';
+          }
+        });
+        p1Panel.addEventListener('transitioncancel', e => {
+          if (e.propertyName !== 'flex-basis') return;
+          p1Transitioning = false;
+          doctorsMain.style.scrollSnapType = '';
+        });
 
         // Trigger section 0 typewriter each time Panel 1 becomes active.
         // currentSection starts at -1 so the applySection(0) guard (idx === currentSection)
         // never short-circuits the very first call.
+        // Only fire on the false→true edge of panel--active — incidental class
+        // churn while already active (e.g. the entrance animation's panel--entering
+        // removal landing after the panel was opened) must not restart the typewriter.
+        // Also snap doctorsMain's scroll position back to top on that same edge —
+        // otherwise a stale scrollTop left over from a previous visit (e.g. the
+        // user had scrolled to section 2) can trigger a genuine scroll event once
+        // the panel regains real height, which recomputes a non-zero section index
+        // and retypes the title again right after this section-0 typewrite. Snap
+        // stays disabled until the transitionend handler above re-enables it once
+        // the open animation has actually finished.
+        let p1WasActive = p1Panel.classList.contains('panel--active');
         new MutationObserver(() => {
-          if (p1Panel.classList.contains('panel--active')) {
+          const isActive = p1Panel.classList.contains('panel--active');
+          if (isActive && !p1WasActive) {
+            doctorsMain.style.scrollSnapType = 'none';
+            doctorsMain.scrollTop = 0;
             currentSection = -1;
             applySection(0, { entering: true });
           }
+          p1WasActive = isActive;
         }).observe(p1Panel, { attributeFilter: ['class'] });
       }
 
@@ -5314,8 +5315,6 @@ html, body {
           c.setAttribute('aria-hidden', 'true');
           if (isMobile) {
             c.classList.remove('panel__content--visible');
-          } else {
-            c.style.overflow = ''; // reset inline overflow
           }
         }
       });
@@ -5349,43 +5348,25 @@ html, body {
 
     // ── Settle once the flex-basis transition actually finishes (or is
     // interrupted) ──
-    // Opening: unclip overflow so content isn't cut off if it ever needs
-    // to render beyond the exact final box (safety margin).
-    // Closing: only now — box fully collapsed, or the close transition
-    // was cancelled by a new click before it finished — drop --visible,
-    // so content stays paintable while it was still visibly shrinking
-    // away, and never gets stuck visible if that shrink gets interrupted.
+    // Only now — box fully collapsed, or the close transition was
+    // cancelled by a new click before it finished — drop --visible, so
+    // content (and its CSS-driven overflow: visible, see
+    // .panel__content--visible) stays paintable while it was still
+    // visibly shrinking away, and never gets stuck visible if that
+    // shrink gets interrupted.
     function settlePanelTransition(e) {
       if (e.propertyName !== 'flex-basis') return;
       const panel = e.currentTarget;
+      if (panel.classList.contains('panel--active')) return;
       const c = panel.querySelector('.panel__content');
-      if (!c) return;
-      if (panel.classList.contains('panel--active')) {
-        c.style.overflow = 'visible';
-      } else {
-        c.classList.remove('panel__content--visible');
-      }
+      if (c) c.classList.remove('panel__content--visible');
     }
 
     panels.forEach(panel => {
       const tab = panel.querySelector('.panel__tab');
       if (!tab) return;
 
-      // ── Tender Touch: bruise ripple on click ────────────
-      tab.addEventListener('click', e => {
-        if (!panel.classList.contains('panel--active')) {
-          const rect   = tab.getBoundingClientRect();
-          const bruise = document.createElement('span');
-          bruise.className    = 'panel__bruise';
-          bruise.style.left   = (e.clientX - rect.left)  + 'px';
-          bruise.style.top    = (e.clientY - rect.top)   + 'px';
-          tab.appendChild(bruise);
-          bruise.offsetWidth; // force reflow so animation fires from scale(0)
-          bruise.classList.add('panel__bruise--spreading');
-          bruise.addEventListener('animationend', () => bruise.remove(), { once: true });
-        }
-        activatePanel(panel);
-      });
+      tab.addEventListener('click', () => activatePanel(panel));
 
       tab.addEventListener('keydown', e => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activatePanel(panel); }
