@@ -5167,12 +5167,20 @@ html, body {
         // Only fire on the false→true edge of panel--active — incidental class
         // churn while already active (e.g. the entrance animation's panel--entering
         // removal landing after the panel was opened) must not restart the typewriter.
+        // Also snap doctorsMain's scroll position back to top on that same edge —
+        // otherwise a stale scrollTop left over from a previous visit (e.g. the
+        // user had scrolled to section 2) can trigger a genuine scroll event once
+        // the panel regains real height, which recomputes a non-zero section index
+        // and retypes the title again right after this section-0 typewrite.
         let p1WasActive = p1Panel.classList.contains('panel--active');
         new MutationObserver(() => {
           const isActive = p1Panel.classList.contains('panel--active');
           if (isActive && !p1WasActive) {
+            doctorsMain.style.scrollSnapType = 'none';
+            doctorsMain.scrollTop = 0;
             currentSection = -1;
             applySection(0);
+            setTimeout(() => { doctorsMain.style.scrollSnapType = ''; }, 120);
           }
           p1WasActive = isActive;
         }).observe(p1Panel, { attributeFilter: ['class'] });
