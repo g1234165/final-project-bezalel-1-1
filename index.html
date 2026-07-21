@@ -187,6 +187,51 @@ html, body {
 .panel[data-panel="0"] .panel__tab {
   border-left: 1px solid var(--color-light);
 }
+/* Tab-side companion to each sidebar's own hdivider (p1/p2/p3/p4), at
+   the same height (their logo-section is 58.972cqh on every one of
+   them, and .panel__tab/.panel__content are sibling flex items that
+   both start flush at the panel's own top, so the same cqh offset lines
+   up in both places). Lives entirely inside the tab — never inside
+   .panel__content, never crossing any clip/overflow boundary, never
+   resized by the panel's own flex-basis animation.
+   Keyed on --content-visible (mirrored onto .panel at the exact same
+   JS lines panel__content--visible is toggled), NOT --active: --active
+   toggles instantly on both open and close, but the sidebar half of
+   this line (plain content, gated on .panel__content's own visibility)
+   stays visible for the whole close animation and only cuts out once
+   settled. Matching that exact signal — and matching its hard on/off
+   with no transition of its own — keeps both halves pixel-synced on
+   every frame instead of one fading out early and cropping the line. */
+.panel[data-panel="1"] .panel__tab::after,
+.panel[data-panel="2"] .panel__tab::after,
+.panel[data-panel="4"] .panel__tab::after {
+  content: '';
+  position: absolute;
+  top: 58.972cqh;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-light);
+  opacity: 0;
+  pointer-events: none;
+}
+.panel[data-panel="3"] .panel__tab::after {
+  content: '';
+  position: absolute;
+  top: 58.972cqh;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--color-dark);
+  opacity: 0;
+  pointer-events: none;
+}
+.panel[data-panel="1"].panel--content-visible .panel__tab::after,
+.panel[data-panel="2"].panel--content-visible .panel__tab::after,
+.panel[data-panel="3"].panel--content-visible .panel__tab::after,
+.panel[data-panel="4"].panel--content-visible .panel__tab::after {
+  opacity: 1;
+}
 .panel:not(.panel--active) .panel__tab:hover {
   background-color: var(--color-light);
 }
@@ -286,18 +331,6 @@ html, body {
 .panel__content.panel__content--visible {
   visibility: visible;
 }
-/* Keyed on .panel--active (not panel__content--visible) deliberately:
-   --active add/remove both happen synchronously at click time for every
-   panel, opening and closing alike, which is exactly the instant-on/
-   instant-off timing this needs — unlike --visible, whose removal is
-   deliberately delayed until the closing panel's flex-basis transition
-   finishes. So anything meant to bleed past content's fixed box (e.g.
-   the p*__hdivider box-shadow into the tab column) appears the instant
-   a panel opens and disappears the instant you navigate away from it,
-   instead of lingering through the whole close animation. */
-.panel--active .panel__content {
-  overflow: visible;
-}
 
 /* ═══════════════════════════════════════════
    Panel 1 — two-column layout
@@ -384,7 +417,6 @@ html, body {
   height: 1px;
   background: var(--color-light);
   flex-shrink: 0;
-  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
 }
 
 /* Description area — fills remaining height after 631px logo + 1px divider */
@@ -766,7 +798,6 @@ html, body {
   height: 1px;
   background: var(--color-light);
   flex-shrink: 0;
-  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
 }
 .p2__desc-section {
   flex: 1;
@@ -1308,7 +1339,6 @@ html, body {
   height: 1px;
   background: var(--color-light);
   flex-shrink: 0;
-  box-shadow: var(--nav-w) 0 0 0 var(--color-light);
 }
 .p4__desc-section {
   flex: 1;
@@ -1783,7 +1813,6 @@ html, body {
   height: 1px;
   background: var(--color-dark);
   flex-shrink: 0;
-  box-shadow: var(--nav-w) 0 0 0 var(--color-dark);
 }
 .p3__desc-section {
   flex: 1;
@@ -3170,6 +3199,14 @@ html, body {
      side-by-side tab column on mobile anymore, so it'd just be a stray
      vertical line down the edge of every page. */
   .panel::after {
+    display: none;
+  }
+  /* Guard against the desktop-only p1-4 tab-side hdivider companion
+     line: its top:58.972cqh offset assumes the tab's own height:100%
+     desktop box, which mobile restyles into a short auto-height header
+     row — explicitly suppress it here rather than relying on it being
+     incidentally clipped. */
+  .panel__tab::after {
     display: none;
   }
   /* Stacks each panel's sidebar above its main content area instead of
@@ -4912,22 +4949,7 @@ html, body {
 
           <!-- About section -->
           <div class="p5__about">
-            <div class="p5__about-inner">
-              <h3 class="p5__subtitle">אודות ותודות</h3>
-              <div class="p5__cols">
-                <div class="p5__col">
-                  <p class="p5__col-text">
-                  אתר זה הוא פרויקט הגמר של אגניו טגניה ונגה קפון, סטודנטים לתקש"ח בבצלאל.
-                   <br><br> הפרויקט צמח מתוך היכרות אישית וקרובה עם חולה HS, ועם המחיר הפיזי והנפשי שהמחלה גובה. היה לנו חשוב ליצור אתר שלא מציג רק מידע רפואי, אלא משתף בהתמודדות הרגשית והחברתית של החולים במחלה. לפיכך בנינו את הפרויקט דרך שיח מתמשך עם חולות וחולי HS, שליווו את תהליך היצירה ושיתפו אותנו בחוויותיהם האישיות לאורך כל הפרויקט, ודרך ראיונות עם רופאים מומחים שמטפלים במחלה.
-                  </p>
-                </div>
-                <div class="p5__col">
-                  <p class="p5__col-text">
-תודה לחולים שלקחו חלק בפרויקט: ל-5 המרואיינים והמרואיינות (במיוחד לש') ול-111 המשיבים לשאלון בישראל ו-195 המשיבים מחו"ל - הפרויקט קיים בזכותכם.
-<br><br>
-תודה למומחי ה-HS פרופ' יובל רמות וד"ר יוסי טייב על ההסברים הרפואיים. תודה למנחים נעמה טוביאס ורונאל מור, לפרופ' עידו ברונו על הייעוץ, לאסף קליין על האיור, ולמשפחה והחברים על התמיכה האינסופית.
-                </div>
-              </div>
+           
             </div>
 
             <div class="p5__footnote-wrap">
@@ -5335,6 +5357,7 @@ html, body {
           c.setAttribute('aria-hidden', 'true');
           if (isMobile) {
             c.classList.remove('panel__content--visible');
+            p.classList.remove('panel--content-visible');
           }
         }
       });
@@ -5346,6 +5369,11 @@ html, body {
         // the ancestor .panel) does all the visual reveal, so there's no
         // delay to desync from it.
         c.classList.add('panel__content--visible');
+        // Mirrored onto .panel itself (not just .panel__content) so
+        // CSS elsewhere (e.g. the p1-4 tab-side hdivider companion line)
+        // can share this exact same on/off timing without racing a
+        // differently-timed class like --active.
+        panel.classList.add('panel--content-visible');
       }
       // Mobile topbar (+ browser chrome via theme-color) follows the
       // active panel's own theme — panels 3 and 5 are light (cream)
@@ -5370,16 +5398,15 @@ html, body {
     // interrupted) ──
     // Only now — box fully collapsed, or the close transition was
     // cancelled by a new click before it finished — drop --visible, so
-    // content (and its CSS-driven overflow: visible, see
-    // .panel__content--visible) stays paintable while it was still
-    // visibly shrinking away, and never gets stuck visible if that
-    // shrink gets interrupted.
+    // content stays paintable while it was still visibly shrinking away,
+    // and never gets stuck visible if that shrink gets interrupted.
     function settlePanelTransition(e) {
       if (e.propertyName !== 'flex-basis') return;
       const panel = e.currentTarget;
       if (panel.classList.contains('panel--active')) return;
       const c = panel.querySelector('.panel__content');
       if (c) c.classList.remove('panel__content--visible');
+      panel.classList.remove('panel--content-visible');
     }
 
     panels.forEach(panel => {
