@@ -5157,9 +5157,27 @@ html, body {
       // scroll-snap-type: y mandatory fires real scroll events on every reflow,
       // so without this gate the typewriter loop can ignite mid-animation.
       if (p1Panel) {
+        // Snap re-fights any programmatic scrollTop reset for as long as the panel
+        // keeps resizing — so scroll-snap-type must stay disabled for the panel's
+        // whole 0.75s flex-basis open transition, not just a short window at the
+        // start of it. Re-enabling it early lets the browser's own resnap-on-resize
+        // behavior settle on the wrong section mid-animation, and that correction's
+        // scroll event lands right as p1Transitioning flips back to false below —
+        // exactly when the scroll listener's guard stops ignoring it.
         p1Panel.addEventListener('transitionstart',  e => { if (e.propertyName === 'flex-basis') p1Transitioning = true;  });
-        p1Panel.addEventListener('transitionend',    e => { if (e.propertyName === 'flex-basis') p1Transitioning = false; });
-        p1Panel.addEventListener('transitioncancel', e => { if (e.propertyName === 'flex-basis') p1Transitioning = false; });
+        p1Panel.addEventListener('transitionend',    e => {
+          if (e.propertyName !== 'flex-basis') return;
+          p1Transitioning = false;
+          if (p1Panel.classList.contains('panel--active')) {
+            doctorsMain.scrollTop = 0;
+            doctorsMain.style.scrollSnapType = '';
+          }
+        });
+        p1Panel.addEventListener('transitioncancel', e => {
+          if (e.propertyName !== 'flex-basis') return;
+          p1Transitioning = false;
+          doctorsMain.style.scrollSnapType = '';
+        });
 
         // Trigger section 0 typewriter each time Panel 1 becomes active.
         // currentSection starts at -1 so the applySection(0) guard (idx === currentSection)
@@ -5171,7 +5189,9 @@ html, body {
         // otherwise a stale scrollTop left over from a previous visit (e.g. the
         // user had scrolled to section 2) can trigger a genuine scroll event once
         // the panel regains real height, which recomputes a non-zero section index
-        // and retypes the title again right after this section-0 typewrite.
+        // and retypes the title again right after this section-0 typewrite. Snap
+        // stays disabled until the transitionend handler above re-enables it once
+        // the open animation has actually finished.
         let p1WasActive = p1Panel.classList.contains('panel--active');
         new MutationObserver(() => {
           const isActive = p1Panel.classList.contains('panel--active');
@@ -5180,7 +5200,6 @@ html, body {
             doctorsMain.scrollTop = 0;
             currentSection = -1;
             applySection(0);
-            setTimeout(() => { doctorsMain.style.scrollSnapType = ''; }, 120);
           }
           p1WasActive = isActive;
         }).observe(p1Panel, { attributeFilter: ['class'] });
