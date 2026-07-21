@@ -112,6 +112,7 @@ html, body {
   flex-direction: row;
   height: 100%;
   overflow: hidden;
+  position: relative;
   flex: 0 0 var(--nav-w);
   transition: flex-basis 0.75s var(--ease-precise),
               flex-grow   0.75s var(--ease-precise);
@@ -119,6 +120,28 @@ html, body {
 
 .panel--active {
   flex: 1 0 0px;
+}
+
+/* Boundary divider, anchored to the panel's own (animating) left edge —
+   not to anything inside its fixed-size content — so it tracks the real
+   visible boundary with the next panel continuously through the whole
+   flex-basis/flex-grow transition, closed, open, or mid-animation. */
+.panel::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--color-light);
+  pointer-events: none;
+  z-index: 10;
+}
+.panel:last-child::after {
+  content: none; /* panel 5 — nothing further left, no boundary needed */
+}
+.panel[data-panel="3"].panel--active::after {
+  content: none; /* p3's active bg is var(--color-light) — same color as the line, invisible anyway */
 }
 
 /* ═══════════════════════════════════════════
@@ -133,7 +156,6 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: var(--sp-pad) 0;
-  border-left: 1px solid var(--color-light);
   cursor: pointer;
   transition: background-color 0.35s var(--ease-precise);
   position: relative;
@@ -142,9 +164,6 @@ html, body {
 }
 .panel--active .panel__tab {
   cursor: default;
-}
-.panel:last-child .panel__tab {
-  border-left: none;
 }
 .panel:not(.panel--active) .panel__tab:hover {
   background-color: var(--color-light);
@@ -240,35 +259,6 @@ html, body {
 }
 .panel__content.panel__content--visible {
   visibility: visible;
-}
-/* Left-edge separator as pseudo-element — avoids border corner artifacts.
-   Unconditional (not gated on any class) and explicitly visibility:visible
-   so its presence is driven purely by the ancestor .panel's animating
-   overflow:hidden clip box — always in sync with the panel's own
-   flex-basis transition, never an instant on/off snap from JS timing. */
-.panel__content::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--color-light);
-  pointer-events: none;
-  z-index: 10;
-  /* Overrides the inherited visibility:hidden from .panel__content itself
-     (a descendant/pseudo may opt back into visible) so this line's
-     presence is driven purely by the ancestor .panel's animating
-     overflow:hidden clip box, continuously — not by whichever moment JS
-     happens to add/remove panel__content--visible. */
-  visibility: visible;
-}
-/* Panel 3: its whole background is var(--color-light) (see .p3), so a
-   light-on-light divider line would be invisible anyway — the background
-   change itself is the boundary. Panels 0 and 1 are dark like their
-   neighbors and need the real divider line. */
-.panel__content.p3::before {
-  content: none;
 }
 
 /* ═══════════════════════════════════════════
@@ -1491,10 +1481,6 @@ html, body {
 /* =========================================
    Panel 0 — Home page
    ========================================= */
-
-.panel[data-panel="0"] .panel__tab {
-  border-left: 1px solid var(--color-light) !important;
-}
 
 .panel[data-panel="3"].panel--active .panel__tab,
 .panel[data-panel="5"].panel--active .panel__tab {
@@ -3110,7 +3096,7 @@ html, body {
      open panel's content and its neighboring tab column — there's no
      side-by-side tab column on mobile anymore, so it'd just be a stray
      vertical line down the edge of every page. */
-  .panel__content.panel__content--visible::before {
+  .panel::after {
     display: none;
   }
   /* Stacks each panel's sidebar above its main content area instead of
