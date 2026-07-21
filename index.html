@@ -2897,9 +2897,8 @@ html, body {
   padding: 36px 80px 48px;
 }
 .p5__card {
-  flex: 1 1 200px;
-  min-width: 120px;
-  min-height: 365px;
+  flex: 0 0 calc((100% - 24px) / 3);
+  height: 200px;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -2923,6 +2922,7 @@ html, body {
   align-items: flex-start;
   padding: 24px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 .p5__card-front {
   background: #F8F4EE;
@@ -4047,6 +4047,9 @@ html, body {
      front/back stay position:absolute (needed for the flip crossfade),
      so height has to stay an explicit — just much smaller — value. */
   .p5__card {
+    flex: 1 1 200px;
+    min-width: 120px;
+    height: auto;
     min-height: 170px;
   }
   .p5__card-front,
