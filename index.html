@@ -182,8 +182,12 @@ html, body {
   line-height: 1;
   transition: color 0.35s var(--ease-precise);
 }
+/* 44px → 2.148cqw at the 2048px reference (the tab itself is --nav-w,
+   3.906cqw = 80px there) — same fixed-px-never-shrinks issue as Panel
+   3/5's illustrations; this logo didn't scale down with its own tab as
+   the desktop viewport narrowed. */
 .panel__tab-logo {
-  width: 44px;
+  width: 2.148cqw;
   display: block;
   transition: transform 0.45s var(--ease-precise);
 }
@@ -987,10 +991,15 @@ html, body {
   border-radius: 15px;
   background: var(--color-dark);
   border: 0.9px solid var(--color-light);
-  padding-top: 24px;
-  padding-right: 24px;
-  padding-bottom: 36px;
-  padding-left: 36px; /* asymmetric padding matches the original pre-refactor
+  /* Converted from fixed px (24/24/36/36) to cqh/cqw at the 2048×1070
+     reference — the card's own width already scales with cqw, but this
+     padding didn't, so it ate a growing share of the box as the card
+     shrank at narrower desktop widths, squeezing the text past the
+     card's left border instead of shrinking down with it. */
+  padding-top: 2.243cqh;
+  padding-right: 1.172cqw;
+  padding-bottom: 3.364cqh;
+  padding-left: 1.758cqw; /* asymmetric padding matches the original pre-refactor
                           design — physical (not logical) properties, so
                           these stay pinned to the physical right/left
                           regardless of dir="rtl" */
@@ -2160,14 +2169,23 @@ html, body {
   min-width: 0;
   direction: rtl;
 }
+/* Widths here were hardcoded px (200/320/124/148), the one spot in this
+   whole row/illustration/text layout that wasn't cqw/cqh like the rest
+   of the file — fine at the ~2048px reference width they were tuned
+   against, but fixed and un-shrinking below that, so at any desktop
+   width under roughly 1300-1500px (not just mobile) the illustration
+   held its full size and squeezed .p3__col-text's flex:1 1 auto column
+   down to nothing. Converted to cqw/cqh at the same 2048×1070 reference
+   ratio (e.g. 200px/2048 = 9.766cqw) — identical rendered size at the
+   original reference width, actually responsive below it. */
 .p3__col-illus {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   flex: 0 0 auto;
-  width: 200px;
-  max-width: 200px;
+  width: 9.766cqw;
+  max-width: 9.766cqw;
   height: auto;
 }
 .p3__col-illus img {
@@ -2177,11 +2195,11 @@ html, body {
   object-fit: contain;
 }
 .p3__col-illus--03-1,
-.p3__col-illus--03-2 { height: 148px; }
-.p3__col-illus--03-1 img { width: 124px; height: 148px; }
+.p3__col-illus--03-2 { height: 13.832cqh; }
+.p3__col-illus--03-1 img { width: 6.055cqw; height: 13.832cqh; }
 .p3__col-illus--03-2 img { transform: rotate(10deg); }
-.p3__col-illus--02 { width: 320px; max-width: 320px; }
-.p3__col-illus--02 img { width: 320px; height: auto; }
+.p3__col-illus--02 { width: 15.625cqw; max-width: 15.625cqw; }
+.p3__col-illus--02 img { width: 15.625cqw; height: auto; }
 .p3__col-text {
   display: flex;
   flex-direction: column;
@@ -2334,12 +2352,14 @@ html, body {
   margin-top: 5px;
   flex-shrink: 0;
 }
+/* 180px → 8.789cqw at the 2048px reference width — same fixed-px-
+   doesn't-shrink issue as .p3__col-illus above. */
 .p3__05-illus {
   display: flex;
   justify-content: center;
   align-items: center;
   flex: 0 0 auto;
-  max-width: 180px;
+  max-width: 8.789cqw;
 }
 .p3__05-illus img {
   max-width: 100%;
@@ -2853,6 +2873,16 @@ html, body {
 }
 
 /* ── Flip cards inside dropdown 1 ── */
+/* flex-wrap was nowrap — unlike .p3__cards-row's wrap, this forced all
+   5 cards into one row no matter how narrow the screen got. Combined
+   with a fixed (non-cqh) 380px min-height, at any width too narrow to
+   fit 5 full-height cards side by side, each card's width got squeezed
+   toward 0 while its height stayed fixed at 380px — tall slivers with
+   the flipped/front text overflowing past the card's own edges. wrap
+   (+ a real flex-basis, like .p3__card's 200px, instead of 0) lets
+   cards drop to the next line instead of being crushed. Padding
+   converted to cqw/cqh at the 2048×1070 reference for the same reason
+   as Panel 3's — fixed px that never shrank below the design width. */
 .p5__cards-row {
   display: flex;
   flex-direction: row;
@@ -2860,14 +2890,17 @@ html, body {
   align-items: stretch;
   gap: 12px;
   width: 100%;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   box-sizing: border-box;
-  padding: 36px 80px 48px;
+  padding: 3.364cqh 3.906cqw 4.486cqh;
 }
 .p5__card {
-  flex: 1 1 0;
+  flex: 1 1 200px;
   min-width: 0;
-  min-height: 380px;
+  /* 380px / 1070 = 35.514cqh — was mistakenly written as 18.551cqh
+     (roughly half), which is why the longer-text cards' back faces were
+     overflowing past the bottom of the box instead of having room. */
+  min-height: 35.514cqh;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -3137,6 +3170,15 @@ html, body {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     visibility: visible !important;
+    /* Browsers place the scrollbar on the LEFT for dir="rtl" content —
+       rendering as a stray vertical line right next to each panel's own
+       number (also on the left). Touch scrolling doesn't need a visible
+       scrollbar for its own sake, so hide it outright rather than have
+       it read as a stray design element. */
+    scrollbar-width: none;
+  }
+  .panel__content::-webkit-scrollbar {
+    display: none;
   }
   /* The left-edge divider line existed to mark the boundary between an
      open panel's content and its neighboring tab column — there's no
@@ -3172,22 +3214,32 @@ html, body {
     padding: 0 16px;
     background: var(--color-dark);
     border-bottom: 1px solid var(--color-light);
+    transition: background 0.3s var(--ease-precise), border-color 0.3s var(--ease-precise);
+  }
+  /* Panels 3 and 5 are light-themed pages (cream background) — the bar
+     follows suit instead of staying permanently dark: white bg, black
+     divider, and swap which logo variant shows. Toggled by JS whenever
+     the active panel changes (see the hamburger-nav script). */
+  .mobile-topbar.mobile-topbar--light {
+    background: var(--color-light);
+    border-bottom-color: var(--color-dark);
   }
   .mobile-topbar-logo {
     width: 28px;
     height: 28px;
     display: block;
   }
-  /* Third flex child, row-reverse + space-between with exactly 3 items
-     — logo/button land at the two edges (as before) and this one falls
-     naturally in the middle, no extra positioning needed. */
-  /* No gray — same rule as the nav item numbers: the palette is
-     strictly black/white, solid var(--color-light) not a dimmed one. */
-  .mobile-topbar-progress {
-    font-family: var(--font-body);
-    font-size: 13px;
-    color: var(--color-light);
-    letter-spacing: 0.02em;
+  .mobile-topbar-logo--dark {
+    display: none;
+  }
+  .mobile-topbar--light .mobile-topbar-logo--light {
+    display: none;
+  }
+  .mobile-topbar--light .mobile-topbar-logo--dark {
+    display: block;
+  }
+  .mobile-topbar--light .mobile-nav-toggle-bars span {
+    background: var(--color-dark);
   }
   .mobile-nav-toggle {
     display: flex;
@@ -4061,11 +4113,9 @@ html, body {
   <!-- Mobile-only persistent top bar + hamburger nav — the nav list is
        built/wired entirely from JS (reads .panel__tab text at runtime),
        hidden on desktop by default CSS. -->
-  <header class="mobile-topbar">
-    <img src="SVG\HS logo small.svg" alt="HS" class="mobile-topbar-logo">
-    <!-- Current/total panel indicator — a quiet hint that there's more
-         to scroll through, kept in sync with panel--active by JS. -->
-    <span class="mobile-topbar-progress" id="mobile-topbar-progress" aria-hidden="true">0/5</span>
+  <header class="mobile-topbar" id="mobile-topbar">
+    <img src="SVG\HS logo small.svg" alt="HS" class="mobile-topbar-logo mobile-topbar-logo--light">
+    <img src="black logo small.svg" alt="HS" class="mobile-topbar-logo mobile-topbar-logo--dark" aria-hidden="true">
     <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="תפריט" aria-expanded="false" aria-controls="mobile-nav-overlay">
       <span class="mobile-nav-toggle-bars"><span></span><span></span><span></span></span>
     </button>
@@ -5107,7 +5157,7 @@ html, body {
         const t = el.textContent;
         if (t.length > 0) {
           el.textContent = t.slice(0, -1);
-          schedule(backspace, 14);
+          schedule(backspace, 10);
         } else {
           schedule(() => forward(0), 50);
         }
@@ -5116,7 +5166,10 @@ html, body {
       function forward(i) {
         if (gen !== typewriterGen) return;
         el.textContent = newText.slice(0, i);
-        if (i < newText.length) schedule(() => forward(i + 1), 44);
+        // Was 44ms/char — a ~48-character title took over 2s to type
+        // alone, on top of backspacing the previous one; 30ms reads as
+        // a normal typing pace instead of a deliberate slow reveal.
+        if (i < newText.length) schedule(() => forward(i + 1), 30);
       }
 
       backspace();
@@ -5251,6 +5304,15 @@ html, body {
         // the ancestor .panel) does all the visual reveal, so there's no
         // delay to desync from it.
         c.classList.add('panel__content--visible');
+      }
+      // Mobile topbar follows the active panel's own theme — panels 3
+      // and 5 are light (cream) pages, so the always-on-top bar should
+      // switch to match instead of staying permanently dark over a
+      // light page underneath it.
+      const topbar = document.getElementById('mobile-topbar');
+      if (topbar) {
+        const lightPanel = panel.dataset.panel === '3' || panel.dataset.panel === '5';
+        topbar.classList.toggle('mobile-topbar--light', lightPanel);
       }
     }
 
@@ -6375,7 +6437,6 @@ html, body {
       const toggle   = document.getElementById('mobile-nav-toggle');
       const overlay  = document.getElementById('mobile-nav-overlay');
       const list     = document.getElementById('mobile-nav-list');
-      const progress = document.getElementById('mobile-topbar-progress');
       const panels   = Array.from(document.querySelectorAll('.panel'));
       if (!toggle || !overlay || !list || !panels.length) return;
 
@@ -6394,7 +6455,6 @@ html, body {
         item.dataset.panel = num;
         item.innerHTML = `<span>${label}</span><span class="mobile-nav-item-num">${num}</span>`;
         item.addEventListener('click', () => {
-          if (progress) progress.textContent = `${panel.dataset.panel}/${panels.length - 1}`;
           activatePanel(panel);
           closeNav();
         });
