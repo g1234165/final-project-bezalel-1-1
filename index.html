@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101212" id="theme-color-meta">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <title>HS</title>
   <style>
@@ -5268,6 +5269,18 @@ html, body {
        ══════════════════════════════════════════ */
     const panels = Array.from(document.querySelectorAll('.panel'));
 
+    // ── Mobile topbar + browser-chrome theme, shared by activatePanel()
+    // below and the hamburger nav's closeNav() (so re-closing the menu
+    // restores whichever panel is actually active, instead of the menu
+    // itself being responsible for knowing panel themes). ──
+    function applyTopbarTheme(lightPanel) {
+      const topbar = document.getElementById('mobile-topbar');
+      if (!topbar) return;
+      topbar.classList.toggle('mobile-topbar--light', lightPanel);
+      const themeColorMeta = document.getElementById('theme-color-meta');
+      if (themeColorMeta) themeColorMeta.setAttribute('content', lightPanel ? '#F8F4EE' : '#101212');
+    }
+
     // ── Single source of truth for opening a panel ──────────
     // Every code path that opens a panel (tab clicks, keyboard, the
     // entrance animation, its safety-fallback timeout, and the mobile
@@ -5305,15 +5318,11 @@ html, body {
         // delay to desync from it.
         c.classList.add('panel__content--visible');
       }
-      // Mobile topbar follows the active panel's own theme — panels 3
-      // and 5 are light (cream) pages, so the always-on-top bar should
-      // switch to match instead of staying permanently dark over a
-      // light page underneath it.
-      const topbar = document.getElementById('mobile-topbar');
-      if (topbar) {
-        const lightPanel = panel.dataset.panel === '3' || panel.dataset.panel === '5';
-        topbar.classList.toggle('mobile-topbar--light', lightPanel);
-      }
+      // Mobile topbar (+ browser chrome via theme-color) follows the
+      // active panel's own theme — panels 3 and 5 are light (cream)
+      // pages, so the always-on-top bar should switch to match instead
+      // of staying permanently dark over a light page underneath it.
+      applyTopbarTheme(panel.dataset.panel === '3' || panel.dataset.panel === '5');
     }
 
     // ── Auto-open guard ──────────────────────────────────────
@@ -6472,11 +6481,20 @@ html, body {
         overlay.dataset.open = 'true';
         overlay.removeAttribute('aria-hidden');
         toggle.setAttribute('aria-expanded', 'true');
+        // The overlay itself is always dark — a light-themed topbar
+        // floating on top of it (e.g. opened from Panel 3/5) would leave
+        // a mismatched white bar over a black menu. Force dark while
+        // it's open regardless of which panel is underneath.
+        applyTopbarTheme(false);
       }
       function closeNav() {
         overlay.dataset.open = 'false';
         overlay.setAttribute('aria-hidden', 'true');
         toggle.setAttribute('aria-expanded', 'false');
+        // Restore whichever theme the actually-active panel calls for
+        // (activatePanel() doesn't re-run just because the menu closed).
+        const active = panels.find(p => p.classList.contains('panel--active'));
+        if (active) applyTopbarTheme(active.dataset.panel === '3' || active.dataset.panel === '5');
       }
       toggle.addEventListener('click', () => {
         if (overlay.dataset.open === 'true') closeNav(); else openNav();
