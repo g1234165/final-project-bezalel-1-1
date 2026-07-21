@@ -178,8 +178,15 @@ html, body {
    both start flush at the panel's own top, so the same cqh offset lines
    up in both places). Lives entirely inside the tab — never inside
    .panel__content, never crossing any clip/overflow boundary, never
-   resized by the panel's own flex-basis animation — so it's always
-   either fully drawn or fading, never a partial/cut segment. */
+   resized by the panel's own flex-basis animation.
+   Keyed on --content-visible (mirrored onto .panel at the exact same
+   JS lines panel__content--visible is toggled), NOT --active: --active
+   toggles instantly on both open and close, but the sidebar half of
+   this line (plain content, gated on .panel__content's own visibility)
+   stays visible for the whole close animation and only cuts out once
+   settled. Matching that exact signal — and matching its hard on/off
+   with no transition of its own — keeps both halves pixel-synced on
+   every frame instead of one fading out early and cropping the line. */
 .panel[data-panel="1"] .panel__tab::after,
 .panel[data-panel="2"] .panel__tab::after,
 .panel[data-panel="4"] .panel__tab::after {
@@ -191,7 +198,6 @@ html, body {
   height: 1px;
   background: var(--color-light);
   opacity: 0;
-  transition: opacity 0.35s var(--ease-precise);
   pointer-events: none;
 }
 .panel[data-panel="3"] .panel__tab::after {
@@ -203,13 +209,12 @@ html, body {
   height: 1px;
   background: var(--color-dark);
   opacity: 0;
-  transition: opacity 0.35s var(--ease-precise);
   pointer-events: none;
 }
-.panel[data-panel="1"].panel--active .panel__tab::after,
-.panel[data-panel="2"].panel--active .panel__tab::after,
-.panel[data-panel="3"].panel--active .panel__tab::after,
-.panel[data-panel="4"].panel--active .panel__tab::after {
+.panel[data-panel="1"].panel--content-visible .panel__tab::after,
+.panel[data-panel="2"].panel--content-visible .panel__tab::after,
+.panel[data-panel="3"].panel--content-visible .panel__tab::after,
+.panel[data-panel="4"].panel--content-visible .panel__tab::after {
   opacity: 1;
 }
 .panel:not(.panel--active) .panel__tab:hover {
@@ -3142,6 +3147,14 @@ html, body {
   .panel::after {
     display: none;
   }
+  /* Guard against the desktop-only p1-4 tab-side hdivider companion
+     line: its top:58.972cqh offset assumes the tab's own height:100%
+     desktop box, which mobile restyles into a short auto-height header
+     row — explicitly suppress it here rather than relying on it being
+     incidentally clipped. */
+  .panel__tab::after {
+    display: none;
+  }
   /* Stacks each panel's sidebar above its main content area instead of
      side-by-side. (.p0 already is column on desktop, listing it here is
      harmless.) */
@@ -5254,6 +5267,7 @@ html, body {
           c.setAttribute('aria-hidden', 'true');
           if (isMobile) {
             c.classList.remove('panel__content--visible');
+            p.classList.remove('panel--content-visible');
           }
         }
       });
@@ -5265,6 +5279,11 @@ html, body {
         // the ancestor .panel) does all the visual reveal, so there's no
         // delay to desync from it.
         c.classList.add('panel__content--visible');
+        // Mirrored onto .panel itself (not just .panel__content) so
+        // CSS elsewhere (e.g. the p1-4 tab-side hdivider companion line)
+        // can share this exact same on/off timing without racing a
+        // differently-timed class like --active.
+        panel.classList.add('panel--content-visible');
       }
     }
 
@@ -5292,6 +5311,7 @@ html, body {
       if (panel.classList.contains('panel--active')) return;
       const c = panel.querySelector('.panel__content');
       if (c) c.classList.remove('panel__content--visible');
+      panel.classList.remove('panel--content-visible');
     }
 
     panels.forEach(panel => {
