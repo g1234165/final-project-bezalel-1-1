@@ -165,6 +165,13 @@ html, body {
 .panel--active .panel__tab {
   cursor: default;
 }
+/* Panel 0's tab has no title text (just the logo), so unlike other
+   panels it keeps a permanent divider between the tab and its own
+   content, even when open — the other panels intentionally don't (see
+   .panel::after for the shared inter-panel boundary). */
+.panel[data-panel="0"] .panel__tab {
+  border-left: 1px solid var(--color-light);
+}
 .panel:not(.panel--active) .panel__tab:hover {
   background-color: var(--color-light);
 }
@@ -259,12 +266,17 @@ html, body {
 }
 .panel__content.panel__content--visible {
   visibility: visible;
-  /* Ties overflow to the same, already-correct --visible timing (on
-     instantly at open-click, off only once the closing panel's own
-     flex-basis transition finishes) instead of a separately-timed JS
-     side effect — so anything meant to bleed past content's fixed box
-     (e.g. the p*__hdivider box-shadow into the tab column) is visible
-     from frame one of opening, not just once the animation settles. */
+}
+/* Keyed on .panel--active (not panel__content--visible) deliberately:
+   --active add/remove both happen synchronously at click time for every
+   panel, opening and closing alike, which is exactly the instant-on/
+   instant-off timing this needs — unlike --visible, whose removal is
+   deliberately delayed until the closing panel's flex-basis transition
+   finishes. So anything meant to bleed past content's fixed box (e.g.
+   the p*__hdivider box-shadow into the tab column) appears the instant
+   a panel opens and disappears the instant you navigate away from it,
+   instead of lingering through the whole close animation. */
+.panel--active .panel__content {
   overflow: visible;
 }
 
