@@ -194,14 +194,15 @@ html, body {
    up in both places). Lives entirely inside the tab — never inside
    .panel__content, never crossing any clip/overflow boundary, never
    resized by the panel's own flex-basis animation.
-   Keyed on --content-visible (mirrored onto .panel at the exact same
-   JS lines panel__content--visible is toggled), NOT --active: --active
-   toggles instantly on both open and close, but the sidebar half of
-   this line (plain content, gated on .panel__content's own visibility)
-   stays visible for the whole close animation and only cuts out once
-   settled. Matching that exact signal — and matching its hard on/off
-   with no transition of its own — keeps both halves pixel-synced on
-   every frame instead of one fading out early and cropping the line. */
+   Deliberately a hard on/off with no transition of its own — a fade (or
+   any other animated effect) here would read as a separate, foreign
+   motion layered on top of the site's actual language for opening/
+   closing panels, which is the physical flex-basis wipe, not opacity.
+   Keyed on --content-visible, mirrored onto .panel at the exact same
+   instant --active is toggled (see activatePanel() in the script) —
+   i.e. the moment you click, so the line snaps to the new state in sync
+   with the click itself instead of lagging behind and popping late
+   once the (much slower) box-resize transition happens to catch up. */
 .panel[data-panel="1"] .panel__tab::after,
 .panel[data-panel="2"] .panel__tab::after,
 .panel[data-panel="4"] .panel__tab::after {
@@ -5350,14 +5351,21 @@ html, body {
       // flex-basis close animation (panels hard-toggle display:none), so
       // hide content immediately instead of waiting for an event that
       // will never fire.
+      // --content-visible itself, though, comes off right here on both
+      // breakpoints — it only drives the tab-side divider line's opacity
+      // (see .panel__tab::after), which has its own transition now and
+      // needs to start fading at the same instant the box starts
+      // shrinking, not ~0.75s later when flex-basis's transitionend
+      // technically fires (by which point the box already looks settled,
+      // so the line held fully opaque and then hard-popped away).
       panels.forEach(p => {
         p.classList.remove('panel--active');
+        p.classList.remove('panel--content-visible');
         const c = p.querySelector('.panel__content');
         if (c) {
           c.setAttribute('aria-hidden', 'true');
           if (isMobile) {
             c.classList.remove('panel__content--visible');
-            p.classList.remove('panel--content-visible');
           }
         }
       });
@@ -5400,13 +5408,14 @@ html, body {
     // cancelled by a new click before it finished — drop --visible, so
     // content stays paintable while it was still visibly shrinking away,
     // and never gets stuck visible if that shrink gets interrupted.
+    // (panel--content-visible itself already came off at click time, in
+    // activatePanel() above — it doesn't wait for this event.)
     function settlePanelTransition(e) {
       if (e.propertyName !== 'flex-basis') return;
       const panel = e.currentTarget;
       if (panel.classList.contains('panel--active')) return;
       const c = panel.querySelector('.panel__content');
       if (c) c.classList.remove('panel__content--visible');
-      panel.classList.remove('panel--content-visible');
     }
 
     panels.forEach(panel => {
