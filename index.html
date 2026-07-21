@@ -922,7 +922,10 @@ html, body {
   position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 20px;
+  gap: 0.977cqw; /* was 20px — fixed px here didn't shrink with the grid
+                    at narrower desktop widths, so the fixed-width hours
+                    column below ate a growing share of the space and
+                    pushed the task cards into overlapping it. */
   direction: ltr;
   text-align: left;
   font-size: var(--fs-body);
@@ -945,7 +948,7 @@ html, body {
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
+  gap: 1.869cqh;
 }
 .p2__line {
   align-self: stretch;
@@ -975,15 +978,15 @@ html, body {
 /* hours frame — second child (Figma: hours on right in LTR) */
 .p2__hours-col {
   align-self: stretch;
-  width: 40px;
+  width: 1.953cqw;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 20px;
+  gap: 1.869cqh;
 }
 .p2__hour-wrap {
-  width: 40px;
+  width: 1.953cqw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1031,8 +1034,15 @@ html, body {
                                it) and pinned to its physical left edge via
                                each card's own margin-left below */
   gap: 16px;
-  padding-right: 120px;
-  padding-left: 48px;
+  /* 120px/48px → cqw at the 2048px reference width — fixed px here meant
+     this reserved gap before the hour-numbers column (right) and the
+     card's left margin (left) stayed pinned at the same size while the
+     card itself (44.922cqw) kept shrinking, so at narrower desktop widths
+     the fixed padding ate a disproportionate share of the box, shoving
+     the whole card assembly visibly left and out of alignment with the
+     grid instead of scaling down together with it. */
+  padding-right: 5.859cqw;
+  padding-left: 2.344cqw;
 }
 
 /* ── Card: black/bordered by default, flips to solid cream when active ── */
