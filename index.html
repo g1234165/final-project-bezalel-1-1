@@ -2889,7 +2889,7 @@ html, body {
   align-items: stretch;
   gap: 12px;
   width: 100%;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   box-sizing: border-box;
   /* 36px top (was 0) — matches .p3__cards-container's own 36px/80px/48px
      rhythm; without it the cards sat flush against the dropdown header
@@ -2899,7 +2899,7 @@ html, body {
 .p5__card {
   flex: 1 1 200px;
   min-width: 120px;
-  min-height: 380px;
+  min-height: 365px;
   perspective: 1200px;
   cursor: pointer;
 }
@@ -4031,17 +4031,9 @@ html, body {
   .p5__dropdown-header {
     padding: 16px;
   }
-   .p5__cards-row {
-    display: flex;
-    flex-direction: row;
-    direction: rtl;
-    align-items: stretch;
-    gap: 8px;
-    width: 100%;
-    flex-wrap: nowrap;
-    box-sizing: border-box;
-    padding: 36px 36px;
-}
+  .p5__cards-row {
+    padding: 16px 16px 24px;
+  }
   /* Desktop's 0/80px top/horizontal padding — 0 top sat the links list
      flush against the dropdown header when opened, and 80px horizontal
      would eat almost half a 375px screen. Matches .p5__cards-row's
@@ -4055,7 +4047,7 @@ html, body {
      front/back stay position:absolute (needed for the flip crossfade),
      so height has to stay an explicit — just much smaller — value. */
   .p5__card {
-    min-height: 200px;
+    min-height: 170px;
   }
   .p5__card-front,
   .p5__card-back {
