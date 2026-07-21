@@ -5127,7 +5127,8 @@ html, body {
     }
 
     function applySection(idx) {
-      if (idx === currentSection) return;
+      console.log('[P1-DEBUG] applySection called', { idx, currentSection, t: performance.now().toFixed(1) });
+      if (idx === currentSection) { console.log('[P1-DEBUG] applySection SKIPPED (same idx)'); return; }
       currentSection = idx;
       const { title, filter } = SECTIONS[idx];
       const titleEl = document.querySelector('.p1__doctors-title');
@@ -5164,8 +5165,12 @@ html, body {
         // behavior settle on the wrong section mid-animation, and that correction's
         // scroll event lands right as p1Transitioning flips back to false below —
         // exactly when the scroll listener's guard stops ignoring it.
-        p1Panel.addEventListener('transitionstart',  e => { if (e.propertyName === 'flex-basis') p1Transitioning = true;  });
+        p1Panel.addEventListener('transitionstart',  e => {
+          console.log('[P1-DEBUG] transitionstart', e.propertyName, performance.now().toFixed(1));
+          if (e.propertyName === 'flex-basis') p1Transitioning = true;
+        });
         p1Panel.addEventListener('transitionend',    e => {
+          console.log('[P1-DEBUG] transitionend', e.propertyName, performance.now().toFixed(1), 'scrollTop=', doctorsMain.scrollTop);
           if (e.propertyName !== 'flex-basis') return;
           p1Transitioning = false;
           if (p1Panel.classList.contains('panel--active')) {
@@ -5174,6 +5179,7 @@ html, body {
           }
         });
         p1Panel.addEventListener('transitioncancel', e => {
+          console.log('[P1-DEBUG] transitioncancel', e.propertyName, performance.now().toFixed(1));
           if (e.propertyName !== 'flex-basis') return;
           p1Transitioning = false;
           doctorsMain.style.scrollSnapType = '';
@@ -5195,23 +5201,33 @@ html, body {
         let p1WasActive = p1Panel.classList.contains('panel--active');
         new MutationObserver(() => {
           const isActive = p1Panel.classList.contains('panel--active');
+          console.log('[P1-DEBUG] class mutation', { isActive, p1WasActive, t: performance.now().toFixed(1), scrollTop: doctorsMain.scrollTop });
           if (isActive && !p1WasActive) {
             doctorsMain.style.scrollSnapType = 'none';
             doctorsMain.scrollTop = 0;
             currentSection = -1;
             applySection(0);
+            console.log('[P1-DEBUG] true-edge reset done, scrollTop now=', doctorsMain.scrollTop);
           }
           p1WasActive = isActive;
         }).observe(p1Panel, { attributeFilter: ['class'] });
       }
 
       doctorsMain.addEventListener('scroll', () => {
-        if (p1Transitioning || isResizing) return;
-        if (!p1Panel || !p1Panel.classList.contains('panel--active') || doctorsMain.clientHeight === 0) return;
+        const t = performance.now().toFixed(1);
+        if (p1Transitioning || isResizing) {
+          console.log('[P1-DEBUG] scroll event IGNORED (transitioning/resizing)', { p1Transitioning, isResizing, scrollTop: doctorsMain.scrollTop, t });
+          return;
+        }
+        if (!p1Panel || !p1Panel.classList.contains('panel--active') || doctorsMain.clientHeight === 0) {
+          console.log('[P1-DEBUG] scroll event IGNORED (not active / clientHeight 0)', { active: p1Panel && p1Panel.classList.contains('panel--active'), clientHeight: doctorsMain.clientHeight, t });
+          return;
+        }
         const { scrollTop, scrollHeight, clientHeight } = doctorsMain;
         const maxScroll = scrollHeight - clientHeight;
-        if (maxScroll <= 0) return;
+        if (maxScroll <= 0) { console.log('[P1-DEBUG] scroll event IGNORED (maxScroll<=0)', t); return; }
         const idx = Math.min(3, Math.floor((scrollTop / maxScroll) * 4));
+        console.log('[P1-DEBUG] scroll event ACTED ON', { scrollTop, scrollHeight, clientHeight, idx, t });
         applySection(idx);
       }, { passive: true });
 
