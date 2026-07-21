@@ -5144,7 +5144,7 @@ html, body {
     let currentSection  = -1;
     let p1Transitioning = false;
 
-    function typewrite(el, newText) {
+    function typewrite(el, newText, { skipBackspace = false } = {}) {
       const gen = ++typewriterGen;
       if (typewriterTimer) { clearTimeout(typewriterTimer); typewriterTimer = null; }
 
@@ -5173,15 +5173,25 @@ html, body {
         if (i < newText.length) schedule(() => forward(i + 1), 30);
       }
 
-      backspace();
+      // Entering the panel: the title already shows section 0's text
+      // (baked into the HTML as no-JS fallback), so backspacing it away
+      // first is pure animation noise — clear instantly and type straight
+      // in. Switching between sections while the panel is already open
+      // still backspaces the old title first, which is the intended effect.
+      if (skipBackspace) {
+        el.textContent = '';
+        schedule(() => forward(0), 50);
+      } else {
+        backspace();
+      }
     }
 
-    function applySection(idx) {
+    function applySection(idx, { entering = false } = {}) {
       if (idx === currentSection) return;
       currentSection = idx;
       const { title, filter } = SECTIONS[idx];
       const titleEl = document.querySelector('.p1__doctors-title');
-      if (titleEl) typewrite(titleEl, title);
+      if (titleEl) typewrite(titleEl, title, { skipBackspace: entering });
       const quoteSpan = document.getElementById('quote-text');
       if (quoteSpan) quoteSpan.textContent = '';
       document.querySelectorAll('.p1__progress-dot').forEach(dot => {
@@ -5217,7 +5227,7 @@ html, body {
         new MutationObserver(() => {
           if (p1Panel.classList.contains('panel--active')) {
             currentSection = -1;
-            applySection(0);
+            applySection(0, { entering: true });
           }
         }).observe(p1Panel, { attributeFilter: ['class'] });
       }
