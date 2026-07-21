@@ -2860,16 +2860,13 @@ html, body {
   align-items: stretch;
   gap: 12px;
   width: 100%;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   box-sizing: border-box;
-  /* 36px top (was 0) — matches .p3__cards-container's own 36px/80px/48px
-     rhythm; without it the cards sat flush against the dropdown header
-     the instant it opened. */
   padding: 36px 80px 48px;
 }
 .p5__card {
-  flex: 1 1 200px;
-  min-width: 120px;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 380px;
   perspective: 1200px;
   cursor: pointer;
@@ -4115,9 +4112,6 @@ html, body {
 
           <!-- small-left-frame-parent: flex row -->
           <div class="p0__lower-row">
-
-            <!-- outer vertical divider (right side of the logo box) -->
-            <div class="p0__v-line" role="separator"></div>
 
             <!-- navigation-barlogo-hs: logo's own boxed column (first = right in RTL) -->
             <div class="p0__logo-nav">
