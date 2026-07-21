@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101212" id="theme-color-meta">
+  <!-- Critical above-the-fold assets: the two body/heading font weights
+       used on first paint (panel 0 hero + the always-visible tab strip),
+       plus the hero illustration. Only the weights actually needed for
+       first paint are preloaded — preloading every @font-face weight
+       would compete with these for bandwidth and hurt the metric it's
+       meant to fix. -->
+  <link rel="preload" href="פונטים/SimonaPro-Regular.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="פונטים/NarkissAsaf-Regular-TRIAL.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="gif/p0_illustration gif.gif" as="image">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
   <title>HS</title>
   <style>
@@ -37,26 +46,31 @@
   font-family: 'Simona Pro';
   src: url('פונטים/SimonaPro-Regular.ttf') format('truetype');
   font-weight: 400;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Simona Pro';
   src: url('פונטים/SimonaPro-Medium.ttf') format('truetype');
   font-weight: 500;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Simona Pro';
   src: url('פונטים/SimonaPro-Bold.ttf') format('truetype');
   font-weight: 700;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Narkiss Asaf TRIAL';
   src: url('פונטים/NarkissAsaf-Regular-TRIAL.ttf') format('truetype');
   font-weight: 400;
+  font-display: swap;
 }
 @font-face {
   font-family: 'Narkiss Asaf TRIAL';
   src: url('פונטים/NarkissAsaf-Bold-TRIAL.ttf') format('truetype');
   font-weight: 700;
+  font-display: swap;
 }
 
 /* ═══════════════════════════════════════════
@@ -4090,8 +4104,8 @@ html, body {
        built/wired entirely from JS (reads .panel__tab text at runtime),
        hidden on desktop by default CSS. -->
   <header class="mobile-topbar" id="mobile-topbar">
-    <img src="SVG\HS logo small.svg" alt="HS" class="mobile-topbar-logo mobile-topbar-logo--light">
-    <img src="black logo small.svg" alt="HS" class="mobile-topbar-logo mobile-topbar-logo--dark" aria-hidden="true">
+    <img src="SVG\HS logo small.svg" alt="HS" width="33" height="22" class="mobile-topbar-logo mobile-topbar-logo--light">
+    <img src="black logo small.svg" alt="HS" width="34" height="24" class="mobile-topbar-logo mobile-topbar-logo--dark" aria-hidden="true">
     <button type="button" class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="תפריט" aria-expanded="false" aria-controls="mobile-nav-overlay">
       <span class="mobile-nav-toggle-bars"><span></span><span></span><span></span></span>
     </button>
@@ -4111,8 +4125,8 @@ html, body {
          ───────────────────────────── -->
     <div class="panel" data-panel="0">
       <div class="panel__tab" role="button" tabindex="0" aria-label="פאנל 0 — HS">
-        <img src="SVG\HS logo small.svg" alt="HS" class="panel__tab-logo panel__tab-logo--light">
-        <img src="SVG\HS logo small black.svg" alt="HS" class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
+        <img src="SVG\HS logo small.svg" alt="HS" width="33" height="22" class="panel__tab-logo panel__tab-logo--light">
+        <img src="SVG\HS logo small black.svg" alt="HS" width="33" height="22" class="panel__tab-logo panel__tab-logo--dark" aria-hidden="true">
         <!-- Mobile-only text counterpart to the logo images above (which
              desktop's vertical tab shows instead of text, unlike every
              other panel) — hidden on desktop by the rule right after
@@ -4127,7 +4141,7 @@ html, body {
 
         <!-- top-frame: illustration -->
         <div class="p0__top-frame">
-          <img src="gif\p0_illustration gif.gif" alt="דמות אנושית — HS" class="p0__illustration">
+          <img src="gif\p0_illustration gif.gif" alt="דמות אנושית — HS" width="3413" height="1920" class="p0__illustration">
         </div>
 
         <!-- lower-frame-home: flex column, 248px -->
@@ -4141,7 +4155,7 @@ html, body {
 
             <!-- navigation-barlogo-hs: logo's own boxed column (first = right in RTL) -->
             <div class="p0__logo-nav">
-              <img src="SVG\logo HS big 2.svg" alt="HS" class="p0__hs-logo">
+              <img src="SVG\logo HS big 2.svg" alt="HS" width="178" height="125" class="p0__hs-logo">
             </div>
 
             <!-- inner vertical divider (between logo and text) -->
@@ -4189,7 +4203,7 @@ html, body {
           <div class="p1__logo-section">
             <div class="p1__logo-big">
               <div class="p1__logo-big-child">
-                <img src="p1-1-1.gif" alt="צורה אבסטרקטית — HS" class="p1__vector-icon">
+                <img src="p1-1-1.gif" alt="צורה אבסטרקטית — HS" width="1380" height="1920" class="p1__vector-icon">
               </div>
             </div>
           </div>
@@ -4221,6 +4235,7 @@ html, body {
                 <div class="p1__quote" role="status" aria-live="polite" aria-atomic="true">
                   <img src="Property 1=empty.svg"
                        alt=""
+                       width="946" height="81"
                        class="p1__quote-bg"
                        aria-hidden="true">
                   <span class="p1__quote-text" id="quote-text"></span>
@@ -4281,7 +4296,7 @@ html, body {
 
           <div class="p2__logo-section">
             <div class="p2__logo-big">
-              <img src="p2-2.gif" alt="צורה אבסטרקטית — פאנל 2" class="p2__vector-icon">
+              <img src="p2-2.gif" alt="צורה אבסטרקטית — פאנל 2" width="1380" height="1920" class="p2__vector-icon">
             </div>
             <div class="p2__episode-label-col">
             </div>
@@ -4449,7 +4464,7 @@ html, body {
         <aside class="p3__sidebar">
           <div class="p3__logo-section">
             <div class="p3__logo-big">
-              <img src="p3-3.gif" alt="צורה — פאנל 3" class="p3__vector-icon">
+              <img src="p3-3.gif" alt="צורה — פאנל 3" width="1380" height="1920" class="p3__vector-icon">
             </div>
             <div class="p3__episode-label-col">
             </div>
@@ -4512,14 +4527,14 @@ html, body {
                         <div class="p3__col-text">
                           <p class="p3__col-body">פצעי HS עשויים להופיע כמעט בכל מקום, אך נוטים לפגוע בעיקר באזורי חיכוך ובקפלי עור כגון:</p>
                           <ul class="p3__05-list">
-                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">בתי שחי</span></li>
-                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מפשעות</span></li>
-                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">ישבן</span></li>
-                            <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מתחת לשדיים (אצל נשים)</span></li>
+                            <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">בתי שחי</span></li>
+                            <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מפשעות</span></li>
+                            <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">ישבן</span></li>
+                            <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מתחת לשדיים (אצל נשים)</span></li>
                           </ul>
                         </div>
                         <div class="p3__col-illus p3__col-illus--02">
-                          <img src="SVG/p3_02 illustration 5.svg" alt="" aria-hidden="true">
+                          <img src="SVG/p3_02 illustration 5.svg" alt="" width="362" height="177" aria-hidden="true">
                         </div>
                       </div>
 
@@ -4546,7 +4561,7 @@ html, body {
                           <p class="p3__col-body">בליטות ופצעים כואבים שחוזרים באותו מקום. עם ההחלמה, הם עלולים להשאיר צלקות ופיגמנטציה במקום הפצע.</p>
                         </div>
                         <div class="p3__col-illus p3__col-illus--03-2">
-                          <img src="Property 1=03.1.svg" alt="" aria-hidden="true">
+                          <img src="Property 1=03.1.svg" alt="" width="61" height="82" aria-hidden="true">
                         </div>
                       </div>
 
@@ -4557,7 +4572,7 @@ html, body {
                           <p class="p3__col-body">במחלה בינונית או קשה הפצעים מתפתחים לגושים נוקשים, פצעים מפרישי מוגלה ותעלות מודלקות מתחת לעור.</p>
                         </div>
                         <div class="p3__col-illus p3__col-illus--03-1">
-                          <img src="Property 1=03.2.svg" alt="" aria-hidden="true">
+                          <img src="Property 1=03.2.svg" alt="" width="155" height="169" aria-hidden="true">
                         </div>
                       </div>
 
@@ -4596,13 +4611,13 @@ html, body {
                         <h4 class="p3__05-subtitle">למי זה קורה?</h4>
                         <p class="p3__05-body">HS פוגעת בכ-1% מהאוכלוסייה, לרוב אחרי גיל ההתבגרות. היא שכיחה במיוחד אצל:</p>
                         <ul class="p3__05-list">
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">פלח הגיל הצעיר באוכלוסייה (שנות ה-20-30)</span></li>
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">בעלי עור כהה</span></li>
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">נשים</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">פלח הגיל הצעיר באוכלוסייה (שנות ה-20-30)</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">בעלי עור כהה</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">נשים</span></li>
                         </ul>
                       </div>
                       <div class="p3__05-illus">
-                        <img src="Property 1=05.1.svg" alt="" style="transform: rotate(90deg);">
+                        <img src="Property 1=05.1.svg" alt="" width="200" height="240" style="transform: rotate(90deg);">
                       </div>
                     </div>
 
@@ -4612,15 +4627,15 @@ html, body {
                         <h4 class="p3__05-subtitle">מה גורמי הסיכון?</h4>
                         <p class="p3__05-body">מומחים מצאו מספר גורמי סיכון אפשריים למחלה:</p>
                         <ul class="p3__05-list">
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">הורמונים</span></li>
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">נטייה גנטית</span></li>
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">עודף משקל</span></li>
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מחלות רקע</span></li>
-                          <li><img src="list poin 05.svg" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">עישון</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">הורמונים</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">נטייה גנטית</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">עודף משקל</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">מחלות רקע</span></li>
+                          <li><img src="list poin 05.svg" width="14" height="14" class="p3__05-bullet-img" alt=""><span class="p3__05-list-text">עישון</span></li>
                         </ul>
                       </div>
                       <div class="p3__05-illus">
-                        <img src="Property 1=05.2.svg" alt="">
+                        <img src="Property 1=05.2.svg" alt="" width="200" height="240">
                       </div>
                     </div>
 
@@ -4649,7 +4664,7 @@ html, body {
                           <p class="p3__col-body">האבחנה מתבצעת לפי היסטוריה של פצעים חוזרים באזורים ספציפיים, בפרק זמן של לפחות שישה חודשים.</p>
                         </div>
                         <div class="p3__col-illus p3__col-illus--06-1">
-                          <img src="SVG\p3_06 illustration 1.svg" alt="" aria-hidden="true">
+                          <img src="SVG\p3_06 illustration 1.svg" alt="" width="200" height="120" aria-hidden="true">
                         </div>
                       </div>
 
@@ -4660,7 +4675,7 @@ html, body {
                           <p class="p3__col-body">כל פצע שחוזר אחרי ריפוי, במיוחד בבתי שחי, מפשעות או ישבן, מצריך בדיקה רפואית.</p>
                         </div>
                         <div class="p3__col-illus p3__col-illus--06-2">
-                          <img src="SVG\p3_06 illustration 2.svg" alt="" aria-hidden="true">
+                          <img src="SVG\p3_06 illustration 2.svg" alt="" width="200" height="120" aria-hidden="true">
                         </div>
                       </div>
 
@@ -4765,7 +4780,7 @@ html, body {
         <aside class="p4__sidebar">
           <div class="p4__logo-section">
             <div class="p4__logo-big">
-              <img src="p4-4.gif" alt="צורה — פאנל 4" class="p4__vector-icon">
+              <img src="p4-4.gif" alt="צורה — פאנל 4" width="1380" height="1920" class="p4__vector-icon">
             </div>
             <div class="p4__episode-label-col">
             </div>
@@ -4811,10 +4826,10 @@ html, body {
         <!-- RIGHT: illustration sidebar (first child = rightmost in RTL) -->
         <div class="p5__sidebar">
           <div class="p5__illus-frame">
-            <img src="p1-black.svg" alt="" aria-hidden="true" class="p5__shape1">
-            <img src="p2-black.svg" alt="" aria-hidden="true" class="p5__shape2">
-            <img src="p4-black.svg" alt="" aria-hidden="true" class="p5__shape3">
-            <img src="p3 black.svg" alt="" aria-hidden="true" class="p5__shape4">
+            <img src="p1-black.svg" alt="" width="313" height="438" aria-hidden="true" class="p5__shape1">
+            <img src="p2-black.svg" alt="" width="254" height="368" aria-hidden="true" class="p5__shape2">
+            <img src="p4-black.svg" alt="" width="208" height="431" aria-hidden="true" class="p5__shape3">
+            <img src="p3 black.svg" alt="" width="288" height="363" aria-hidden="true" class="p5__shape4">
           </div>
         </div>
 
@@ -4877,15 +4892,15 @@ html, body {
                 <p class="p5__links-subtitle">לינקים שימושיים:</p>
                 <div class="p5__links-list">
                   <div class="p5__list-item">
-                    <img src="list poin 05.svg" class="p5__bullet" alt="">
+                    <img src="list poin 05.svg" width="14" height="14" class="p5__bullet" alt="">
                     <a href="https://www.bad.org.uk/pils/hidradenitis-suppurativa" target="_blank" rel="noopener" class="p5__link">HS באתר איגוד רופאי העור הבריטי (BAD) – מידע רפואי באנגלית.</a>
                   </div>
                   <div class="p5__list-item">
-                    <img src="list poin 05.svg" class="p5__bullet" alt="">
+                    <img src="list poin 05.svg" width="14" height="14" class="p5__bullet" alt="">
                     <a href="https://www.clalit.co.il/he/your_health/family/Pages/hidradenitis_suppurativa.aspx" target="_blank" rel="noopener" class="p5__link">HS באתר קופת חולים "כללית" – מידע רפואי בעברית.</a>
                   </div>
                   <div class="p5__list-item">
-                    <img src="list poin 05.svg" class="p5__bullet" alt="">
+                    <img src="list poin 05.svg" width="14" height="14" class="p5__bullet" alt="">
                     <a href="https://www.facebook.com/groups/1587557678179297/?locale=he_IL" target="_blank" rel="noopener" class="p5__link">קבוצת הפייסבוק של HS בישראל (לחולים בלבד).</a>
                   </div>
                 </div>
